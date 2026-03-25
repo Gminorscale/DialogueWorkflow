@@ -1,0 +1,58 @@
+Category,Entry,Speaker
+Maze_Opening,Alright maze—let's get this bread. Waka waka.,Pac-Man
+Maze_Opening,I smell pellets. Lots of pellets. This is my moment.,Pac-Man
+Maze_Opening,Target acquired. Yellow dot. Do not engage alone.,Blinky
+Maze_Opening,I'm gonna flank him cute-style. He'll never see it coming.,Pinky
+Maze_Opening,If I take the long route I arrive exactly when I mean to.,Inky
+Maze_Opening,I'm… I'm just happy to be here. Is that a fruit?,Clyde
+Maze_Opening,Scatter! Wait—why are we scattering? I forgot the plan.,Clyde
+Maze_Opening,Plan is simple: corner him at the junction. Move.,Blinky
+Maze_Opening,Copy that. Pinky out.,Pinky
+Maze_Opening,Inky calculating… calculating… okay go.,Inky
+
+Power_Pellet,OH NO HE ATE THE BIG ONE.,Blinky
+Power_Pellet,RETREAT RETREAT RETREAT—,Pinky
+Power_Pellet,This was not in my flowchart.,Inky
+Power_Pellet,I'm gonna hide behind this wall. Is this a wall?,Clyde
+Power_Pellet,Blue time! Who's hungry now? Waka waka waka!,Pac-Man
+Power_Pellet,I'm blue and I'm brave—no wait I'm blue and I'm SCARED.,Blinky
+Power_Pellet,If I pretend I'm a decoration maybe he won't—,Pinky
+Power_Pellet,Abort mission. New mission: survive.,Inky
+Power_Pellet,I love pellets but I do NOT love being chased.,Clyde
+Power_Pellet,One more lap and I'm naming this tunnel after myself.,Pac-Man
+Power_Pellet,Regroup at the ghost house. I mean it.,Blinky
+Power_Pellet,Fine. But I'm taking the scenic route.,Pinky
+
+Chase_Sequence,He doubled back! Classic Pac move!,Blinky
+Chase_Sequence,I cut him off—he feinted—he's a menace.,Pinky
+Chase_Sequence,I'm intercepting… nope… intercepting… still nope.,Inky
+Chase_Sequence,I got lost but emotionally I'm winning.,Clyde
+Chase_Sequence,You ghosts need cardio. I'm basically a professional athlete.,Pac-Man
+Chase_Sequence,Split formation. Pinky left, Inky right, Clyde… stay alive.,Blinky
+Chase_Sequence,I'm left! I'm fast! I'm slightly panicked!,Pinky
+Chase_Sequence,Right lane clear. Psych—it's a dead end. Classic me.,Inky
+Chase_Sequence,I found a pellet. I ate it. I'm helping?,Clyde
+Chase_Sequence,That was a power pellet. Clyde why.,Blinky
+Chase_Sequence,Waka waka—see you at the next intersection.,Pac-Man
+
+Ghost_House_Regroup,Okay. Damage report. Who got eaten?,Blinky
+Ghost_House_Regroup,Me. Twice. I saw my whole life. It was mostly pellets.,Pinky
+Ghost_House_Regroup,I phased through a wall and my dignity phased out.,Inky
+Ghost_House_Regroup,I waited in the corner. It was strategic. Probably.,Clyde
+Ghost_House_Regroup,You hear that? He's still out there. Waka-ing.,Blinky
+Ghost_House_Regroup,New rule: nobody touches the shiny ones.,Pinky
+Ghost_House_Regroup,Second rule: if Clyde touches the shiny ones we don't judge.,Inky
+Ghost_House_Regroup,I won't touch them. I'll just look at them lovingly.,Clyde
+Ghost_House_Regroup,Fresh start. We exit classy. We hunt hungry.,Blinky
+Ghost_House_Regroup,I can hear him chewing from here. It's haunting.,Pinky
+
+Victory_Lap,Final lap. Fruit spawned. Destiny calls.,Pac-Man
+Victory_Lap,We had one job: stop the yellow circle.,Blinky
+Victory_Lap,Technically we had four jobs. We did four attempts.,Pinky
+Victory_Lap,My attempt was conceptual.,Inky
+Victory_Lap,Mine was snack-based.,Clyde
+Victory_Lap,GG ghosts. Thanks for the cardio. Waka waka.,Pac-Man
+Victory_Lap,Rematch. Same maze. New attitudes.,Blinky
+Victory_Lap,I'm bringing traps. Cute traps.,Pinky
+Victory_Lap,I'm bringing math. Vibes math.,Inky
+Victory_Lap,I'm bringing snacks. For us. Not him.,Clyde

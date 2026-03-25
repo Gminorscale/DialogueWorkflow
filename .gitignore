@@ -1,0 +1,29 @@
+# Editor / IDE
+.cursor/
+.vscode/
+*.swp
+*.swo
+*~
+
+# REAPER autosave backups
+AutoSaves/
+*.rpp-bak
+*.rpp-undo
+
+# Development helpers (not shipped)
+_dev/
+
+# Intermediate / patched files
+*_FIXED.csv
+
+# Root-level CSV leftovers (samples live in Samples/)
+/demo_*.csv
+
+# Notion / secrets
+.env
+notion_secrets.cfg
+
+# OS junk
+Thumbs.db
+.DS_Store
+desktop.ini

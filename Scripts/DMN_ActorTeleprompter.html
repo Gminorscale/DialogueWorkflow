@@ -1,0 +1,1923 @@
+<!DOCTYPE html>
+<!--
+    ActorTeleprompter.html - REAPER actor web interface (teleprompter)
+    
+    This interface works with ImportDialogueFromSheets.lua.
+    
+    Supported marker/region types:
+    - Category= markers: Define scene/category groupings (e.g., "Category=Scene1")
+    - Entry= regions OR plain regions: Dialogue lines (e.g., "Entry=Hello world" or just "Hello world")
+    - Character= or Speaker= markers: Character/speaker attribution
+    - Delivery= markers: Delivery style notes
+    
+    Both scripts use the same conventions and are designed to be bundled together.
+-->
+<html>
+<head>
+    <title>REAPER Actor Web Interface</title>
+    <meta charset="utf-8"/>
+    <style>
+        /* ── Theme: matches DMN_DialogueWorkflow.lua THEME_DEFAULTS ───────────── */
+        :root {
+            --base-font-size: 16px;
+            --text-offset: 0px;          /* controlled by the vertical slider      */
+            --accent:       #ff8026;     /* button / selection (1.00,0.50,0.15)    */
+            --accent-dim:   #b25810;     /* button_active  (0.70,0.35,0.10)        */
+            --accent-hover: #d96d1a;     /* button_hover   (0.85,0.45,0.10)        */
+            --bg:           #242426;     /* window_bg      (0.14,0.14,0.16)        */
+            --panel-bg:     #1e1e23;     /* popup_bg       (0.12,0.12,0.14)        */
+            --frame-bg:     #2e2e33;     /* frame_bg       (0.18,0.18,0.20)        */
+            --frame-hover:  #3d3d47;     /* frame_bg_hover (0.24,0.24,0.28)        */
+            --text:         #ffffff;
+            --text-dim:     #808080;
+            --green:        #1ecb4f;
+            --teal:         #3ee6b0;
+            --yellow:       #ffe066;
+            --blue:         #6cf;
+            --red:          #ff3333;
+        }
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            font-size: 16px;
+        }
+
+        /* ── Status bar ──────────────────────────────────────────────────────── */
+        #status-bar {
+            position: fixed;
+            left: 0; right: 0; top: 0;
+            height: 50px;
+            background: transparent;
+            z-index: 1001;
+        }
+
+        /* ── Header ──────────────────────────────────────────────────────────── */
+        #header {
+            width: 100%;
+            padding: 32px 0 20px;
+            text-align: center;
+            position: fixed;
+            top: 50px;
+            z-index: 100;
+            background: linear-gradient(to bottom, rgba(36,36,38,1) 0%, rgba(36,36,38,0.95) 70%, rgba(36,36,38,0) 100%);
+        }
+        .track-name {
+            font-size: 1.8em;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            color: var(--blue);
+            text-shadow: 0 2px 4px #0005;
+            padding: 0 240px;
+            margin: 0;
+        }
+
+        /* ── Main content area ───────────────────────────────────────────────── */
+        #main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 80vh;
+            position: relative;
+            margin-top: 60px;
+            padding-bottom: 260px;
+            font-size: var(--base-font-size);
+        }
+
+        /* ── Dialogue layout ─────────────────────────────────────────────────── */
+        .dialogue-vertical {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2em 1em 0 1em;
+        }
+        .dialogue-container {
+            width: 900px;
+            height: 600px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .main-dialogue-container {
+            position: fixed;
+            top: calc(50% + var(--text-offset));
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 900px;
+            max-width: 90%;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            z-index: 2;
+            transition: top 0.1s;
+        }
+        .character-name {
+            font-size: 2.5em;
+            font-weight: 500;
+            color: var(--yellow);
+            text-align: left;
+            margin-bottom: 0.25em;
+            margin-top: 0;
+            line-height: 1.05;
+            letter-spacing: 0px;
+            text-shadow: 0 2px 4px #0005;
+            opacity: 0.9;
+            font-style: italic;
+            width: 100%;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+        .region-section {
+            font-size: 2.5em;
+            font-weight: 600;
+            margin-bottom: 0.8em;
+            margin-top: 0;
+            line-height: 1.15;
+            letter-spacing: 1px;
+            text-align: left;
+            color: var(--text);
+            text-shadow: 0 2px 8px #000a;
+            width: 100%;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+
+        /* previous / next context lines */
+        .previous-group {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%;
+            text-align: left;
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            z-index: 1;
+            transform: translateY(var(--text-offset));
+            transition: transform 0.1s;
+        }
+        .previous-speaker {
+            font-size: 1em;
+            color: #bbb;
+            font-style: italic;
+            margin-bottom: 0.1em;
+            opacity: 0.8;
+        }
+        .previous-line {
+            font-size: 1.2em;
+            color: #aaa;
+            font-style: italic;
+            opacity: 0.7;
+            min-height: 1.5em;
+            margin-bottom: 0;
+        }
+        .next-group {
+            position: absolute;
+            bottom: 0; right: 0;
+            width: 100%;
+            text-align: right;
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: flex-end;
+            z-index: 1;
+            transform: translateY(var(--text-offset));
+            transition: transform 0.1s;
+        }
+        .next-speaker {
+            font-size: 1em;
+            color: #bbb;
+            font-style: italic;
+            margin-bottom: 0.1em;
+            opacity: 0.8;
+        }
+        .next-line {
+            font-size: 1.2em;
+            color: #aaa;
+            font-style: italic;
+            opacity: 0.7;
+            min-height: 1.5em;
+            margin-top: 0;
+        }
+        .hide-context-lines .previous-group,
+        .hide-context-lines .next-group {
+            display: none !important;
+        }
+
+        /* ── Delivery (centre overlay) ───────────────────────────────────────── */
+        .delivery-center-wrapper {
+            position: fixed;
+            left: 50%; top: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 90;
+            pointer-events: none;
+        }
+        .delivery-section {
+            font-size: 1.4em;
+            font-weight: 500;
+            min-width: 200px;
+            padding: 0.5em 1.5em;
+            border-radius: 18px;
+            background: rgba(0,0,0,0.18);
+            box-shadow: 0 2px 8px #0004;
+            text-align: center;
+            letter-spacing: 0.5px;
+            pointer-events: auto;
+        }
+        .delivery-present {
+            color: var(--teal);
+            background: rgba(62,230,176,0.10);
+        }
+        .delivery-absent { color: var(--text-dim); background: rgba(180,180,180,0.08); }
+
+        /* ── Side-info (category / character / armed track) ──────────────────── */
+        .side-info {
+            position: fixed;
+            left: 40px;
+            bottom: 160px;
+            display: flex;
+            flex-direction: column;
+            gap: 0.7em;
+            align-items: flex-start;
+            z-index: 50;
+            font-size: 16px;
+            transition: transform 0.3s cubic-bezier(.4,2,.6,1);
+        }
+        .side-info.hidden { transform: translateY(100vh); }
+
+        .category-section {
+            font-size: 1.1em;
+            font-weight: 500;
+            min-width: 180px;
+            padding: 0.4em 1.2em;
+            border-radius: 18px;
+            background: rgba(0,0,0,0.18);
+            box-shadow: 0 2px 8px #0004;
+            text-align: left;
+            letter-spacing: 0.5px;
+        }
+        .category-present { color: var(--green);  background: rgba(30,203,79,0.08); }
+        .category-absent  { color: var(--yellow); background: rgba(255,224,102,0.08); }
+
+        .character-section {
+            font-size: 1.1em;
+            font-weight: 500;
+            min-width: 180px;
+            padding: 0.4em 1.2em;
+            border-radius: 18px;
+            background: rgba(255,224,102,0.08);
+            box-shadow: 0 2px 8px #0004;
+            text-align: left;
+            letter-spacing: 0.5px;
+            color: var(--yellow);
+        }
+        .character-present { color: var(--yellow); background: rgba(255,224,102,0.18); }
+        .character-absent  { color: var(--yellow); background: rgba(255,224,102,0.08); }
+
+        .armed-track-section {
+            font-size: 1.05em;
+            font-style: italic;
+            color: var(--blue);
+            background: rgba(80,180,255,0.10);
+            border: 1.5px solid var(--blue);
+            border-radius: 18px;
+            padding: 0.4em 1.2em;
+            margin-top: 0.3em;
+            min-width: 180px;
+            box-shadow: 0 2px 8px #0002;
+            letter-spacing: 0.5px;
+        }
+        .scene-arrow, .character-track-btn {
+            background: none;
+            border: none;
+            padding: 0 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            border-radius: 50%;
+            transition: background 0.15s;
+        }
+        .scene-arrow:hover        { background: rgba(30,203,79,0.12); }
+        .character-track-btn:hover{ background: rgba(255,224,102,0.18); }
+
+        /* ── Progress bars ───────────────────────────────────────────────────── */
+        .progress-bar-fixed {
+            position: fixed;
+            top: 50px; left: 0; right: 0;
+            width: 80%; max-width: 700px;
+            margin: 0 auto;
+            background: transparent;
+            transition: opacity 0.2s;
+            z-index: 3000;
+        }
+        .progress-bar-fixed.hidden { opacity: 0; pointer-events: none; }
+
+        /* ── Logo (Gminorscale wordmark → gminorscale.com) ───────────────────── */
+        #logo {
+            position: fixed;
+            top: 24px; right: 32px;
+            width: auto;
+            max-width: min(280px, 90vw);
+            z-index: 500;
+            opacity: 0.93;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px #0007;
+            background: linear-gradient(145deg, rgba(20,20,24,0.92) 0%, rgba(30,30,36,0.88) 100%);
+            border: 1px solid rgba(255,128,38,0.25);
+            transition: opacity 0.2s, transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            padding: 10px 14px;
+            box-sizing: border-box;
+        }
+        #logo:hover {
+            opacity: 1;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 18px rgba(255,128,38,0.2);
+        }
+        #logo .logo-text {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            font-weight: 700;
+            font-size: clamp(0.95rem, 1.15vw, 1.1rem);
+            color: var(--yellow);
+            letter-spacing: 0.02em;
+            white-space: nowrap;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.55);
+            line-height: 1;
+        }
+        #logo.hidden { opacity: 0; pointer-events: none; }
+
+        /* ── Recording indicator ─────────────────────────────────────────────── */
+        #recording-indicator {
+            position: fixed;
+            top: 70px; left: 50%;
+            transform: translateX(-50%);
+            display: none;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(255,51,51,0.15);
+            border: 1.5px solid var(--red);
+            border-radius: 20px;
+            color: var(--red);
+            font-size: 1.1em;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            z-index: 1002;
+            box-shadow: 0 2px 8px rgba(255,51,51,0.3);
+        }
+        #recording-indicator.visible { display: flex; }
+        #recording-indicator .record-icon {
+            width: 12px; height: 12px;
+            border-radius: 50%;
+            background: var(--red);
+            box-shadow: 0 0 8px rgba(255,51,51,0.8);
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50%       { opacity: 0.7; transform: scale(1.1); }
+        }
+
+        /* ── Transport controls ──────────────────────────────────────────────── */
+        .transport-controls {
+            position: fixed;
+            bottom: 40px; left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            z-index: 200;
+            font-size: 16px;
+            transition: transform 0.3s cubic-bezier(.4,2,.6,1);
+            margin-bottom: 16px;
+        }
+        .transport-controls.hidden { transform: translate(-50%, 100vh); }
+        .transport-button {
+            width: 80px; height: 80px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            font-size: 24px;
+            transition: all 0.2s;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        #play-button   { background: var(--green); color: white; }
+        #play-button:hover  { background: #18a340; }
+        #play-button.active { background: #18a340; box-shadow: inset 0 2px 8px rgba(0,0,0,0.3); }
+        #stop-button   { background: #e6e6e6; color: #222; }
+        #stop-button:hover  { background: #d4d4d4; }
+        #record-button { background: var(--red); color: white; }
+        #record-button:hover  { background: #cc2929; }
+        #record-button.active { background: #cc2929; box-shadow: inset 0 2px 8px rgba(0,0,0,0.3); }
+
+        /* toggle-context-lines button */
+        #toggle-context-lines {
+            height: 80px; min-width: 80px;
+            padding: 0 24px; width: auto;
+            border-radius: 40px; border: none;
+            font-size: 1.15em;
+            display: flex; align-items: center; justify-content: center;
+            transition: background 0.2s, color 0.2s;
+            margin-left: 16px;
+        }
+        #toggle-context-lines.toggle-context-on  { background: var(--green); color: #fff; }
+        #toggle-context-lines.toggle-context-off { background: var(--yellow); color: #222; }
+        .toggle-context-label {
+            font-size: 1.15em; font-weight: 500;
+            line-height: 1.2; text-align: center;
+            white-space: normal; display: block;
+        }
+
+        /* ── Combined panel (Entries + Categories) — RIGHT SIDE ────────────── */
+        #browse-panel-toggle {
+            position: fixed;
+            top: 120px; right: 0;
+            width: 40px; height: 60px;
+            background: rgba(36,36,38,0.85);
+            border-radius: 12px 0 0 12px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            z-index: 1200;
+            box-shadow: 0 2px 8px #0006;
+            transition: background 0.2s;
+            font-size: 16px;
+        }
+        #browse-panel-toggle:hover { background: #444; }
+
+        #browse-panel {
+            position: fixed;
+            top: 100px; right: -300px;
+            width: 280px;
+            min-height: 200px; max-height: 75vh;
+            background: var(--panel-bg);
+            border-radius: 12px 0 0 12px;
+            box-shadow: 0 2px 16px #000a;
+            z-index: 1201;
+            padding: 0 0 24px 0;
+            transition: right 0.3s cubic-bezier(.4,2,.6,1);
+            overflow-y: auto;
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            font-size: 16px;
+        }
+        #browse-panel.open { right: 0; }
+
+        #browse-panel-header {
+            font-size: 1.1em;
+            font-weight: 600;
+            padding: 14px 14px 8px 14px;
+            border-bottom: 1px solid #333;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        #browse-panel-close {
+            margin-left: auto;
+            width: 28px; height: 28px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            background: none; border: none;
+            border-radius: 50%;
+            transition: background 0.2s;
+            padding: 0;
+        }
+        #browse-panel-close:hover { background: #3336; }
+
+        /* Search bar */
+        #browse-search-row {
+            padding: 0 12px 6px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        #browse-search {
+            width: 100%;
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: 1px solid #333;
+            background: var(--frame-bg);
+            color: var(--text);
+            font-size: 1em;
+            outline: none;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+        #browse-search:focus { border-color: var(--accent); }
+
+        /* Filter chips */
+        #browse-filter-chips {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .filter-chip {
+            padding: 3px 12px;
+            border-radius: 14px;
+            border: 1.5px solid #444;
+            background: var(--frame-bg);
+            color: var(--text-dim);
+            font-size: 0.88em;
+            cursor: pointer;
+            transition: background 0.15s, color 0.15s, border-color 0.15s;
+            user-select: none;
+        }
+        .filter-chip.active {
+            background: var(--accent);
+            color: #fff;
+            border-color: var(--accent);
+        }
+        .filter-chip:hover:not(.active) {
+            border-color: var(--accent-hover);
+            color: var(--text);
+        }
+
+        /* Browse list */
+        #browse-list {
+            list-style: none;
+            margin: 0;
+            padding: 0 12px;
+        }
+        #browse-list li {
+            display: flex;
+            align-items: center;
+            gap: 0.6em;
+            font-size: 1.05em;
+            margin-bottom: 6px;
+            padding: 5px 4px;
+            border-radius: 7px;
+            cursor: pointer;
+            transition: background 0.12s;
+        }
+        #browse-list li:hover { background: var(--frame-hover); }
+        #browse-list li .entry-color {
+            width: 14px; height: 14px;
+            border-radius: 3px;
+            display: inline-block;
+            border: 1.5px solid #444;
+            flex-shrink: 0;
+        }
+        .browse-category-divider {
+            font-size: 1em;
+            font-weight: bold;
+            color: #fff;
+            background: linear-gradient(90deg, var(--accent) 0%, var(--accent-hover) 100%);
+            border-radius: 7px;
+            margin: 10px 0 6px 0;
+            padding: 6px 10px;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 8px #0002;
+            border-left: 5px solid var(--yellow);
+            display: flex;
+            align-items: center;
+        }
+        .browse-category-header {
+            font-size: 0.82em;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--accent);
+            margin: 10px 0 4px 4px;
+        }
+
+        /* Category-only view: navigate chips */
+        #browse-list .category-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5em;
+            padding: 7px 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.05em;
+            transition: background 0.12s;
+            margin-bottom: 5px;
+        }
+        #browse-list .category-item:hover { background: var(--frame-hover); }
+        .category-dot {
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            background: var(--green);
+            flex-shrink: 0;
+        }
+
+        /* ── Preferences panel — TOP LEFT ────────────────────────────────────── */
+        #prefs-toggle {
+            position: fixed;
+            top: 20px; left: 20px;
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255,255,255,0.12);
+            color: var(--text);
+            font-size: 18px;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            z-index: 2100;
+            transition: background 0.2s;
+            box-shadow: 0 2px 8px #0005;
+        }
+        #prefs-toggle:hover { background: rgba(255,255,255,0.22); }
+
+        #prefs-panel {
+            position: fixed;
+            top: 60px; left: 20px;
+            width: 230px;
+            background: var(--panel-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px #0009;
+            z-index: 2000;
+            padding: 14px 16px 16px;
+            display: none;
+            flex-direction: column;
+            gap: 14px;
+            font-size: 14px;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+        #prefs-panel.open { display: flex; }
+
+        .prefs-section-label {
+            font-size: 0.78em;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--accent);
+            margin-bottom: 4px;
+        }
+        .prefs-row {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .prefs-btn-row {
+            display: flex;
+            gap: 8px;
+        }
+        .prefs-btn {
+            flex: 1;
+            padding: 6px 0;
+            border-radius: 7px;
+            border: none;
+            background: var(--frame-bg);
+            color: var(--text);
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: background 0.15s;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+        .prefs-btn:hover { background: var(--accent); color: #fff; }
+
+        /* Vertical slider (text position) */
+        #text-offset-slider {
+            -webkit-appearance: slider-vertical;
+            appearance: slider-vertical;
+            writing-mode: vertical-lr;
+            direction: rtl;
+            width: 28px;
+            height: 130px;
+            cursor: pointer;
+            accent-color: var(--accent);
+            align-self: center;
+        }
+        .prefs-slider-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .prefs-slider-labels {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 130px;
+            font-size: 0.75em;
+            color: var(--text-dim);
+        }
+        .prefs-slider-value {
+            font-size: 0.82em;
+            color: var(--text-dim);
+            text-align: center;
+        }
+
+        /* visibility toggle buttons inside prefs */
+        .prefs-vis-btn {
+            padding: 6px 8px;
+            border-radius: 7px;
+            border: 1.5px solid #444;
+            background: var(--frame-bg);
+            color: var(--text-dim);
+            font-size: 0.82em;
+            cursor: pointer;
+            transition: background 0.15s, color 0.15s, border-color 0.15s;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            text-align: left;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .prefs-vis-btn .vis-icon { font-size: 1em; opacity: 0.7; }
+        .prefs-vis-btn.on  { border-color: var(--green); color: var(--green); background: rgba(30,203,79,0.08); }
+        .prefs-vis-btn.on .vis-icon { opacity: 1; }
+        .prefs-vis-btn:hover { border-color: var(--accent-hover); color: var(--text); }
+        .prefs-vis-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+        }
+
+        /* browse panel toggle button inside prefs */
+        #prefs-browse-toggle {
+            padding: 7px 0;
+            border-radius: 8px;
+            border: 1.5px solid var(--accent);
+            background: transparent;
+            color: var(--accent);
+            font-size: 0.95em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.15s, color 0.15s;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            letter-spacing: 0.3px;
+        }
+        #prefs-browse-toggle:hover, #prefs-browse-toggle.active {
+            background: var(--accent);
+            color: #fff;
+        }
+
+        /* ── Responsive ──────────────────────────────────────────────────────── */
+        @media (max-width: 1200px) {
+            .region-section  { font-size: 1.3em; }
+            .character-name  { font-size: 1.4em; }
+            .side-info       { left: 10px; bottom: 120px; }
+            .category-section, .delivery-section { font-size: 0.95em; min-width: 120px; }
+            #logo            { top: 10px; right: 10px; padding: 8px 12px; }
+            .track-name      { font-size: 1.4em; padding: 0 160px; }
+            #header          { padding: 20px 0 15px; }
+            .transport-controls { bottom: 20px; }
+            .transport-button   { width: 60px; height: 60px; font-size: 20px; }
+            #main            { padding-bottom: 180px; }
+        }
+        @media (max-width: 700px) {
+            .side-info { left: 0; bottom: 100px; gap: 0.4em; }
+            #main      { padding-bottom: 140px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ── Status bar ─────────────────────────────────────────────────────────── -->
+<div id="status-bar"></div>
+
+<!-- ── Recording indicator ──────────────────────────────────────────────── -->
+<div id="recording-indicator">
+    <div class="record-icon"></div>
+    <span>Recording</span>
+</div>
+
+<!-- ── Preferences toggle (gear icon) ───────────────────────────────────── -->
+<button id="prefs-toggle" title="Preferences" onclick="togglePrefs()">⚙</button>
+
+<!-- ── Preferences panel ────────────────────────────────────────────────── -->
+<div id="prefs-panel">
+
+    <!-- Font size -->
+    <div class="prefs-row">
+        <div class="prefs-section-label">Font Size</div>
+        <div class="prefs-btn-row">
+            <button class="prefs-btn" onclick="changeFontSize(-1)" title="Decrease font size">−</button>
+            <button class="prefs-btn" id="prefs-font-label" style="cursor:default;background:var(--frame-bg);pointer-events:none;">16px</button>
+            <button class="prefs-btn" onclick="changeFontSize(1)"  title="Increase font size">+</button>
+        </div>
+    </div>
+
+    <!-- Text position (vertical slider) — slider top = up, bottom = down -->
+    <div class="prefs-row">
+        <div class="prefs-section-label">Text Position</div>
+        <div class="prefs-slider-row">
+            <div class="prefs-slider-labels">
+                <span>▲ up</span>
+                <span>▼ dn</span>
+            </div>
+            <input id="text-offset-slider" type="range"
+                   min="-300" max="300" value="0" step="5"
+                   oninput="applyTextOffset(this.value)"
+                   title="Move main text up / down">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+                <span class="prefs-slider-value" id="offset-display">0px</span>
+                <button class="prefs-btn" style="font-size:0.7em;padding:3px 6px;" onclick="resetTextOffset()" title="Reset position">↺</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Browse panel toggle -->
+    <div class="prefs-row">
+        <div class="prefs-section-label">Browse</div>
+        <button id="prefs-browse-toggle" onclick="toggleBrowsePanel()">☰ Entries &amp; Categories</button>
+    </div>
+
+    <!-- Visibility toggles -->
+    <div class="prefs-row">
+        <div class="prefs-section-label">Show / Hide</div>
+        <div class="prefs-vis-grid">
+            <button class="prefs-vis-btn on" id="vis-transport" onclick="toggleVisibility('transport')" title="Transport controls">
+                <span class="vis-icon">⏺</span> Transport
+            </button>
+            <button class="prefs-vis-btn on" id="vis-progress" onclick="toggleVisibility('progress')" title="Progress bar">
+                <span class="vis-icon">▬</span> Progress
+            </button>
+            <button class="prefs-vis-btn on" id="vis-logo" onclick="toggleVisibility('logo')" title="Logo">
+                <span class="vis-icon">🖼</span> Logo
+            </button>
+            <button class="prefs-vis-btn on" id="vis-sideinfo" onclick="toggleVisibility('sideinfo')" title="Category / Character / Armed Track panel">
+                <span class="vis-icon">ℹ</span> Info Panel
+            </button>
+            <button class="prefs-vis-btn on" id="vis-speaker" onclick="toggleVisibility('speaker')" title="Speaker labels (center and side panel)">
+                <span class="vis-icon">🗣</span> Speaker
+            </button>
+        </div>
+    </div>
+
+    <!-- Context lines toggle -->
+    <div class="prefs-row">
+        <div class="prefs-section-label">Context Lines</div>
+        <div class="prefs-btn-row">
+            <button class="prefs-btn" id="prefs-ctx-btn" onclick="toggleContextLines()" style="flex:1;font-size:0.88em;">Context Lines: ON</button>
+        </div>
+    </div>
+</div>
+
+<!-- ── Progress bars ─────────────────────────────────────────────────────── -->
+<div id="progress-bar-container" class="progress-bar-fixed" style="display:flex;flex-direction:column;align-items:center;">
+    <div id="progress-bar-label" style="color:#fff;font-size:0.6em;margin-bottom:2px;text-shadow:0 2px 4px #0005;"></div>
+    <div style="width:100%;background:#333;border-radius:6px;height:9px;box-shadow:0 2px 8px #0006;overflow:hidden;">
+        <div id="progress-bar-fill" style="height:100%;width:0%;background:linear-gradient(90deg,var(--green) 0%,var(--teal) 100%);transition:width 0.3s;"></div>
+    </div>
+    <div id="sub-progress-container" style="width:60%;margin-top:8px;display:flex;flex-direction:column;align-items:center;">
+        <div id="sub-progress-label" style="color:#fff;font-size:0.5em;margin-bottom:2px;text-shadow:0 2px 4px #0005;"></div>
+        <div style="width:100%;background:#333;border-radius:4px;height:6px;box-shadow:0 2px 8px #0006;overflow:hidden;">
+            <div id="sub-progress-fill" style="height:100%;width:0%;background:linear-gradient(90deg,var(--yellow) 0%,#ffb366 100%);transition:width 0.3s;"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ── Header ────────────────────────────────────────────────────────────── -->
+<div id="header">
+    <div class="track-name" id="track">Loading track...</div>
+</div>
+
+<!-- ── Logo: Gminorscale → www.gminorscale.com ───────────────────────────── -->
+<a id="logo" href="https://www.gminorscale.com" target="_blank" rel="noopener noreferrer" title="Gminorscale — visit gminorscale.com" aria-label="Gminorscale">
+    <span class="logo-text">Gminorscale</span>
+</a>
+
+<!-- ── Delivery overlay ──────────────────────────────────────────────────── -->
+<div class="delivery-center-wrapper" id="delivery-wrapper">
+    <div class="delivery-section delivery-absent" id="delivery">Loading delivery...</div>
+</div>
+
+<!-- ── Main dialogue area ─────────────────────────────────────────────────── -->
+<div id="main">
+    <div class="dialogue-vertical">
+        <div class="dialogue-container">
+            <div class="previous-group">
+                <div class="previous-speaker" id="previous-speaker"></div>
+                <div class="previous-line" id="previous-line"></div>
+            </div>
+            <div class="main-dialogue-container">
+                <div class="character-name" id="character-name"></div>
+                <div class="region-section" id="region">Loading entry...</div>
+            </div>
+            <div class="next-group">
+                <div class="next-speaker" id="next-speaker"></div>
+                <div class="next-line" id="next-line"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Side info (category / character / armed track) -->
+    <div class="side-info">
+        <div class="category-section category-absent" id="category-label-container" style="display:flex;align-items:center;gap:0.5em;">
+            <button id="scene-left-arrow" class="scene-arrow" title="Previous Category" onclick="navigateScene(-1)">
+                <svg width="20" height="20" viewBox="0 0 20 20"><polyline points="13,5 7,10 13,15" stroke="var(--green)" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <span id="category" style="flex:1;text-align:center;">Loading category...</span>
+            <button id="scene-right-arrow" class="scene-arrow" title="Next Category" onclick="navigateScene(1)">
+                <svg width="20" height="20" viewBox="0 0 20 20"><polyline points="7,5 13,10 7,15" stroke="var(--green)" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+        </div>
+        <div class="character-section character-absent" id="character">Loading character...</div>
+        <div class="armed-track-section" id="armed-track-label-container" style="display:flex;align-items:center;gap:0.5em;">
+            <button class="scene-arrow" title="Previous Speaker" onclick="navigateSpeaker(-1)">
+                <svg width="20" height="20" viewBox="0 0 20 20"><polyline points="13,5 7,10 13,15" stroke="var(--yellow)" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <button id="select-character-track" class="character-track-btn" title="Arm track for current speaker" onclick="selectCharacterTrack()">
+                <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="11" cy="11" r="10" stroke="var(--yellow)" stroke-width="2" fill="none"/>
+                    <circle cx="11" cy="9" r="3" fill="var(--yellow)"/>
+                    <rect x="7.5" y="13" width="7" height="4" rx="2" fill="var(--yellow)"/>
+                </svg>
+            </button>
+            <span id="armed-track" style="flex:1;text-align:center;">Loading armed track...</span>
+            <button class="scene-arrow" title="Next Speaker" onclick="navigateSpeaker(1)">
+                <svg width="20" height="20" viewBox="0 0 20 20"><polyline points="7,5 13,10 7,15" stroke="var(--yellow)" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ── Transport controls ─────────────────────────────────────────────────── -->
+<div class="transport-controls" style="justify-content:flex-start;">
+    <button id="record-button" class="transport-button" onclick="toggleRecord()" title="Record">⬤</button>
+    <button id="play-button"   class="transport-button" onclick="wwr_req(1007)" title="Play">▶</button>
+    <button id="stop-button"   class="transport-button" onclick="wwr_req(40667)" title="Stop">
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><rect x="8" y="8" width="16" height="16" rx="3" fill="#222"/></svg>
+    </button>
+    <button id="prev-character-line-button" class="transport-button" onclick="navigateSpeakerEntry(-1)" title="Previous Entry for Active Speaker">
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+            <circle cx="16" cy="16" r="8" fill="#fff" stroke="#222" stroke-width="2"/>
+            <path d="M8 32c0-4.418 3.582-8 8-8s8 3.582 8 8" fill="#fff" stroke="#222" stroke-width="2"/>
+            <circle cx="8" cy="32" r="7" fill="#fff" stroke="#3984c6" stroke-width="2"/>
+            <polyline points="12,32 6,32" fill="none" stroke="#3984c6" stroke-width="2.5" stroke-linecap="round"/>
+            <polyline points="8,30 6,32 8,34" fill="none" stroke="#3984c6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+    </button>
+    <button id="next-character-line-button" class="transport-button" onclick="navigateSpeakerEntry(1)" title="Next Entry for Active Speaker">
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+            <circle cx="24" cy="16" r="8" fill="#fff" stroke="#222" stroke-width="2"/>
+            <path d="M16 32c0-4.418 3.582-8 8-8s8 3.582 8 8" fill="#fff" stroke="#222" stroke-width="2"/>
+            <circle cx="32" cy="32" r="7" fill="#fff" stroke="#3984c6" stroke-width="2"/>
+            <polyline points="28,32 34,32" fill="none" stroke="#3984c6" stroke-width="2.5" stroke-linecap="round"/>
+            <polyline points="32,30 34,32 32,34" fill="none" stroke="#3984c6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+    </button>
+    <button id="prev-line-button" class="transport-button" onclick="wwr_req(41801)" title="Go to Previous Entry">
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><polyline points="20,8 12,16 20,24" stroke="#222" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <button id="next-line-button" class="transport-button" onclick="wwr_req(41802)" title="Go to Next Entry">
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><polyline points="12,8 20,16 12,24" stroke="#222" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <button id="toggle-context-lines" class="toggle-context-on" onclick="toggleContextLines()" title="Show/Hide Previous &amp; Next Lines">
+        <span class="toggle-context-label">Display surrounding<br>dialogue lines</span>
+    </button>
+</div>
+
+<!-- ── Combined browse panel (right side) ────────────────────────────────── -->
+<div id="browse-panel-toggle" onclick="toggleBrowsePanel()" title="Browse Entries &amp; Categories">
+    <svg id="browse-toggle-arrow" width="28" height="28" viewBox="0 0 28 28" fill="none">
+        <polyline points="18,6 8,14 18,22" stroke="#fff" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+</div>
+
+<div id="browse-panel">
+    <div id="browse-panel-header">
+        <span>Browse</span>
+        <button id="browse-panel-close" onclick="toggleBrowsePanel()" title="Close">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+                <polyline points="6,6 16,16" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
+                <polyline points="16,6 6,16" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+        </button>
+    </div>
+    <div id="browse-search-row">
+        <input id="browse-search" type="text" placeholder="Search entries &amp; categories…" autocomplete="off">
+        <div id="browse-filter-chips">
+            <span class="filter-chip active" data-filter="all"    onclick="setFilter('all')">All</span>
+            <span class="filter-chip"        data-filter="entries"    onclick="setFilter('entries')">Entries</span>
+            <span class="filter-chip"        data-filter="categories" onclick="setFilter('categories')">Categories</span>
+        </div>
+    </div>
+    <ul id="browse-list"></ul>
+</div>
+
+<script>
+    // ── WWR implementation ─────────────────────────────────────────────────
+    var wwrreqloopxhr;
+    function wwr_req_recur(req, ms) {
+        if (wwrreqloopxhr) wwrreqloopxhr.abort();
+        function recur() {
+            wwrreqloopxhr = new XMLHttpRequest();
+            wwrreqloopxhr.onload = function() {
+                if (this.status == 200) wwr_onreply(this.responseText);
+                setTimeout(recur, ms);
+            };
+            wwrreqloopxhr.onerror = function() { setTimeout(recur, 1000); };
+            wwrreqloopxhr.open("GET", "/_/" + req, true);
+            wwrreqloopxhr.send(null);
+        }
+        recur();
+    }
+
+    // ── DOM cache ──────────────────────────────────────────────────────────
+    var domCache = new Map();
+    function getCachedElement(id) {
+        if (!domCache.has(id)) domCache.set(id, document.getElementById(id));
+        return domCache.get(id);
+    }
+
+    function preCacheElements() {
+        [
+            'play-button','record-button','track','region','category',
+            'armed-track','character','character-name','status-bar',
+            'recording-indicator','progress-bar-label','progress-bar-fill',
+            'sub-progress-label','sub-progress-fill','previous-line','previous-speaker',
+            'next-line','next-speaker','browse-list','browse-search',
+            'scene-left-arrow','scene-right-arrow',
+            'browse-panel','browse-panel-toggle','browse-toggle-arrow',
+            'toggle-context-lines','main','progress-bar-container',
+            'prefs-panel','prefs-toggle','prefs-font-label','prefs-ctx-btn',
+            'text-offset-slider','offset-display','prefs-browse-toggle',
+            'delivery','logo',
+            'vis-transport','vis-progress','vis-logo','vis-sideinfo'
+        ].forEach(function(id) { getCachedElement(id); });
+    }
+
+    // ── Data cache ────────────────────────────────────────────────────────
+    var dataCache = {
+        lastRegionData: null, lastCategoryDividers: null,
+        lastDeliveryMarkers: null, lastCharacterMarkers: null,
+        lastPlayheadPos: null, lastCurrentRegion: null,
+        lastSceneText: null, lastCharacterLabel: null,
+        lastDeliveryText: null, lastArmedTrack: null,
+        lastTrack: null, lastIsPlaying: false, lastIsRecording: false,
+        dialogueRegions: [], sceneRegions: [], deliveryMarkers: [], characterMarkers: [],
+        browseListNeedsUpdate: true,
+        lastRegionCount: 0, lastCategoryCount: 0, lastDeliveryCount: 0, lastCharacterCount: 0,
+        lastRegionDataString: '', lastCategoryDataString: '',
+        lastDeliveryDataString: '', lastCharacterDataString: '',
+    };
+
+    var regionData = [];
+    var categoryDividers = [];
+
+    // ── Browse filter state ───────────────────────────────────────────────
+    var browseFilter = 'all'; // 'all' | 'entries' | 'categories'
+
+    function setFilter(f) {
+        browseFilter = f;
+        document.querySelectorAll('.filter-chip').forEach(function(chip) {
+            chip.classList.toggle('active', chip.dataset.filter === f);
+        });
+        dataCache.browseListNeedsUpdate = true;
+        updateBrowseList();
+    }
+
+    // ── Preferences panel ─────────────────────────────────────────────────
+    var prefsOpen = false;
+    function togglePrefs() {
+        prefsOpen = !prefsOpen;
+        var panel = getCachedElement('prefs-panel');
+        panel.classList.toggle('open', prefsOpen);
+    }
+
+    // Close prefs if user clicks outside
+    document.addEventListener('click', function(e) {
+        if (!prefsOpen) return;
+        var panel = getCachedElement('prefs-panel');
+        var toggle = getCachedElement('prefs-toggle');
+        if (panel && !panel.contains(e.target) && toggle && !toggle.contains(e.target)) {
+            prefsOpen = false;
+            panel.classList.remove('open');
+        }
+    });
+
+    // ── Font size ─────────────────────────────────────────────────────────
+    var currentFontSize = 16;
+    function changeFontSize(delta) {
+        currentFontSize = Math.max(12, Math.min(48, currentFontSize + delta));
+        document.documentElement.style.setProperty('--base-font-size', currentFontSize + 'px');
+        var lbl = getCachedElement('prefs-font-label');
+        if (lbl) lbl.textContent = currentFontSize + 'px';
+    }
+
+    // ── Text position slider — slider up = text moves up (negate) ────────
+    function applyTextOffset(val) {
+        var n = -parseInt(val, 10);   // invert: slider up → negative offset → text goes up
+        document.documentElement.style.setProperty('--text-offset', n + 'px');
+        var disp = getCachedElement('offset-display');
+        if (disp) disp.textContent = (n >= 0 ? '+' : '') + n + 'px';
+    }
+    function resetTextOffset() {
+        var slider = getCachedElement('text-offset-slider');
+        if (slider) { slider.value = 0; applyTextOffset(0); }
+    }
+
+    // ── Visibility toggles ────────────────────────────────────────────────
+    var visState = { transport: true, progress: true, logo: true, sideinfo: true, speaker: true };
+
+    function toggleVisibility(which) {
+        visState[which] = !visState[which];
+        var btn = document.getElementById('vis-' + which);
+        if (btn) btn.classList.toggle('on', visState[which]);
+
+        if (which === 'transport') {
+            var tc = document.querySelector('.transport-controls');
+            if (tc) tc.classList.toggle('hidden', !visState.transport);
+        }
+        if (which === 'progress') {
+            var pb = getCachedElement('progress-bar-container');
+            if (pb) pb.classList.toggle('hidden', !visState.progress);
+        }
+        if (which === 'logo') {
+            var logo = getCachedElement('logo');
+            if (logo) logo.classList.toggle('hidden', !visState.logo);
+        }
+        if (which === 'sideinfo') {
+            var si = document.querySelector('.side-info');
+            if (si) si.classList.toggle('hidden', !visState.sideinfo);
+        }
+        if (which === 'speaker') {
+            var charElem = getCachedElement('character');
+            var charNameElem = getCachedElement('character-name');
+            if (charElem) charElem.style.display = visState.speaker ? 'block' : 'none';
+            if (charNameElem) charNameElem.style.display = visState.speaker ? 'block' : 'none';
+        }
+    }
+
+    // ── Browse panel ──────────────────────────────────────────────────────
+    function toggleBrowsePanel() {
+        var panel  = getCachedElement('browse-panel');
+        var isOpen = panel.classList.toggle('open');
+        var prefBtn = getCachedElement('prefs-browse-toggle');
+        if (prefBtn) prefBtn.classList.toggle('active', isOpen);
+        // Flip toggle-tab arrow: panel open → point right (close), closed → point left (open)
+        var arrow = getCachedElement('browse-toggle-arrow');
+        if (arrow) {
+            arrow.querySelector('polyline').setAttribute('points',
+                isOpen ? '10,6 20,14 10,22' : '18,6 8,14 18,22');
+        }
+        if (isOpen) {
+            dataCache.browseListNeedsUpdate = true;
+            updateBrowseList();
+        }
+    }
+
+    // ── Browse list rendering ─────────────────────────────────────────────
+    function updateBrowseList() {
+        var panel = getCachedElement('browse-panel');
+        if (!panel.classList.contains('open') || !dataCache.browseListNeedsUpdate) return;
+
+        var list  = getCachedElement('browse-list');
+        var query = (getCachedElement('browse-search').value || '').trim().toLowerCase();
+
+        var dialogueRegions = dataCache.dialogueRegions;
+        var combined = dialogueRegions.map(function(r) { return { type: 'region',   item: r }; })
+                       .concat(categoryDividers.map(function(c) { return { type: 'category', item: c }; }));
+        combined.sort(function(a, b) { return a.item.start - b.item.start; });
+
+        var fragment = document.createDocumentFragment();
+        var showEntries    = (browseFilter === 'all' || browseFilter === 'entries');
+        var showCategories = (browseFilter === 'all' || browseFilter === 'categories');
+
+        for (var i = 0; i < combined.length; i++) {
+            var entry = combined[i];
+
+            if (entry.type === 'category') {
+                if (!showCategories) continue;
+                var catName = entry.item.name;
+                if (query && !catName.toLowerCase().includes(query)) {
+                    // Still show category header if it has matching children
+                    var hasMatch = false;
+                    for (var j = i + 1; j < combined.length; j++) {
+                        if (combined[j].type === 'category') break;
+                        var dn = extractEntryName(combined[j].item.name);
+                        if (dn.toLowerCase().includes(query)) { hasMatch = true; break; }
+                    }
+                    if (!hasMatch && browseFilter !== 'categories') continue;
+                }
+                if (browseFilter === 'categories') {
+                    // Show as clickable category item
+                    var li = document.createElement('li');
+                    li.className = 'category-item';
+                    li.onclick = (function(start) { return function() { navigateToCategory(start); }; })(entry.item.start);
+                    var dot = document.createElement('span');
+                    dot.className = 'category-dot';
+                    li.appendChild(dot);
+                    li.appendChild(document.createTextNode(catName));
+                    fragment.appendChild(li);
+                } else {
+                    var div = document.createElement('div');
+                    div.className = 'browse-category-divider';
+                    div.textContent = catName;
+                    fragment.appendChild(div);
+                }
+            } else {
+                if (!showEntries) continue;
+                var displayName = extractEntryName(entry.item.name);
+                if (query && !displayName.toLowerCase().includes(query)) continue;
+                var li2 = document.createElement('li');
+                li2.onclick = (function(start) { return function() { wwr_req('SET/POS/' + start); }; })(entry.item.start);
+                var colorSpan = document.createElement('span');
+                colorSpan.className = 'entry-color';
+                colorSpan.style.background = entry.item.color || '#888';
+                li2.appendChild(colorSpan);
+                li2.appendChild(document.createTextNode(displayName));
+                fragment.appendChild(li2);
+            }
+        }
+
+        list.innerHTML = '';
+        list.appendChild(fragment);
+        dataCache.browseListNeedsUpdate = false;
+    }
+
+    function navigateToCategory(catStart) {
+        var nextCatStart = Infinity;
+        for (var i = 0; i < regionData.length; i++) {
+            if (isSceneOrStimulusRegion(regionData[i].name) && regionData[i].start > parseFloat(catStart)) {
+                nextCatStart = regionData[i].start;
+                break;
+            }
+        }
+        var firstDialogue = regionData.find(function(r) {
+            return isDialogueRegion(r.name) && r.start >= parseFloat(catStart) && r.start < nextCatStart;
+        });
+        wwr_req('SET/POS/' + (firstDialogue ? firstDialogue.start : catStart));
+    }
+
+    // ── Context lines ─────────────────────────────────────────────────────
+    var contextLinesVisible = true;
+    function toggleContextLines() {
+        contextLinesVisible = !contextLinesVisible;
+        var btn  = getCachedElement('toggle-context-lines');
+        var pBtn = getCachedElement('prefs-ctx-btn');
+        var main = getCachedElement('main');
+        if (contextLinesVisible) {
+            btn.classList.add('toggle-context-on');
+            btn.classList.remove('toggle-context-off');
+            if (main) main.classList.remove('hide-context-lines');
+            if (pBtn) pBtn.textContent = 'Context Lines: ON';
+        } else {
+            btn.classList.remove('toggle-context-on');
+            btn.classList.add('toggle-context-off');
+            if (main) main.classList.add('hide-context-lines');
+            if (pBtn) pBtn.textContent = 'Context Lines: OFF';
+        }
+    }
+
+    // ── String / region helpers ────────────────────────────────────────────
+    function normalizeRegionName(name) {
+        return name ? name.replace(/^0+/, '').trim().toLowerCase() : '';
+    }
+    function isSceneOrStimulusRegion(regionName) {
+        var lower = (regionName || '').trim().toLowerCase();
+        return /^(scene|category|stimulus)\s*=/.test(lower);
+    }
+    function isDialogueRegion(regionName) {
+        var name = (regionName || '').trim().toLowerCase();
+        return !name.includes('=') || name.startsWith('entry=') || name.startsWith('variation=');
+    }
+    function extractEntryName(regionName) {
+        var name  = (regionName || '').trim();
+        var lower = name.toLowerCase();
+        if (lower.startsWith('entry='))     return name.substring(6).trim();
+        if (lower.startsWith('variation=')) return name.substring(10).trim();
+        return name;
+    }
+    function extractSceneOrStimulusName(regionName) {
+        var name  = (regionName || '').trim();
+        var lower = name.toLowerCase();
+        if (/^(scene|category|stimulus)\s*=/.test(lower)) {
+            var idx = name.indexOf('=');
+            if (idx !== -1 && idx < name.length - 1)
+                return name.substring(idx + 1).replace(/^\s*[:=\-]*\s*/, '');
+        }
+        return '';
+    }
+
+    // ── Simple hash for change detection ──────────────────────────────────
+    function createSimpleHash(data) {
+        if (!data || !data.length) return '0';
+        var hash = data.length + '_';
+        for (var i = 0; i < Math.min(data.length, 3); i++) {
+            if (data[i].name)  hash += data[i].name.length;
+            if (data[i].start) hash += '_' + Math.round(data[i].start * 1000);
+        }
+        return hash;
+    }
+
+    // ── Progress bar update ────────────────────────────────────────────────
+    function updateProgressBar(currentRegionName) {
+        var barLabel   = getCachedElement('progress-bar-label');
+        var barFill    = getCachedElement('progress-bar-fill');
+        var subLabel   = getCachedElement('sub-progress-label');
+        var subFill    = getCachedElement('sub-progress-fill');
+        var dialogueRegions = dataCache.dialogueRegions;
+        if (!dialogueRegions.length) {
+            barLabel.textContent = '';
+            barFill.style.width = '0%';
+            subLabel.textContent = '';
+            subFill.style.width  = '0%';
+            return;
+        }
+        var normCurrent = normalizeRegionName(currentRegionName);
+        var idx = -1;
+        for (var i = 0; i < dialogueRegions.length; i++) {
+            if (normalizeRegionName(dialogueRegions[i].name) === normCurrent) { idx = i; break; }
+        }
+        var total = dialogueRegions.length;
+        if (idx >= 0) {
+            var current = idx + 1;
+            var percent = Math.round((current / total) * 100);
+            barLabel.textContent = 'Entry ' + String(current).padStart(2,'0') + ' of ' + String(total).padStart(2,'0') + ' (' + percent + '%)';
+            barFill.style.width = percent + '%';
+
+            var currentDR = dialogueRegions[idx];
+            var sceneStart = -Infinity, sceneEnd = Infinity, sceneName = '';
+            var sceneRegions = dataCache.sceneRegions || [];
+            var currentSceneIdx = -1;
+            for (var i = 0; i < sceneRegions.length; i++) {
+                if (sceneRegions[i].start <= currentDR.start &&
+                    (i === sceneRegions.length - 1 || sceneRegions[i+1].start > currentDR.start)) {
+                    currentSceneIdx = i;
+                    break;
+                }
+            }
+            if (currentSceneIdx === -1) {
+                var cats = dataCache.lastCategoryDividers || [];
+                for (var i = 0; i < cats.length; i++) {
+                    if (cats[i].start <= currentDR.start &&
+                        (i === cats.length - 1 || cats[i+1].start > currentDR.start)) {
+                        sceneStart = cats[i].start;
+                        sceneName  = cats[i].name;
+                        if (i < cats.length - 1) sceneEnd = cats[i+1].start;
+                        break;
+                    }
+                }
+            } else {
+                var cs = sceneRegions[currentSceneIdx];
+                sceneStart = cs.start;
+                sceneName  = extractSceneOrStimulusName(cs.name) || cs.name;
+                if (currentSceneIdx < sceneRegions.length - 1)
+                    sceneEnd = sceneRegions[currentSceneIdx + 1].start;
+            }
+            var inScene = dialogueRegions.filter(function(r) { return r.start >= sceneStart && r.start < sceneEnd; });
+            var inSceneIdx = 0;
+            for (var i = 0; i < inScene.length; i++) {
+                if (normalizeRegionName(inScene[i].name) === normCurrent) { inSceneIdx = i + 1; break; }
+            }
+            var catPct = inScene.length ? Math.round((inSceneIdx / inScene.length) * 100) : 0;
+            subLabel.textContent = (sceneName ? 'Category: ' + sceneName + ' — ' : '') + inSceneIdx + ' of ' + inScene.length + ' (' + catPct + '%)';
+            subFill.style.width = catPct + '%';
+        } else {
+            barLabel.textContent = 'Not in entry';
+            barFill.style.width  = '0%';
+            subLabel.textContent = '';
+            subFill.style.width  = '0%';
+        }
+    }
+
+    // ── Data processing ────────────────────────────────────────────────────
+    function processData(lines) {
+        var region = '', category = '', delivery = '', track = '', armedTrack = '';
+        var playheadPos = null;
+        var newRegionData = [], newCategoryDividers = [], newDeliveryMarkers = [], newCharacterMarkers = [];
+        var newDialogueRegions = [], newSceneRegions = [];
+
+        for (var i = 0; i < lines.length; i++) {
+            var line = lines[i];
+            var tok  = line.split('\t');
+
+            if (tok[1] === 'XR_Lyrics') {
+                if (tok[2] === 'region_text')   region   = tok[3];
+                if (tok[2] === 'category_text') category = tok[3];
+                if (tok[2] === 'delivery_text') delivery = tok[3];
+            }
+            if (tok[0] === 'REGION' && tok.length > 4) {
+                var color = '#888';
+                if (tok[5] && /^\d+$/.test(tok[5])) {
+                    var c = parseInt(tok[5]);
+                    color = '#' + ('000000' + (c & 0xFFFFFF).toString(16)).slice(-6);
+                }
+                var regionName = (tok[1] && tok[1].trim().length > 0) ? tok[1].trim() : 'Region ' + tok[2];
+                var startPos   = parseFloat(tok[3]);
+                var endPos     = parseFloat(tok[4]);
+                var regionObj  = { type: 'region', name: regionName, color: color, start: startPos, end: endPos };
+                newRegionData.push(regionObj);
+                if (isDialogueRegion(regionName))        newDialogueRegions.push(regionObj);
+                else if (isSceneOrStimulusRegion(regionName)) newSceneRegions.push(regionObj);
+            }
+            if (tok[0] === 'TRANSPORT') {
+                last_transport_state = parseInt(tok[1]);
+                playheadPos = parseFloat(tok[2]);
+            }
+            if (tok[0] === 'TRACK' && tok.length > 4) {
+                if ((parseInt(tok[3]) & 64) && tok[2]) armedTrack = tok[2];
+            }
+            if (tok[0] === 'MARKER' && tok[1]) {
+                var ml    = tok[1].toLowerCase();
+                var mpos  = parseFloat(tok[3]);
+                if (ml.startsWith('category=') || ml.startsWith('scene=')) {
+                    var catName2 = tok[1].split('=')[1] ? tok[1].split('=')[1].trim() : '';
+                    newCategoryDividers.push({ type: 'category', name: catName2, start: mpos });
+                    newSceneRegions.push({ type: 'region', name: 'Scene=' + catName2, color: '#1ecb4f', start: mpos, end: mpos });
+                } else if (ml.startsWith('delivery=')) {
+                    newDeliveryMarkers.push({ type: 'delivery', name: tok[1].substring(9).trim(), start: mpos });
+                } else if (ml.startsWith('speaker=') || ml.startsWith('character=')) {
+                    newCharacterMarkers.push({ name: tok[1].split('=')[1].trim(), start: mpos });
+                }
+            }
+        }
+
+        var rHash = createSimpleHash(newRegionData);
+        var cHash = createSimpleHash(newCategoryDividers);
+        var dHash = createSimpleHash(newDeliveryMarkers);
+        var chHash= createSimpleHash(newCharacterMarkers);
+        var dataChanged = false;
+
+        if (rHash !== dataCache.lastRegionDataString || newRegionData.length !== dataCache.lastRegionCount) {
+            dataCache.lastRegionDataString = rHash; dataCache.lastRegionCount = newRegionData.length;
+            dataCache.lastRegionData = newRegionData;
+            dataCache.dialogueRegions = newDialogueRegions;
+            dataCache.sceneRegions    = newSceneRegions;
+            dataChanged = true;
+        }
+        if (cHash !== dataCache.lastCategoryDataString || newCategoryDividers.length !== dataCache.lastCategoryCount) {
+            dataCache.lastCategoryDataString = cHash; dataCache.lastCategoryCount = newCategoryDividers.length;
+            dataCache.lastCategoryDividers = newCategoryDividers;
+            dataChanged = true;
+        }
+        if (dHash !== dataCache.lastDeliveryDataString || newDeliveryMarkers.length !== dataCache.lastDeliveryCount) {
+            dataCache.lastDeliveryDataString = dHash; dataCache.lastDeliveryCount = newDeliveryMarkers.length;
+            dataCache.lastDeliveryMarkers = newDeliveryMarkers;
+            dataCache.deliveryMarkers = newDeliveryMarkers;
+            dataChanged = true;
+        } else if (!Array.isArray(dataCache.deliveryMarkers)) {
+            dataCache.deliveryMarkers = newDeliveryMarkers;
+        }
+        if (chHash !== dataCache.lastCharacterDataString || newCharacterMarkers.length !== dataCache.lastCharacterCount) {
+            dataCache.lastCharacterDataString = chHash; dataCache.lastCharacterCount = newCharacterMarkers.length;
+            dataCache.characterMarkers = newCharacterMarkers;
+        }
+        if (dataChanged) dataCache.browseListNeedsUpdate = true;
+
+        return { region, category, delivery, track, armedTrack, playheadPos,
+                 regionData: newRegionData, categoryDividers: newCategoryDividers,
+                 deliveryMarkers: newDeliveryMarkers };
+    }
+
+    // ── Throttled update ───────────────────────────────────────────────────
+    var updateThrottle = null, pendingUpdate = false;
+    function throttledUpdate() {
+        if (updateThrottle) return;
+        updateThrottle = setTimeout(function() {
+            updateThrottle = null;
+            if (pendingUpdate) { pendingUpdate = false; performUpdate(); }
+        }, 50);
+    }
+    function performUpdate() {
+        var browsePanel = getCachedElement('browse-panel');
+        if (browsePanel && browsePanel.classList.contains('open')) updateBrowseList();
+    }
+
+    // ── Main reply handler ─────────────────────────────────────────────────
+    var last_transport_state = 0;
+    function wwr_onreply(results) {
+        var lines = results.split('\n');
+        debugLogData(lines);
+
+        var playButton   = getCachedElement('play-button');
+        var recordButton = getCachedElement('record-button');
+        var isPlaying = false, isRecording = false;
+
+        var processedData = processData(lines);
+        regionData       = processedData.regionData;
+        categoryDividers = processedData.categoryDividers;
+
+        if (last_transport_state & 1) { playButton.classList.add('active');    isPlaying   = true; }
+        else                           { playButton.classList.remove('active'); }
+        if (last_transport_state & 4) { recordButton.classList.add('active');   isRecording = true; }
+        else                           { recordButton.classList.remove('active'); }
+
+        var statusBar          = getCachedElement('status-bar');
+        var recordingIndicator = getCachedElement('recording-indicator');
+        if (isRecording !== dataCache.lastIsRecording || isPlaying !== dataCache.lastIsPlaying) {
+            if (isRecording) {
+                statusBar.style.background = '#ff3333';
+                if (recordingIndicator) recordingIndicator.classList.add('visible');
+            } else if (isPlaying) {
+                statusBar.style.background = '#1ecb4f';
+                if (recordingIndicator) recordingIndicator.classList.remove('visible');
+            } else {
+                statusBar.style.background = 'transparent';
+                if (recordingIndicator) recordingIndicator.classList.remove('visible');
+            }
+            dataCache.lastIsRecording = isRecording;
+            dataCache.lastIsPlaying   = isPlaying;
+        }
+
+        if (dataCache.browseListNeedsUpdate) { pendingUpdate = true; throttledUpdate(); }
+
+        var playheadPos = processedData.playheadPos;
+        var mainRegionText = '', progressRegionName = '', sceneText = '';
+        var currentRegionObj = null;
+        var epsilon = 0.0001;
+
+        if (playheadPos !== null && regionData.length > 0) {
+            var dR = dataCache.dialogueRegions;
+            for (var i = 0; i < dR.length; i++) {
+                if (dR[i].start - epsilon <= playheadPos && playheadPos < dR[i].end - epsilon) {
+                    currentRegionObj = dR[i]; break;
+                }
+            }
+            if (!currentRegionObj) {
+                for (var i = dR.length - 1; i >= 0; i--) {
+                    if (dR[i].start - epsilon <= playheadPos) { currentRegionObj = dR[i]; break; }
+                }
+            }
+        }
+
+        if (currentRegionObj !== dataCache.lastCurrentRegion) dataCache.lastCurrentRegion = currentRegionObj;
+
+        var sceneRegions = dataCache.sceneRegions;
+        var lastSceneObj = null;
+        for (var i = sceneRegions.length - 1; i >= 0; i--) {
+            var r = sceneRegions[i];
+            if (currentRegionObj && r.start <= currentRegionObj.start + epsilon) { lastSceneObj = r; break; }
+            else if (!currentRegionObj && playheadPos !== null && r.start <= playheadPos + epsilon) { lastSceneObj = r; break; }
+        }
+
+        if (currentRegionObj) {
+            if (isDialogueRegion(currentRegionObj.name)) {
+                mainRegionText   = extractEntryName(currentRegionObj.name);
+                progressRegionName = currentRegionObj.name;
+                if (lastSceneObj) sceneText = extractSceneOrStimulusName(lastSceneObj.name) || lastSceneObj.name;
+            } else {
+                sceneText = extractSceneOrStimulusName(currentRegionObj.name) || currentRegionObj.name;
+                var found = false;
+                for (var i = 0; i < dataCache.dialogueRegions.length; i++) {
+                    if (dataCache.dialogueRegions[i].start > currentRegionObj.start) {
+                        mainRegionText   = extractEntryName(dataCache.dialogueRegions[i].name);
+                        progressRegionName = dataCache.dialogueRegions[i].name;
+                        found = true; break;
+                    }
+                }
+                if (!found) { mainRegionText = 'No entry'; progressRegionName = ''; }
+            }
+        } else {
+            if (processedData.region && isDialogueRegion(processedData.region)) {
+                mainRegionText   = extractEntryName(processedData.region);
+                progressRegionName = processedData.region;
+            } else { mainRegionText = 'No entry'; progressRegionName = ''; }
+        }
+
+        // ── Track
+        var trackElement = getCachedElement('track');
+        if (processedData.track !== dataCache.lastTrack) {
+            if (processedData.track) { trackElement.textContent = processedData.track; trackElement.style.display = 'block'; }
+            else trackElement.style.display = 'none';
+            dataCache.lastTrack = processedData.track;
+        }
+
+        // ── Entry text
+        var regionElement = getCachedElement('region');
+        if (regionElement.textContent !== mainRegionText) regionElement.textContent = mainRegionText;
+
+        // ── Category
+        var catElem = getCachedElement('category');
+        if (sceneText !== dataCache.lastSceneText) {
+            if (sceneText) {
+                catElem.textContent = sceneText;
+                catElem.classList.remove('category-absent'); catElem.classList.add('category-present');
+            } else {
+                catElem.textContent = 'No category';
+                catElem.classList.remove('category-present'); catElem.classList.add('category-absent');
+            }
+            dataCache.lastSceneText = sceneText;
+        }
+
+        // ── Armed track
+        var armedElem = getCachedElement('armed-track');
+        if (processedData.armedTrack !== dataCache.lastArmedTrack) {
+            armedElem.textContent = processedData.armedTrack ? 'Armed Track: ' + processedData.armedTrack : 'No armed track';
+            dataCache.lastArmedTrack = processedData.armedTrack;
+        }
+
+        // ── Character label
+        var characterLabel = '';
+        if (currentRegionObj && dataCache.characterMarkers.length > 0) {
+            for (var i = dataCache.characterMarkers.length - 1; i >= 0; i--) {
+                if (dataCache.characterMarkers[i].start < currentRegionObj.start) {
+                    characterLabel = dataCache.characterMarkers[i].name; break;
+                }
+            }
+        }
+        var charElem     = getCachedElement('character');
+        var charNameElem = getCachedElement('character-name');
+        if (characterLabel !== dataCache.lastCharacterLabel) {
+            if (characterLabel) {
+                charElem.textContent = 'Speaker: ' + characterLabel;
+                charElem.classList.remove('character-absent'); charElem.classList.add('character-present');
+                charElem.style.display = visState.speaker ? 'block' : 'none';
+                charNameElem.textContent = characterLabel;
+                charNameElem.style.display = visState.speaker ? 'block' : 'none';
+            } else {
+                charElem.style.display = 'none';
+                charNameElem.textContent = ''; charNameElem.style.display = 'none';
+            }
+            dataCache.lastCharacterLabel = characterLabel;
+        }
+
+        // ── Delivery
+        var deliveryElem = getCachedElement('delivery');
+        if (deliveryElem) {
+            var deliveryText = '';
+            var posForDelivery = currentRegionObj ? currentRegionObj.start : playheadPos;
+            if (Array.isArray(dataCache.deliveryMarkers) && dataCache.deliveryMarkers.length > 0 && posForDelivery !== null) {
+                for (var i = dataCache.deliveryMarkers.length - 1; i >= 0; i--) {
+                    if (dataCache.deliveryMarkers[i].start <= posForDelivery) { deliveryText = dataCache.deliveryMarkers[i].name; break; }
+                }
+            }
+            if (deliveryText !== dataCache.lastDeliveryText) {
+                if (deliveryText) {
+                    deliveryElem.textContent = 'Delivery: ' + deliveryText;
+                    deliveryElem.classList.remove('delivery-absent'); deliveryElem.classList.add('delivery-present');
+                    deliveryElem.style.display = 'block';
+                } else deliveryElem.style.display = 'none';
+                dataCache.lastDeliveryText = deliveryText;
+            }
+        }
+
+        updateProgressBar(progressRegionName);
+
+        // ── Previous / next lines
+        var prevDialogue = '', prevSpeaker = '', nextDialogue = '', nextSpeaker = '';
+        if (currentRegionObj && dataCache.dialogueRegions.length > 0) {
+            var sStart = -Infinity, sEnd = Infinity;
+            for (var i = 0; i < sceneRegions.length; i++) {
+                if (sceneRegions[i].start <= currentRegionObj.start) sStart = sceneRegions[i].start;
+                else if (sceneRegions[i].start > currentRegionObj.start && sEnd === Infinity) { sEnd = sceneRegions[i].start; break; }
+            }
+            var inScene = dataCache.dialogueRegions.filter(function(r) { return r.start >= sStart && r.start < sEnd; });
+            var idxInScene = -1;
+            for (var i = 0; i < inScene.length; i++) {
+                if (inScene[i] === currentRegionObj) { idxInScene = i; break; }
+            }
+            if (idxInScene > 0) {
+                var prev = inScene[idxInScene - 1];
+                prevDialogue = extractEntryName(prev.name);
+                for (var i = dataCache.characterMarkers.length - 1; i >= 0; i--) {
+                    if (dataCache.characterMarkers[i].start < prev.start) { prevSpeaker = dataCache.characterMarkers[i].name; break; }
+                }
+            }
+            if (idxInScene >= 0 && idxInScene < inScene.length - 1) {
+                var next = inScene[idxInScene + 1];
+                nextDialogue = extractEntryName(next.name);
+                for (var i = dataCache.characterMarkers.length - 1; i >= 0; i--) {
+                    if (dataCache.characterMarkers[i].start < next.start) { nextSpeaker = dataCache.characterMarkers[i].name; break; }
+                }
+            }
+        }
+        var prevElem       = getCachedElement('previous-line');
+        var prevSpkrElem   = getCachedElement('previous-speaker');
+        var nextElem       = getCachedElement('next-line');
+        var nextSpkrElem   = getCachedElement('next-speaker');
+        if (prevElem && prevElem.textContent !== prevDialogue) prevElem.textContent = prevDialogue || '';
+        if (prevSpkrElem) { var pt = prevSpeaker ? prevSpeaker + ':' : ''; if (prevSpkrElem.textContent !== pt) prevSpkrElem.textContent = pt; }
+        if (nextElem && nextElem.textContent !== nextDialogue) nextElem.textContent = nextDialogue || '';
+        if (nextSpkrElem) { var nt = nextSpeaker ? nextSpeaker + ':' : ''; if (nextSpkrElem.textContent !== nt) nextSpkrElem.textContent = nt; }
+
+        dataCache.lastPlayheadPos = playheadPos;
+    }
+
+    // ── Navigate speaker entries (prev/next entry for active speaker) ─────
+    function navigateSpeakerEntry(direction) {
+        // Active speaker = armed track name, falling back to the current speaker label
+        var speaker = (dataCache.lastArmedTrack || dataCache.lastCharacterLabel || '').trim();
+        if (!speaker) return;
+        var speakerLower = speaker.toLowerCase();
+
+        // Build ordered list of all dialogue entries attributed to this speaker
+        var speakerEntries = dataCache.dialogueRegions.filter(function(r) {
+            var spk = '';
+            for (var i = dataCache.characterMarkers.length - 1; i >= 0; i--) {
+                if (dataCache.characterMarkers[i].start < r.start) {
+                    spk = dataCache.characterMarkers[i].name;
+                    break;
+                }
+            }
+            return spk.toLowerCase() === speakerLower;
+        });
+
+        if (!speakerEntries.length) return;
+
+        var cur = dataCache.lastCurrentRegion;
+        var idx = cur ? speakerEntries.indexOf(cur) : -1;
+
+        // If we're not in a speaker entry, jump to the nearest one in the requested direction
+        if (idx === -1) {
+            var pos = dataCache.lastPlayheadPos;
+            if (pos === null) { wwr_req('SET/POS/' + speakerEntries[0].start); return; }
+            if (direction > 0) {
+                var found = speakerEntries.find(function(r) { return r.start > pos; });
+                if (found) wwr_req('SET/POS/' + found.start);
+            } else {
+                var found2 = null;
+                for (var i = speakerEntries.length - 1; i >= 0; i--) {
+                    if (speakerEntries[i].start < pos) { found2 = speakerEntries[i]; break; }
+                }
+                if (found2) wwr_req('SET/POS/' + found2.start);
+            }
+            return;
+        }
+
+        var target = speakerEntries[idx + direction];
+        if (target) wwr_req('SET/POS/' + target.start);
+    }
+
+    // ── Navigate speaker (prev/next track — select + arm) ─────────────────
+    function navigateSpeaker(direction) {
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState !== 4 || xhr.status !== 200) return;
+            var lines = xhr.responseText.split('\n');
+            var tracks = [];
+            var armedIdx = -1;
+            for (var i = 0; i < lines.length; i++) {
+                var tok = lines[i].split('\t');
+                if (tok[0] === 'TRACK') {
+                    var flags = parseInt(tok[3] || '0');
+                    tracks.push({ n: tok[1], name: (tok[2] || '').trim(), flags: flags });
+                    if (flags & 64) armedIdx = tracks.length - 1;
+                }
+            }
+            var targetIdx = armedIdx + direction;
+            if (targetIdx < 0 || targetIdx >= tracks.length) return;
+            var t = tracks[targetIdx];
+            // Deselect + unarm all, then select + arm the target track
+            var cmds = tracks.map(function(tr) {
+                return 'SET/TRACK/' + tr.n + '/SEL/0;SET/TRACK/' + tr.n + '/I_RECARM/0';
+            }).join(';');
+            cmds += ';SET/TRACK/' + t.n + '/SEL/1;SET/TRACK/' + t.n + '/I_RECARM/1';
+            wwr_req(cmds);
+        };
+        xhr.open('GET', '/_/TRACK', true);
+        xhr.send(null);
+    }
+
+    // ── Navigate category ──────────────────────────────────────────────────
+    function navigateScene(direction) {
+        if (!dataCache.sceneRegions.length) return;
+        var scenes = dataCache.sceneRegions;
+        var pos    = dataCache.lastPlayheadPos;
+        if (pos === null) return;
+        var currentIdx = -1;
+        for (var i = 0; i < scenes.length; i++) {
+            if (scenes[i].start <= pos && (i === scenes.length - 1 || scenes[i+1].start > pos)) { currentIdx = i; break; }
+        }
+        var target = currentIdx + direction;
+        if (target < 0 || target >= scenes.length) return;
+        var tScene = scenes[target];
+        var nextStart = scenes[target+1] ? scenes[target+1].start : Infinity;
+        var first = dataCache.dialogueRegions.find(function(r) { return r.start >= tScene.start && r.start < nextStart; });
+        if (first) wwr_req('SET/POS/' + first.start);
+    }
+
+    // ── wwr_req ────────────────────────────────────────────────────────────
+    function wwr_req(cmd) {
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", "/_/" + cmd, true);
+        xhr.send(null);
+    }
+
+    // ── Select character track ─────────────────────────────────────────────
+    function selectCharacterTrack() {
+        var charElem = getCachedElement('character');
+        if (!charElem) return;
+        var match = (charElem.textContent || '').match(/Speaker: (.+)/);
+        if (!match) return;
+        var characterName = match[1].trim();
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState !== 4 || xhr.status !== 200) return;
+            var lines = xhr.responseText.split('\n');
+            var allIdx = [], targetIdx = null;
+            for (var i = 0; i < lines.length; i++) {
+                var tok = lines[i].split('\t');
+                if (tok[0] === 'TRACK') {
+                    allIdx.push(tok[1]);
+                    if (tok[2] && tok[2].trim().toLowerCase() === characterName.toLowerCase()) targetIdx = tok[1];
+                }
+            }
+            if (targetIdx !== null) {
+                var deselectCmds = allIdx.map(function(idx) { return 'SET/TRACK/' + idx + '/SEL/0;SET/TRACK/' + idx + '/I_RECARM/0'; }).join(';');
+                wwr_req(deselectCmds + ';SET/TRACK/' + targetIdx + '/SEL/1;SET/TRACK/' + targetIdx + '/I_RECARM/1');
+            }
+        };
+        xhr.open('GET', '/_/TRACK', true);
+        xhr.send(null);
+    }
+
+    // ── Toggle record ──────────────────────────────────────────────────────
+    function toggleRecord() {
+        var isRecording = false;
+        var transportLine = (window.lastLines || []).find(function(l) { return l.startsWith('TRANSPORT'); });
+        if (transportLine) {
+            var tok = transportLine.split('\t');
+            if (tok[1] && (parseInt(tok[1]) & 4)) isRecording = true;
+        }
+        var statusBar = getCachedElement('status-bar');
+        var recordButton = getCachedElement('record-button');
+        var recordingIndicator = getCachedElement('recording-indicator');
+        if (isRecording) {
+            wwr_req(1016);
+            statusBar.style.background = 'transparent';
+            recordButton.classList.remove('active');
+            if (recordingIndicator) recordingIndicator.classList.remove('visible');
+            dataCache.lastIsRecording = false;
+        } else {
+            wwr_req(1013);
+            statusBar.style.background = '#ff3333';
+            recordButton.classList.add('active');
+            if (recordingIndicator) recordingIndicator.classList.add('visible');
+            dataCache.lastIsRecording = true;
+        }
+    }
+
+    // ── Init on load ───────────────────────────────────────────────────────
+    window.addEventListener('DOMContentLoaded', function() {
+        preCacheElements();
+        toggleContextLines(); toggleContextLines(); // initialise state
+
+        var browseSearch = getCachedElement('browse-search');
+        if (browseSearch) {
+            browseSearch.addEventListener('input', debounce(function() {
+                dataCache.browseListNeedsUpdate = true;
+                updateBrowseList();
+            }, 150));
+        }
+    });
+
+    function debounce(func, wait) {
+        var timeout;
+        return function() {
+            clearTimeout(timeout);
+            timeout = setTimeout(function() { clearTimeout(timeout); func(); }, wait);
+        };
+    }
+
+    // ── Debug ──────────────────────────────────────────────────────────────
+    function debugLogData(lines) {
+        var regions = lines.filter(function(l) { return l.startsWith('REGION'); });
+        var markers = lines.filter(function(l) { return l.startsWith('MARKER'); });
+        if (regions.length > 0 || markers.length > 0) {
+            console.log('=== REAPER Data ===');
+            console.log('Entries/Regions:', regions.length);
+            regions.slice(0,5).forEach(function(r) { console.log('  ', r); });
+            console.log('Markers:', markers.length);
+            markers.slice(0,5).forEach(function(m) { console.log('  ', m); });
+        }
+    }
+
+    // ── Adaptive polling ───────────────────────────────────────────────────
+    var adaptivePolling = {
+        currentInterval: 50, maxInterval: 500, minInterval: 50,
+        responseTimes: [],
+        adjustInterval: function(rt) {
+            this.responseTimes.push(rt);
+            if (this.responseTimes.length > 10) this.responseTimes.shift();
+            var avg = this.responseTimes.reduce(function(a,b){return a+b;},0) / this.responseTimes.length;
+            if (avg > 200) this.currentInterval = Math.min(this.currentInterval * 1.2, this.maxInterval);
+            else if (avg < 100) this.currentInterval = Math.max(this.currentInterval * 0.9, this.minInterval);
+        },
+        start: function() {
+            var self = this;
+            function poll() {
+                var t0 = performance.now();
+                wwrreqloopxhr = new XMLHttpRequest();
+                wwrreqloopxhr.onload = function() {
+                    self.adjustInterval(performance.now() - t0);
+                    if (this.status == 200) wwr_onreply(this.responseText);
+                    setTimeout(poll, self.currentInterval);
+                };
+                wwrreqloopxhr.onerror = function() { setTimeout(poll, 1000); };
+                wwrreqloopxhr.open("GET", "/_/TRACK;GET/PROJEXTSTATE/XR_Lyrics/region_text;GET/PROJEXTSTATE/XR_Lyrics/category_text;GET/PROJEXTSTATE/XR_Lyrics/delivery_text;TRANSPORT;REGION;MARKER", true);
+                wwrreqloopxhr.send(null);
+            }
+            poll();
+        }
+    };
+    adaptivePolling.start();
+
+    // Keep lastLines for playhead position
+    window.lastLines = [];
+    var origWwrOnReply = wwr_onreply;
+    wwr_onreply = function(results) {
+        window.lastLines = results.split('\n');
+        dataCache.lastLines = window.lastLines;
+        var tl = window.lastLines.find(function(l) { return l.startsWith('TRANSPORT'); });
+        if (tl) { var tok = tl.split('\t'); dataCache.lastPlayheadPos = parseFloat(tok[2]); }
+        if (origWwrOnReply) origWwrOnReply(results);
+    };
+</script>
+</body>
+</html>

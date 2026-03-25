@@ -1,0 +1,7539 @@
+<REAPER_PROJECT 0.1 "7.62/win64" 1774470180 0
+  RECTAG Value
+  RIPPLE 0 0
+  GROUPOVERRIDE 0 0 0 0
+  AUTOXFADE 393
+  ENVATTACH 1
+  POOLEDENVATTACH 0
+  TCPUIFLAGS 0
+  MIXERUIFLAGS 11 48
+  PEAKGAIN 1
+  FEEDBACK 0
+  AUTOBYPASS 1 -90
+  PANLAW 1
+  PROJOFFS 0 -4400 0
+  MAXPROJLEN 0 600
+  GRID 3711 8 1 8 1 0 0 0.04
+  TIMEMODE 1 5 -1 30 0 0 -1 0
+  VIDEO_CONFIG 0 0 256
+  PANMODE 3
+  CURSOR 120.5
+  ZOOM 28.62818677227413 3029 0
+  VZOOMEX 0 0
+  USE_REC_CFG 0
+  RECMODE 0
+  SMPTESYNC 0 30 100 40 1000 300 0 0 1 0 0
+  LOOP 0
+  LOOPGRAN 0 4
+  RECORD_PATH "/media" "/recording"
+  <RECORD_CFG
+    ZXZhdxgAAA==
+  >
+  <APPLYFX_CFG
+  >
+  RENDER_FILE ""
+  RENDER_PATTERN ""
+  RENDER_FMT 0 2 0
+  RENDER_1X 0
+  RENDER_RANGE 1 0 0 18 1500
+  RENDER_RESAMPLE 3 0 1
+  RENDER_ADDTOPROJ 0
+  RENDER_STEMS 8
+  RENDER_DITHER 0
+  RENDER_NORMALIZE 1024 0.063096 1 0 0.3 1 1
+  RENDER_TRIM 0.000001 0.000001 0 0
+  TIMELOCKMODE 1
+  TEMPOENVLOCKMODE 1
+  ITEMMIX 0
+  DEFPITCHMODE 589824 0
+  TAKELANE 1
+  SAMPLERATE 48000 1 0
+  <RENDER_CFG
+    ZXZhdxhIAA==
+  >
+  LOCK 1
+  <METRONOME 7 2
+    VOL 0.25 0.125
+    BEATLEN 4
+    FREQ 800 1600 1
+    SAMPLES "" "" "" ""
+    SPLIGNORE 0 0
+    SPLDEF 2 660 "" 0 ""
+    SPLDEF 3 440 "" 0 ""
+    PATTERN 0 169
+    PATTERNSTR ABBB
+    MULT 1
+  >
+  GLOBAL_AUTO -1
+  TEMPO 120 4 4 0
+  PLAYRATE 1 0 0.25 4
+  SELECTION 0 0
+  SELECTION2 0 0
+  MASTERAUTOMODE 0
+  MASTERTRACKHEIGHT 117 0
+  MASTERPEAKCOL 16576
+  MASTERMUTESOLO 2
+  MASTERTRACKVIEW 1 0.6667 0.5 0.5 0 0 0 0 0 0 0 0 0 0 1
+  MASTERHWOUT 0 0 1 0 0 0 0 -1
+  MASTER_NCH 2 2
+  MASTER_VOLUME 1 0 -1 -1 1
+  MASTER_FX 1
+  MASTER_SEL 0
+  <MASTERPLAYSPEEDENV
+    EGUID {958BE60D-B5A7-4687-A2AD-1A6F394C386E}
+    ACT 0 -1
+    VIS 0 1 1
+    LANEHEIGHT 0 0
+    ARM 0
+    DEFSHAPE 0 -1 -1
+  >
+  <TEMPOENVEX
+    EGUID {915D94DE-D119-4341-AFF3-C1A16303C498}
+    ACT 1 -1
+    VIS 1 0 1
+    LANEHEIGHT 0 0
+    ARM 0
+    DEFSHAPE 1 -1 -1
+  >
+  RULERHEIGHT 172 98
+  RULERLANE 1 4 "" 0 -1
+  RULERLANE 2 8 "" 0 -1
+  MARKER 1 -0.5 Category=Category 0 0 1 R {038C3101-A06A-4DCF-A51F-795E623DA990} 0 2
+  MARKER 88 -0.5 Category=Category 1 26666928 1 R {0C4895FF-D6BB-4097-9752-87CB8F28BCDB} 0 1
+  MARKER 88 12.5 "" 1
+  MARKER 2 1.5 Speaker=Speaker 0 0 1 R {355CFDED-F9A6-4AE8-93C1-D7345B7408E6} 0 2
+  MARKER 3 1.5 Speaker=Speaker 0 0 1 R {E606E151-E909-46BA-8D1D-798A88F0CF2C} 0 2
+  MARKER 1 2.5 Entry=Entry 1 23290879 1 R {890DAF31-0BD4-4A10-A374-C9DDD254F0DA} 0 1
+  MARKER 1 12.5 "" 1
+  MARKER 4 44.5 Category=Act5_Scene1_Graveyard 0 0 1 R {BEC2FDEB-2763-4011-9A24-9738743D24E7} 0 2
+  MARKER 89 44.5 Category=Act5_Scene1_Graveyard 1 26666928 1 R {023EE1B0-7DDD-45EE-A0B7-2E3A0D8B8281} 0 1
+  MARKER 89 1332.5 "" 1
+  MARKER 5 46.5 "Speaker=First Clown" 0 0 1 R {406E254E-6DE1-42E4-8250-7700133A2D60} 0 2
+  MARKER 6 46.5 "Speaker=First Clown" 0 0 1 R {92CC6E44-16E0-408D-95B6-C79BAEB3BC6E} 0 2
+  MARKER 2 47.5 "Entry=Is she to be buried in Christian burial that wilfully seeks her own salvation?" 1 21997311 1 R {8986045B-4E83-4B3A-9781-05B4CA2C48BA} 0 1
+  MARKER 2 57.5 "" 1
+  MARKER 7 61.5 "Speaker=Second Clown" 0 0 1 R {1564684B-C3C8-4FA8-B99F-8F99D93326F5} 0 2
+  MARKER 8 61.5 "Speaker=Second Clown" 0 0 1 R {8A2C5B1A-0DE9-4AF0-9D37-FF1D29255AF3} 0 2
+  MARKER 3 62.5 "Entry=I tell thee she is; and therefore make her grave straight: the crowner hath sat on her and finds it Christian burial." 1 21997311 1 R {9CE1F6E1-8C8C-41E5-BA9E-075960651C3E} 0 1
+  MARKER 3 72.5 "" 1
+  MARKER 9 76.5 "Speaker=First Clown" 0 0 1 R {DEE967B4-EF11-474E-83B0-507C1020CE4B} 0 2
+  MARKER 10 76.5 "Speaker=First Clown" 0 0 1 R {FA033217-32F4-4F0E-ABA9-9E27A044976B} 0 2
+  MARKER 4 77.5 "Entry=How can that be unless she drowned herself in her own defence?" 1 21997311 1 R {DF5F4915-9DEC-4078-841A-A8CDAEC4BCA5} 0 1
+  MARKER 4 87.5 "" 1
+  MARKER 11 91.5 "Speaker=Second Clown" 0 0 1 R {6BA0A2E8-947E-402C-88A4-D5A5ECEC22DD} 0 2
+  MARKER 12 91.5 "Speaker=Second Clown" 0 0 1 R {B31AD002-AC46-4102-8E31-641085D140F2} 0 2
+  MARKER 5 92.5 "Entry=Why 'tis found so." 1 21997311 1 R {01B6DA2C-5777-42C5-A96E-5CCEDDAE1EA3} 0 1
+  MARKER 5 102.5 "" 1
+  MARKER 13 106.5 "Speaker=First Clown" 0 0 1 R {55350977-0BBB-4CE6-843C-4D575469BA94} 0 2
+  MARKER 14 106.5 "Speaker=First Clown" 0 0 1 R {7D4E2C93-339C-4EC5-859C-A11BF5F689C0} 0 2
+  MARKER 6 107.5 "Entry=It must be se offendendo; it cannot be else. For here lies the point: if I drown myself wittingly it argues an act: and an act hath three branches--it is to act to do to perform: argal she drowned herself wittingly." 1 21997311 1 R {86FDD68E-B5DB-4B70-B02A-EB2CD45F332B} 0 1
+  MARKER 6 117.5 "" 1
+  MARKER 15 121.5 "Speaker=Second Clown" 0 0 1 R {D453F325-B6A8-490A-A39E-BA01FEDC0836} 0 2
+  MARKER 16 121.5 "Speaker=Second Clown" 0 0 1 R {8A70478A-BE4B-4CFF-8A59-C664738F19AA} 0 2
+  MARKER 7 122.5 "Entry=Nay but hear you Goodman Delver--" 1 21997311 1 R {8511A949-DF4F-4995-9224-731F884BDAAE} 0 1
+  MARKER 7 132.5 "" 1
+  MARKER 17 136.5 "Speaker=good: or if he come to the water and drown himself" 0 0 1 R {0BA4D1C0-0347-47EA-8102-662745B9B81B} 0 2
+  MARKER 18 136.5 "Speaker=good: or if he come to the water and drown himself" 0 0 1 R {945E4538-948C-463F-A898-AED8E1183DA7} 0 2
+  MARKER 8 137.5 "Entry=Give me leave. Here lies the water; good: here stands the man; good: if the man go to this water and drown himself" 1 21997311 1 R {257B1CD4-7B0F-45B8-84DB-780E4625A3FA} 0 1
+  MARKER 8 147.5 "" 1
+  MARKER 19 151.5 "Speaker=Second Clown" 0 0 1 R {CF07E4B6-B341-4DC7-A28A-A1E5293B8655} 0 2
+  MARKER 20 151.5 "Speaker=Second Clown" 0 0 1 R {D1EF00BF-5883-4424-89F2-E641F04762F4} 0 2
+  MARKER 9 152.5 "Entry=But is this law?" 1 21997311 1 R {D0CA2E59-5131-4F66-8A90-10E33517D1EC} 0 1
+  MARKER 9 162.5 "" 1
+  MARKER 21 166.5 "Speaker=First Clown" 0 0 1 R {295BAE4B-677B-4726-851B-1B5333F95C76} 0 2
+  MARKER 22 166.5 "Speaker=First Clown" 0 0 1 R {CFCFE0E0-F200-4B50-9CCB-03444BF26652} 0 2
+  MARKER 10 167.5 "Entry=Ay marry is't--crowner's quest law." 1 21997311 1 R {529E7007-1AFC-4A9F-9474-F71EAF076351} 0 1
+  MARKER 10 177.5 "" 1
+  MARKER 23 181.5 "Speaker=Second Clown" 0 0 1 R {3B94AFD7-C89F-45EA-92CE-F385D9DD33E5} 0 2
+  MARKER 24 181.5 "Speaker=Second Clown" 0 0 1 R {741E2C15-7B2B-440E-83A4-E595E7FB954A} 0 2
+  MARKER 11 182.5 "Entry=Will you ha' the truth on't? If this had not been a gentlewoman she should have been buried out o' Christian burial." 1 21997311 1 R {4C476D6F-DE19-410B-B98F-0351BDE45A0A} 0 1
+  MARKER 11 192.5 "" 1
+  MARKER 25 196.5 "Speaker=my spade." 0 0 1 R {A810170D-BC54-4EA7-B54C-B54D41C66B1C} 0 2
+  MARKER 26 196.5 "Speaker=my spade." 0 0 1 R {32D77301-92FE-4753-9270-0BB84BC35C8A} 0 2
+  MARKER 12 197.5 "Entry=Why there thou say'st: and the more pity that great folk should have countenance in this world to drown or hang themselves more than their even Christian. Come" 1 21997311 1 R {8521A49D-F2B9-4378-A24F-02A84C00EE17} 0 1
+  MARKER 12 207.5 "" 1
+  MARKER 27 211.5 "Speaker=Second Clown" 0 0 1 R {C2A0FF5F-2F22-41C0-93B5-3BC0E9615B9B} 0 2
+  MARKER 28 211.5 "Speaker=Second Clown" 0 0 1 R {48E3363E-32EC-4FB7-9371-8A313A6980E4} 0 2
+  MARKER 13 212.5 "Entry=Go to." 1 21997311 1 R {D7953D7A-77A4-4A24-8669-F8F096870E69} 0 1
+  MARKER 13 222.5 "" 1
+  MARKER 29 226.5 "Speaker=First Clown" 0 0 1 R {0C70D5D1-8453-453C-9848-BFA0B988082C} 0 2
+  MARKER 30 226.5 "Speaker=First Clown" 0 0 1 R {527F5BCC-C906-4180-B5A3-892942229ECA} 0 2
+  MARKER 14 227.5 "Entry=What is he that builds stronger than either the mason the shipwright or the carpenter?" 1 21997311 1 R {35121AA0-ADAA-4148-91F4-8A9A95256CBA} 0 1
+  MARKER 14 237.5 "" 1
+  MARKER 31 241.5 "Speaker=Second Clown" 0 0 1 R {6FA39A8A-9839-4B67-B014-717EF74555DA} 0 2
+  MARKER 32 241.5 "Speaker=Second Clown" 0 0 1 R {F9D12E6E-61D9-426B-8A70-32C2600BB762} 0 2
+  MARKER 15 242.5 "Entry=The gallows-maker; for that frame outlives a thousand tenants." 1 21997311 1 R {2B0F14C2-F8F2-4542-A1EA-8E441F0A102F} 0 1
+  MARKER 15 252.5 "" 1
+  MARKER 33 256.5 "Speaker=First Clown" 0 0 1 R {506F29C9-3ABF-4C02-8B70-F9E160F21081} 0 2
+  MARKER 34 256.5 "Speaker=First Clown" 0 0 1 R {27F80786-F5F4-41D0-8E85-5D0D42297276} 0 2
+  MARKER 16 257.5 "Entry=I like thy wit well in good faith: the gallows does well; but how does it well? it does well to those that do ill: now thou dost ill to say the gallows is built stronger than the church: argal the gallows may do well to thee." 1 21997311 1 R {60512B59-45E9-4184-8C81-A1D4786C7686} 0 1
+  MARKER 16 267.5 "" 1
+  MARKER 35 271.5 "Speaker=Second Clown" 0 0 1 R {A4D2F8D6-BD54-4607-9749-31653687EDC6} 0 2
+  MARKER 36 271.5 "Speaker=Second Clown" 0 0 1 R {89F3B99B-0681-45CF-BA56-8A3F66DF56CA} 0 2
+  MARKER 17 272.5 "Entry=Who builds stronger than a mason a shipwright or a carpenter?" 1 21997311 1 R {14755D4B-0B58-422D-81FB-065F1D2E8572} 0 1
+  MARKER 17 282.5 "" 1
+  MARKER 37 286.5 "Speaker=First Clown" 0 0 1 R {B341957E-F2EB-4E1B-8A72-DB5AEBDCC3DF} 0 2
+  MARKER 38 286.5 "Speaker=First Clown" 0 0 1 R {70D2D600-8962-4990-9FF8-1D78229C40B0} 0 2
+  MARKER 18 287.5 "Entry=Ay tell me that and unyoke." 1 21997311 1 R {67328A98-8F9E-414E-BAF4-DA3A69A1866C} 0 1
+  MARKER 18 297.5 "" 1
+  MARKER 39 301.5 "Speaker=Second Clown" 0 0 1 R {5E0739B5-8C8D-43E1-AE07-C98EFF4FD1DF} 0 2
+  MARKER 40 301.5 "Speaker=Second Clown" 0 0 1 R {C7357F6C-75AA-4121-B1CE-0E2033EAC857} 0 2
+  MARKER 19 302.5 "Entry=Marry now I can tell." 1 21997311 1 R {03FF3FE0-C70E-4C3E-BA0F-1BF1FE3C9995} 0 1
+  MARKER 19 312.5 "" 1
+  MARKER 41 316.5 "Speaker=First Clown" 0 0 1 R {EB89F304-BDC4-4FF0-8213-F5D9AC45B767} 0 2
+  MARKER 42 316.5 "Speaker=First Clown" 0 0 1 R {6C1FA5ED-D3EE-4391-8C50-B0ADF804CA8D} 0 2
+  MARKER 20 317.5 Entry=To't. 1 21997311 1 R {CCEF0271-E970-4068-B427-3807BD9730FE} 0 1
+  MARKER 20 327.5 "" 1
+  MARKER 43 331.5 "Speaker=Second Clown" 0 0 1 R {222046C5-0593-4E40-AE3A-F715E968D3B4} 0 2
+  MARKER 44 331.5 "Speaker=Second Clown" 0 0 1 R {5FD45B8D-8A0B-4E89-88C3-051D8C2B6401} 0 2
+  MARKER 21 332.5 "Entry=Mass I cannot tell." 1 21997311 1 R {0A0A259C-40C5-4402-AFCB-3688B3C5B724} 0 1
+  MARKER 21 342.5 "" 1
+  MARKER 45 346.5 "Speaker=First Clown" 0 0 1 R {EDFA0B68-D8E0-463E-81BD-8026E7E1FFD0} 0 2
+  MARKER 46 346.5 "Speaker=First Clown" 0 0 1 R {7033F5C4-5042-4117-A643-B1FB5ADDED54} 0 2
+  MARKER 22 347.5 "Entry=Cudgel thy brains no more about it for your dull ass will not mend his pace with beating; and when you are asked this question next say 'a grave-maker:' the houses that he makes last till doomsday." 1 21997311 1 R {FCDD2FC2-65FA-4003-BABB-43C113B72C59} 0 1
+  MARKER 22 357.5 "" 1
+  MARKER 47 361.5 "Speaker=Second Clown" 0 0 1 R {DE282906-6045-48D4-8B02-E61AED9A9FFA} 0 2
+  MARKER 48 361.5 "Speaker=Second Clown" 0 0 1 R {9A27327E-AE70-47EA-A96C-E9E6583A838F} 0 2
+  MARKER 23 362.5 "Entry=Go get thee to Yaughan; fetch me a stoup of liquor." 1 21997311 1 R {CA12D16C-3ECF-4774-A461-D9F2E12AD843} 0 1
+  MARKER 23 372.5 "" 1
+  MARKER 49 376.5 "Speaker=First Clown" 0 0 1 R {6B3A234D-039E-4D79-90A2-23E29A8EC88B} 0 2
+  MARKER 50 376.5 "Speaker=First Clown" 0 0 1 R {EF54EDB2-56C0-49DB-A4A9-F6951CA6D47B} 0 2
+  MARKER 24 377.5 "Entry=In youth when I did love did love methought it was very sweet; To contract O the time for ah my behove methought there was nothing meet." 1 21997311 1 R {286093D2-6E88-4B3D-80A8-CD4FDB3468EC} 0 1
+  MARKER 24 387.5 "" 1
+  MARKER 51 391.5 Speaker=Hamlet 0 0 1 R {B4014374-AA6A-49BD-8EFF-88D641D60935} 0 2
+  MARKER 52 391.5 Speaker=Hamlet 0 0 1 R {A21E79BA-EFA2-4280-A137-DB35D4A864E3} 0 2
+  MARKER 25 392.5 "Entry=Has this fellow no feeling of his business that he sings at grave-making?" 1 21997311 1 R {140CFD69-167A-4A6B-8E6A-1729A7DBE000} 0 1
+  MARKER 25 402.5 "" 1
+  MARKER 53 406.5 Speaker=Horatio 0 0 1 R {97936394-A75F-44CE-BAC0-45CEED2961A1} 0 2
+  MARKER 54 406.5 Speaker=Horatio 0 0 1 R {9408463F-089E-443D-B9DF-BB3B54EAC7AB} 0 2
+  MARKER 26 407.5 "Entry=Custom hath made it in him a property of easiness." 1 21997311 1 R {7619B9E9-F236-48AC-A89E-735A86E77A79} 0 1
+  MARKER 26 417.5 "" 1
+  MARKER 55 421.5 Speaker=Hamlet 0 0 1 R {BF5997A9-2111-4B3A-9A43-345A8F667CD1} 0 2
+  MARKER 56 421.5 Speaker=Hamlet 0 0 1 R {1A7F8796-F010-4308-BA6C-CFA0E4E9812A} 0 2
+  MARKER 27 422.5 "Entry='Tis e'en so: the hand of little employment hath the daintier sense." 1 21997311 1 R {F4DE40F8-9592-49B5-A3C9-F935197D7566} 0 1
+  MARKER 27 432.5 "" 1
+  MARKER 57 436.5 "Speaker=First Clown" 0 0 1 R {2013257C-73E3-4EE1-862C-7BEC8C721C2F} 0 2
+  MARKER 58 436.5 "Speaker=First Clown" 0 0 1 R {7845C20A-8725-4C17-9B62-674883188575} 0 2
+  MARKER 28 437.5 "Entry=But age with his stealing steps hath clawed me in his clutch; And hath shipped me intil the land as if I had never been such." 1 21997311 1 R {F3FD72C3-89BD-4832-844D-7780D08025F1} 0 1
+  MARKER 28 447.5 "" 1
+  MARKER 59 451.5 Speaker=Hamlet 0 0 1 R {7C2E1158-B3C6-4F7C-AB63-3AB34DD343CD} 0 2
+  MARKER 60 451.5 Speaker=Hamlet 0 0 1 R {C63ED19D-A75E-4DD2-A099-0E83427B1771} 0 2
+  MARKER 29 452.5 "Entry=That skull had a tongue in it and could sing once: how the knave jowls it to the ground as if it were Cain's jaw-bone that did the first murder!" 1 21997311 1 R {2F29B41B-E3C5-4268-91FC-9130ABDA4472} 0 1
+  MARKER 29 462.5 "" 1
+  MARKER 61 466.5 Speaker=Hamlet 0 0 1 R {7312C2C9-CE45-4B59-A7D0-820B630DADF2} 0 2
+  MARKER 62 466.5 Speaker=Hamlet 0 0 1 R {00D34DDC-7111-4FE9-80E1-BF589CB40C55} 0 2
+  MARKER 30 467.5 "Entry=It might be the pate of a politician which this ass now o'erreaches; one that would circumvent God might it not?" 1 21997311 1 R {5DACEF70-58CE-4C44-AEEE-48D822BF8B34} 0 1
+  MARKER 30 477.5 "" 1
+  MARKER 63 481.5 Speaker=Horatio 0 0 1 R {3D1B6D83-BD3D-4B71-A7D5-5DC1AA8A8B0C} 0 2
+  MARKER 64 481.5 Speaker=Horatio 0 0 1 R {532E78E5-81A3-45AC-AE6E-040FE9AE74FF} 0 2
+  MARKER 31 482.5 "Entry=It might my lord." 1 21997311 1 R {A623EDFD-5EA7-40C9-810D-78E9440BA289} 0 1
+  MARKER 31 492.5 "" 1
+  MARKER 65 496.5 Speaker=Hamlet 0 0 1 R {62A338F0-2AFD-46EB-856C-8D6382DAEEF7} 0 2
+  MARKER 66 496.5 Speaker=Hamlet 0 0 1 R {8C96DFA5-13B0-468B-9801-93CA92DCA5F0} 0 2
+  MARKER 32 497.5 "Entry=Or of a courtier which could say 'Good morrow sweet lord! How dost thou sweet lord?' This might be my lord such-a-one that praised my lord such-a-one's horse when he meant to beg it--might it not?" 1 21997311 1 R {49497DD1-7F87-4204-81E8-DDD4C16D826C} 0 1
+  MARKER 32 507.5 "" 1
+  MARKER 67 511.5 Speaker=Horatio 0 0 1 R {7A2D024F-711E-4D21-9588-479235CCDDF9} 0 2
+  MARKER 68 511.5 Speaker=Horatio 0 0 1 R {EE1A627D-5A6B-40C3-81B3-A57DFF77E1FE} 0 2
+  MARKER 33 512.5 "Entry=Ay my lord." 1 21997311 1 R {4EB1B535-563D-423E-A483-568CDB593DF0} 0 1
+  MARKER 33 522.5 "" 1
+  MARKER 69 526.5 Speaker=Hamlet 0 0 1 R {D11D322D-9812-42BD-AC02-ADDD60AB80F1} 0 2
+  MARKER 70 526.5 Speaker=Hamlet 0 0 1 R {5113B531-B89C-47D9-9665-7FBFF3B772E7} 0 2
+  MARKER 34 527.5 "Entry=Why e'en so: and now my Lady Worm's chapless and knocked about the mazard with a sexton's spade: here's fine revolution an we had the trick to see't." 1 21997311 1 R {4A356504-2DED-49D5-87F7-81E33FEAA7FA} 0 1
+  MARKER 34 537.5 "" 1
+  MARKER 71 541.5 Speaker=Hamlet 0 0 1 R {4A2C8B08-9039-48B0-AE41-DF81568B8266} 0 2
+  MARKER 72 541.5 Speaker=Hamlet 0 0 1 R {27A3C959-065F-4D27-AA88-58EBEBAEF501} 0 2
+  MARKER 35 542.5 "Entry=Did these bones cost no more the breeding but to play at loggats with 'em? mine ache to think on't." 1 21997311 1 R {87F97E4D-256C-4171-8302-AE7B7F60F671} 0 1
+  MARKER 35 552.5 "" 1
+  MARKER 73 556.5 "Speaker=First Clown" 0 0 1 R {653A204F-A3D9-4E02-BB83-090C673F811E} 0 2
+  MARKER 74 556.5 "Speaker=First Clown" 0 0 1 R {3F37EC53-71B2-4C9A-A6CF-A5DE731FD5A4} 0 2
+  MARKER 36 557.5 "Entry=A pick-axe and a spade a spade; For and a shrouding sheet: O a pit of clay for to be made For such a guest is meet." 1 21997311 1 R {BECA29B2-F8C8-4D98-A91E-7760E8016499} 0 1
+  MARKER 36 567.5 "" 1
+  MARKER 75 571.5 Speaker=Hamlet 0 0 1 R {B4308628-F68D-4A8F-9C92-C1EC0DDD3064} 0 2
+  MARKER 76 571.5 Speaker=Hamlet 0 0 1 R {4A238B5F-44A6-45EA-9EDE-E2A0E896D0B6} 0 2
+  MARKER 37 572.5 "Entry=There's another: why may not that be the skull of a lawyer? Where be his quiddits now his quillets his cases his tenures and his tricks?" 1 21997311 1 R {FC23E94C-00B7-4890-A2FE-DAB30EFB1568} 0 1
+  MARKER 37 582.5 "" 1
+  MARKER 77 586.5 Speaker=Horatio 0 0 1 R {F3EA7F0B-B7F7-44DE-AB8C-29633149E7F4} 0 2
+  MARKER 78 586.5 Speaker=Horatio 0 0 1 R {DE5153B0-C053-4F3A-94D8-AABEF2F1E3B4} 0 2
+  MARKER 38 587.5 "Entry=What's that his honour?" 1 21997311 1 R {89028B44-01C7-4B86-98C5-1AEEC653B52E} 0 1
+  MARKER 38 597.5 "" 1
+  MARKER 79 601.5 Speaker=Hamlet 0 0 1 R {ED89D11C-CCBB-4254-9593-04DCFA4907E6} 0 2
+  MARKER 80 601.5 Speaker=Hamlet 0 0 1 R {5380E8DF-4EFC-4F58-9573-F92C71BCB513} 0 2
+  MARKER 39 602.5 "Entry=Is not this something more than fantasy? Think on that." 1 21997311 1 R {2A1AB137-19C0-44B4-B432-BCEDA0A5D5A9} 0 1
+  MARKER 39 612.5 "" 1
+  MARKER 81 616.5 "Speaker=First Clown" 0 0 1 R {252490D8-5438-4819-B6A8-922A0E771AB2} 0 2
+  MARKER 82 616.5 "Speaker=First Clown" 0 0 1 R {6A2DA06C-023D-40A7-BDD8-F7332B4344C1} 0 2
+  MARKER 40 617.5 "Entry=Here lies the water; good: here stands the man; good: if the man go to this water and drown himself--" 1 21997311 1 R {84DD528D-85E0-4EFD-98EB-D76A0EA64CA6} 0 1
+  MARKER 40 627.5 "" 1
+  MARKER 83 631.5 Speaker=Hamlet 0 0 1 R {8BBCEFD7-428A-446F-8DD0-D566277B57E7} 0 2
+  MARKER 84 631.5 Speaker=Hamlet 0 0 1 R {5A2A1EC6-1747-4385-BDB2-930BB0B2CEBD} 0 2
+  MARKER 41 632.5 "Entry=This doth well for these--but what of this man's picture? Look you." 1 21997311 1 R {3FB3AC97-A95A-409A-BD6F-E6B5B9F06847} 0 1
+  MARKER 41 642.5 "" 1
+  MARKER 85 646.5 Speaker=Hamlet 0 0 1 R {56A4B886-2DEA-472A-A891-FE2209E89954} 0 2
+  MARKER 86 646.5 Speaker=Hamlet 0 0 1 R {DB833985-6A8D-4AD1-AACD-06EAD06B93F7} 0 2
+  MARKER 42 647.5 "Entry=The very conveyances of his lands will hardly lie in this box; and must the inheritor himself have no more, ha?" 1 21997311 1 R {7D5F4070-95E5-4445-A73C-6EFE13702024} 0 1
+  MARKER 42 657.5 "" 1
+  MARKER 87 661.5 Speaker=Horatio 0 0 1 R {DACC8FDC-124F-48A2-86DA-204FE51FB6D4} 0 2
+  MARKER 88 661.5 Speaker=Horatio 0 0 1 R {2151987E-D393-402D-BDE6-B0B90AE1D95E} 0 2
+  MARKER 43 662.5 "Entry=Not a jot more my lord." 1 21997311 1 R {AA2C5A6F-57E5-4F5A-A0FB-39E28F371D9C} 0 1
+  MARKER 43 672.5 "" 1
+  MARKER 89 676.5 Speaker=Hamlet 0 0 1 R {6E179439-A11C-468D-9636-ACBBF2A1E85F} 0 2
+  MARKER 90 676.5 Speaker=Hamlet 0 0 1 R {68C69633-67BD-45C4-9D54-31B9812D982C} 0 2
+  MARKER 44 677.5 "Entry=Is not parchment made of sheep-skins?" 1 21997311 1 R {FABD29D8-B685-4E3F-9C5B-F280D25AB5ED} 0 1
+  MARKER 44 687.5 "" 1
+  MARKER 91 691.5 Speaker=Horatio 0 0 1 R {943642D1-7714-4DA5-8D0B-DFD5D90E9E51} 0 2
+  MARKER 92 691.5 Speaker=Horatio 0 0 1 R {D77BFEC0-F837-401E-B7EA-5CD87AE5AB9F} 0 2
+  MARKER 45 692.5 "Entry=Ay my lord And of calves-skins too." 1 21997311 1 R {EC68AC20-9DD8-4792-9295-F8E98CE8DD9C} 0 1
+  MARKER 45 702.5 "" 1
+  MARKER 93 706.5 Speaker=Hamlet 0 0 1 R {BB3622B1-85D6-4CDD-92D2-96030364DAB0} 0 2
+  MARKER 94 706.5 Speaker=Hamlet 0 0 1 R {EA963763-62CB-4760-B882-D1080D5DFE42} 0 2
+  MARKER 46 707.5 "Entry=Those are sheep and calves which seek out assurance in that. I will speak to this fellow.--Whose grave's this sirrah?" 1 21997311 1 R {9F1C3DD5-2746-4AE7-BBD9-B30685800E40} 0 1
+  MARKER 46 717.5 "" 1
+  MARKER 95 721.5 "Speaker=First Clown" 0 0 1 R {0DA71AF0-5707-44D0-8B8B-9E6113685B97} 0 2
+  MARKER 96 721.5 "Speaker=First Clown" 0 0 1 R {F96BB755-A975-4499-953D-3D637A39154B} 0 2
+  MARKER 47 722.5 "Entry=Mine sir." 1 21997311 1 R {31D415EF-6344-4ECE-A5FB-225336AA6BFA} 0 1
+  MARKER 47 732.5 "" 1
+  MARKER 97 736.5 Speaker=Hamlet 0 0 1 R {81022278-F53E-483C-A801-388AF48C5840} 0 2
+  MARKER 98 736.5 Speaker=Hamlet 0 0 1 R {0A28989F-37CE-485A-A3C5-999A5430594C} 0 2
+  MARKER 48 737.5 "Entry=I think it be thine indeed; for thou liest in't." 1 21997311 1 R {382498B7-089F-4F6F-B1E9-E9F13CD98963} 0 1
+  MARKER 48 747.5 "" 1
+  MARKER 99 751.5 "Speaker=First Clown" 0 0 1 R {9ED793CF-C74C-4DC9-8109-B7C2F43C5CE7} 0 2
+  MARKER 100 751.5 "Speaker=First Clown" 0 0 1 R {A43FDD8B-240B-44BF-8546-E827D21EC008} 0 2
+  MARKER 49 752.5 "Entry=You lie out on't sir and therefore it is not yours: for my part I do not lie in't." 1 21997311 1 R {C0CA20BE-5136-4E5D-B17F-7019BB4E180D} 0 1
+  MARKER 49 762.5 "" 1
+  MARKER 101 766.5 Speaker=Hamlet 0 0 1 R {11A526C4-9409-497E-944D-3A45AC50CAAF} 0 2
+  MARKER 102 766.5 Speaker=Hamlet 0 0 1 R {FFA0241B-D003-4E34-818A-0EB51DE266E1} 0 2
+  MARKER 50 767.5 "Entry='Tis a quick lie sir; 'twill away gain from me to you." 1 21997311 1 R {0D29ED7E-97E0-4319-B6C7-9BC1DB7679DF} 0 1
+  MARKER 50 777.5 "" 1
+  MARKER 103 781.5 Speaker=Hamlet 0 0 1 R {61E78181-1394-4167-AADB-B31DAC56F689} 0 2
+  MARKER 104 781.5 Speaker=Hamlet 0 0 1 R {8F7281CF-7DFA-4DAB-9DA0-AE59512F6424} 0 2
+  MARKER 51 782.5 "Entry=What man dost thou dig it for?" 1 21997311 1 R {CC55C772-103E-48EF-B31D-58085B81B7FA} 0 1
+  MARKER 51 792.5 "" 1
+  MARKER 105 796.5 "Speaker=First Clown" 0 0 1 R {6E5428F7-4D01-4F38-BC3C-687CBC258307} 0 2
+  MARKER 106 796.5 "Speaker=First Clown" 0 0 1 R {9C5F6C36-3CE7-462F-AA92-2CE073E1D49C} 0 2
+  MARKER 52 797.5 "Entry=For no man madam." 1 21997311 1 R {6E753FBF-CE11-4770-9E85-A5B19090DA1D} 0 1
+  MARKER 52 807.5 "" 1
+  MARKER 107 811.5 Speaker=Hamlet 0 0 1 R {8A6704B2-EBCD-40B6-A698-D881971FFF07} 0 2
+  MARKER 108 811.5 Speaker=Hamlet 0 0 1 R {48054814-1F4A-494C-A53D-75C830FDD4E3} 0 2
+  MARKER 53 812.5 "Entry=What woman then?" 1 21997311 1 R {BDA84BE8-4C4C-4595-9E57-350154FE3A98} 0 1
+  MARKER 53 822.5 "" 1
+  MARKER 109 826.5 "Speaker=First Clown" 0 0 1 R {E75FDFDC-9691-4986-AD85-D0D44485DF94} 0 2
+  MARKER 110 826.5 "Speaker=First Clown" 0 0 1 R {638301B9-BF0C-499D-A9D9-341C2B6D7E20} 0 2
+  MARKER 54 827.5 "Entry=For none neither." 1 21997311 1 R {26828CB6-8122-41A6-89E6-72988D9FE87A} 0 1
+  MARKER 54 837.5 "" 1
+  MARKER 111 841.5 Speaker=Hamlet 0 0 1 R {5ABB3C66-145A-4446-8F04-CE28A0A1687D} 0 2
+  MARKER 112 841.5 Speaker=Hamlet 0 0 1 R {07836A38-04D1-46BC-BA41-E8B9FEC3CE46} 0 2
+  MARKER 55 842.5 "Entry=Who is to be buried in't?" 1 21997311 1 R {2F8D6FDA-43A9-4774-8385-7175EAD9F0E3} 0 1
+  MARKER 55 852.5 "" 1
+  MARKER 113 856.5 "Speaker=First Clown" 0 0 1 R {DF48399A-FB06-4CDE-8EE5-8DE7AD0A5227} 0 2
+  MARKER 114 856.5 "Speaker=First Clown" 0 0 1 R {ABF3BFEE-3B80-42EA-9947-A3552E802F45} 0 2
+  MARKER 56 857.5 "Entry=One that was a woman sir; but rest her soul she's dead." 1 21997311 1 R {58B2A49D-BD8B-4F7D-9E81-3A6ABB4E83A3} 0 1
+  MARKER 56 867.5 "" 1
+  MARKER 115 871.5 Speaker=Hamlet 0 0 1 R {1B556F6E-F3F0-4711-A769-B11DA4059B3C} 0 2
+  MARKER 116 871.5 Speaker=Hamlet 0 0 1 R {4FC05720-357B-464D-8F7A-F91B2663F53F} 0 2
+  MARKER 57 872.5 "Entry=How absolute the knave is! we must speak by the card or equivocation will undo us." 1 21997311 1 R {148798EE-1865-4786-8CDE-6C96B65063AB} 0 1
+  MARKER 57 882.5 "" 1
+  MARKER 117 886.5 Speaker=Hamlet 0 0 1 R {FEB661B6-9464-462E-A4E1-D54F3697D764} 0 2
+  MARKER 118 886.5 Speaker=Hamlet 0 0 1 R {ECB0B7DE-7107-4CB6-A611-1CB57773D191} 0 2
+  MARKER 58 887.5 "Entry=By the Lord Horatio these three years I have taken note of it; the age is grown so picked that the toe of the peasant comes so near the heel of the courtier he galls his kibe." 1 21997311 1 R {C72F69D1-9A0F-4E41-A3B5-75E02AE1ED3F} 0 1
+  MARKER 58 897.5 "" 1
+  MARKER 119 901.5 Speaker=Hamlet 0 0 1 R {8F3BFB2C-0214-42C7-9169-28E403F61FF3} 0 2
+  MARKER 120 901.5 Speaker=Hamlet 0 0 1 R {A3395553-6539-498F-AB51-9525BF7599F3} 0 2
+  MARKER 59 902.5 "Entry=How long hast thou been a grave-maker?" 1 21997311 1 R {6BC55781-AB08-47C7-8D5F-F4CD3EE26FC1} 0 1
+  MARKER 59 912.5 "" 1
+  MARKER 121 916.5 "Speaker=First Clown" 0 0 1 R {24538576-8218-4CA9-95CA-9F62021AC6C2} 0 2
+  MARKER 122 916.5 "Speaker=First Clown" 0 0 1 R {EAEBCFA6-00F2-4200-8BB1-543EDC605B77} 0 2
+  MARKER 60 917.5 "Entry=Of all the days i' the year I came to't that day that our last king Hamlet o'ercame Fortinbras." 1 21997311 1 R {8D7A8864-A117-4EA6-9C3D-3FC596B632A5} 0 1
+  MARKER 60 927.5 "" 1
+  MARKER 123 931.5 Speaker=Hamlet 0 0 1 R {E82A5B72-9E6C-4601-BD93-15AD021089CD} 0 2
+  MARKER 124 931.5 Speaker=Hamlet 0 0 1 R {2697DD66-3125-4AC1-A45B-E3EE424BF6D1} 0 2
+  MARKER 61 932.5 "Entry=How long is that since?" 1 21997311 1 R {8B0ED57C-865B-40CC-8AB3-46DA0AD0978A} 0 1
+  MARKER 61 942.5 "" 1
+  MARKER 125 946.5 "Speaker=First Clown" 0 0 1 R {7F3B3952-65FF-465A-9A43-E0A2B43A6DC2} 0 2
+  MARKER 126 946.5 "Speaker=First Clown" 0 0 1 R {A427BEAE-AB36-4960-9803-81829C73E4AE} 0 2
+  MARKER 62 947.5 "Entry=Cannot you tell that? every fool can tell that: it was the very day that young Hamlet was born--" 1 21997311 1 R {E68A29DC-F597-4DF8-9E24-D4EE90DA4B7B} 0 1
+  MARKER 62 957.5 "" 1
+  MARKER 127 961.5 "Speaker=First Clown" 0 0 1 R {6A7677AB-27D9-4B12-82F5-121C931A76AA} 0 2
+  MARKER 128 961.5 "Speaker=First Clown" 0 0 1 R {1BA5C59F-A2CD-4B14-83E3-51B23EB5AD3A} 0 2
+  MARKER 63 962.5 "Entry=I' faith if he be not rotten before he die--" 1 21997311 1 R {82EDA275-A4EA-4168-8AE0-7BC0BAAA0EDB} 0 1
+  MARKER 63 972.5 "" 1
+  MARKER 129 976.5 Speaker=Hamlet 0 0 1 R {E33E338D-CBF4-49AF-A130-F6444FA8DCB3} 0 2
+  MARKER 130 976.5 Speaker=Hamlet 0 0 1 R {BC7DA7B2-73C8-4657-A605-4A1640EFCB0D} 0 2
+  MARKER 64 977.5 "Entry=Ha! ha! ha!--" 1 21997311 1 R {5E0CDEBF-1E0C-4AC3-94F1-54CFA5C3AED2} 0 1
+  MARKER 64 987.5 "" 1
+  MARKER 131 991.5 "Speaker=First Clown" 0 0 1 R {3241DC8B-FA2C-438F-9995-8D754B246B38} 0 2
+  MARKER 132 991.5 "Speaker=First Clown" 0 0 1 R {DEE76143-2277-4B72-8044-2C83B0A7A9B0} 0 2
+  MARKER 65 992.5 "Entry=--we shall have him a piece of a carrion: Lord an he had lain i' the ground two years he would not have smelled." 1 21997311 1 R {A26A914B-01AB-4371-BED5-60432F60CD99} 0 1
+  MARKER 65 1002.5 "" 1
+  MARKER 133 1006.5 Speaker=Hamlet 0 0 1 R {1D4FF9B2-8E2D-4D28-B9A0-AE47C94F9C8D} 0 2
+  MARKER 134 1006.5 Speaker=Hamlet 0 0 1 R {FFB426F6-C92C-4245-AAF5-7F2379E5CEDD} 0 2
+  MARKER 66 1007.5 "Entry=How came he mad?" 1 21997311 1 R {C52A6665-8F75-4C2A-B92A-BAE352F6A4A2} 0 1
+  MARKER 66 1017.5 "" 1
+  MARKER 135 1021.5 "Speaker=First Clown" 0 0 1 R {504DB7C9-3C33-413E-A604-C13F5BF21647} 0 2
+  MARKER 136 1021.5 "Speaker=First Clown" 0 0 1 R {3E624642-0732-409C-AAD0-F71178ABE50B} 0 2
+  MARKER 67 1022.5 "Entry=Very strangely by a kind of madness." 1 21997311 1 R {1E24FE4F-D868-45E0-BBB7-72467C0BFE8F} 0 1
+  MARKER 67 1032.5 "" 1
+  MARKER 137 1036.5 Speaker=Hamlet 0 0 1 R {670CD027-6DAB-435E-BD41-82ECA4EA21A3} 0 2
+  MARKER 138 1036.5 Speaker=Hamlet 0 0 1 R {63318B09-C007-4D4A-A873-8ACE6DF16C07} 0 2
+  MARKER 68 1037.5 "Entry=Of what?" 1 21997311 1 R {40E1BF4B-7248-4F00-A666-BBC53A868E6E} 0 1
+  MARKER 68 1047.5 "" 1
+  MARKER 139 1051.5 "Speaker=First Clown" 0 0 1 R {CDDAB326-011D-4918-89EE-EC4E3EED583A} 0 2
+  MARKER 140 1051.5 "Speaker=First Clown" 0 0 1 R {11C55565-5752-4C9A-8CD9-B45108C9FE65} 0 2
+  MARKER 69 1052.5 "Entry=Why here in Denmark: I have been sexton here man and boy thirty years." 1 21997311 1 R {60A7790C-5E7C-4E56-A66A-0C0D5D8183A8} 0 1
+  MARKER 69 1062.5 "" 1
+  MARKER 141 1066.5 Speaker=Hamlet 0 0 1 R {1D4B28F9-2714-435D-858D-540EABFD73CE} 0 2
+  MARKER 142 1066.5 Speaker=Hamlet 0 0 1 R {28E02B3D-5544-4762-BDA5-C80D965FF1BB} 0 2
+  MARKER 70 1067.5 "Entry=How long will a man lie i' the earth ere he rot?" 1 21997311 1 R {4803EC43-6FE2-46AE-B69B-06C61D8862BC} 0 1
+  MARKER 70 1077.5 "" 1
+  MARKER 143 1081.5 "Speaker=First Clown" 0 0 1 R {8A6AE866-C198-4BBF-A680-08EB49996680} 0 2
+  MARKER 144 1081.5 "Speaker=First Clown" 0 0 1 R {79B797E6-DE72-468B-B157-94D249AABFE5} 0 2
+  MARKER 71 1082.5 "Entry=Faith if he be not rotten before he die--and we have many pocky corses now-a-days that will scarce hold the laying in--" 1 21997311 1 R {E40B0A56-48CB-4DF7-B426-A7584CB602D5} 0 1
+  MARKER 71 1092.5 "" 1
+  MARKER 145 1096.5 Speaker=Hamlet 0 0 1 R {2BA3D1D5-9423-4D48-A9E4-68C9AAAA3E51} 0 2
+  MARKER 146 1096.5 Speaker=Hamlet 0 0 1 R {8353D545-2321-4FE6-96F1-80504C49472D} 0 2
+  MARKER 72 1097.5 "Entry=He must build churches then." 1 21997311 1 R {C7BE2F88-81AA-4E4C-9A51-D72D59CE1634} 0 1
+  MARKER 72 1107.5 "" 1
+  MARKER 147 1111.5 "Speaker=First Clown" 0 0 1 R {CA1354B6-A7CC-4CDD-A95F-952F20E17FDC} 0 2
+  MARKER 148 1111.5 "Speaker=First Clown" 0 0 1 R {31EF8D54-9E47-4E1A-A321-2787420E5839} 0 2
+  MARKER 73 1112.5 "Entry=No I tell thee he will keep no mean in the talking to himself: words words words." 1 21997311 1 R {03B6F314-DFAD-4DC2-94DE-B158316A7230} 0 1
+  MARKER 73 1122.5 "" 1
+  MARKER 149 1126.5 Speaker=Hamlet 0 0 1 R {186FD824-D629-4DF6-83DA-B2A7E5B64E45} 0 2
+  MARKER 150 1126.5 Speaker=Hamlet 0 0 1 R {6E07C25D-8C82-4A7F-9A68-38887A99AAB7} 0 2
+  MARKER 74 1127.5 "Entry=Alas poor Yorick! I knew him Horatio: a fellow of infinite jest of most excellent fancy." 1 21997311 1 R {ADD8BB8E-42E7-4698-876C-97936CAAFFCC} 0 1
+  MARKER 74 1137.5 "" 1
+  MARKER 151 1141.5 Speaker=Hamlet 0 0 1 R {A6427631-04BF-4F59-8B68-217F95D6393E} 0 2
+  MARKER 152 1141.5 Speaker=Hamlet 0 0 1 R {8EF482C0-43B4-4259-86F0-8479E4F6C6A4} 0 2
+  MARKER 75 1142.5 "Entry=He hath borne me on his back a thousand times; and now how abhorred in my imagination it is!" 1 21997311 1 R {189A9FEB-F1EF-4125-96AC-4EBB04A8E5E1} 0 1
+  MARKER 75 1152.5 "" 1
+  MARKER 153 1156.5 Speaker=Hamlet 0 0 1 R {4931A956-F13A-44B2-B9B9-6A2B74D77D0E} 0 2
+  MARKER 154 1156.5 Speaker=Hamlet 0 0 1 R {AFF13C74-70E3-473E-8F94-7763F9A93A68} 0 2
+  MARKER 76 1157.5 "Entry=My gorge rises at it. Here hung those lips that I have kissed I know not how oft." 1 21997311 1 R {E1F1BA18-2C0C-4A06-8AB5-EC397F451E4B} 0 1
+  MARKER 76 1167.5 "" 1
+  MARKER 155 1171.5 Speaker=Hamlet 0 0 1 R {C49B7DC5-867C-441C-A552-26ABBE683FCB} 0 2
+  MARKER 156 1171.5 Speaker=Hamlet 0 0 1 R {5D567979-B4FB-4786-92A7-DE0E8901E7AD} 0 2
+  MARKER 77 1172.5 "Entry=Where be your gibes now? your gambols? your songs? your flashes of merriment that were wont to set the table on a roar?" 1 21997311 1 R {C106DCAF-3015-473F-9C37-6C977A0EB2C5} 0 1
+  MARKER 77 1182.5 "" 1
+  MARKER 157 1186.5 Speaker=Hamlet 0 0 1 R {45FAF62F-61DD-4361-B74F-8DDE70F84990} 0 2
+  MARKER 158 1186.5 Speaker=Hamlet 0 0 1 R {74FCB2F3-1BB5-437B-8B4E-18A802356214} 0 2
+  MARKER 78 1187.5 "Entry=Not one now to mock your own grinning? quite chap-fallen? Now get you to my lady's chamber and tell her let her paint an inch thick to this favour she must come; make her laugh at that." 1 21997311 1 R {F4B26DA1-B0A0-45F6-ACE5-D5DEDB7F69DF} 0 1
+  MARKER 78 1197.5 "" 1
+  MARKER 159 1201.5 Speaker=Hamlet 0 0 1 R {BDA3B0C5-942C-4A22-898B-B5C62BE3DADB} 0 2
+  MARKER 160 1201.5 Speaker=Hamlet 0 0 1 R {6789EE2A-6EAB-4A1C-9A41-48E3018C28AA} 0 2
+  MARKER 79 1202.5 "Entry=Prithee Horatio tell me one thing." 1 21997311 1 R {95CD0AB0-5A6F-4AB8-91E2-CFB7CFE3D0B7} 0 1
+  MARKER 79 1212.5 "" 1
+  MARKER 161 1216.5 Speaker=Horatio 0 0 1 R {F90CB1FF-9E44-4091-9516-AB4125595063} 0 2
+  MARKER 162 1216.5 Speaker=Horatio 0 0 1 R {94E21D31-0A93-47D5-86E0-12EA38540626} 0 2
+  MARKER 80 1217.5 "Entry=What's that my lord?" 1 21997311 1 R {C9820BFB-2D90-47E2-AAF6-2A0D6BC63D1A} 0 1
+  MARKER 80 1227.5 "" 1
+  MARKER 163 1231.5 Speaker=Hamlet 0 0 1 R {DD9AB1FE-369E-4081-9982-9C1AD707C787} 0 2
+  MARKER 164 1231.5 Speaker=Hamlet 0 0 1 R {C93B880F-EBC2-4461-9289-4A5837236182} 0 2
+  MARKER 81 1232.5 "Entry=Dost thou think Alexander looked o' this fashion i' the earth?" 1 21997311 1 R {4DD0D3DF-358C-4875-9E1A-04A21CB4FB23} 0 1
+  MARKER 81 1242.5 "" 1
+  MARKER 165 1246.5 Speaker=Horatio 0 0 1 R {530748E7-A816-4585-80C1-F15BFFC572F3} 0 2
+  MARKER 166 1246.5 Speaker=Horatio 0 0 1 R {79C7A202-B501-4478-8CC6-5B84256CC134} 0 2
+  MARKER 82 1247.5 "Entry=E'en so." 1 21997311 1 R {9F8FE355-9678-4A6C-8ED5-B2298A092D66} 0 1
+  MARKER 82 1257.5 "" 1
+  MARKER 167 1261.5 Speaker=Hamlet 0 0 1 R {8F89DF6C-EFF8-4FFD-8204-8209C263BE7F} 0 2
+  MARKER 168 1261.5 Speaker=Hamlet 0 0 1 R {50683462-7DB8-465F-A9AE-5201B62A0590} 0 2
+  MARKER 83 1262.5 "Entry=To what base uses we may return Horatio! Why may not imagination trace the noble dust of Alexander till he find it stopping a bunghole?" 1 21997311 1 R {A69F9D1E-2FA7-4B04-B6D1-A9C92D44C59B} 0 1
+  MARKER 83 1272.5 "" 1
+  MARKER 169 1276.5 Speaker=Horatio 0 0 1 R {E327B964-6091-46AA-8452-2639F074914F} 0 2
+  MARKER 170 1276.5 Speaker=Horatio 0 0 1 R {54FC561C-F6CC-470E-8B94-4074629A25C0} 0 2
+  MARKER 84 1277.5 "Entry='Twere to consider too curiously to consider so." 1 21997311 1 R {C4BC0D3D-673D-43B0-82B6-FF5A1339BE5C} 0 1
+  MARKER 84 1287.5 "" 1
+  MARKER 171 1291.5 Speaker=Hamlet 0 0 1 R {007E61D9-0AD9-4566-BA7A-BA83583E189A} 0 2
+  MARKER 172 1291.5 Speaker=Hamlet 0 0 1 R {503520FE-0C80-4E5A-B38F-7707728717A4} 0 2
+  MARKER 85 1292.5 "Entry=No faith not a jot; but to follow him thither with modesty enough and likelihood to lead it: as thus: Alexander died Alexander was buried Alexander returneth into dust; the dust is earth; of earth we make loam; and why of that loam whereto he was converted might they not stop a beer-barrel?" 1 21997311 1 R {05FE2039-6AC9-46A4-B783-1D8AB779010F} 0 1
+  MARKER 85 1302.5 "" 1
+  MARKER 173 1306.5 Speaker=Hamlet 0 0 1 R {DEA90EDF-3758-4065-A4C1-2605FFC6912D} 0 2
+  MARKER 174 1306.5 Speaker=Hamlet 0 0 1 R {ACB795B9-AD0A-4518-BD51-7DACBADF9B0B} 0 2
+  MARKER 86 1307.5 "Entry=Imperious Caesar dead and turned to clay might stop a hole to keep the wind away." 1 21997311 1 R {988BA256-28BD-4256-91B1-B5ACB6E7B6F5} 0 1
+  MARKER 86 1317.5 "" 1
+  MARKER 175 1321.5 Speaker=Hamlet 0 0 1 R {7A8E6E6B-065D-492B-A2C1-7E12613914E1} 0 2
+  MARKER 176 1321.5 Speaker=Hamlet 0 0 1 R {D54F4F52-819F-49E7-8889-43AD84807498} 0 2
+  MARKER 87 1322.5 "Entry=O that that earth which kept the world in awe should patch a wall t' expel the winter's flaw!" 1 21997311 1 R {FC1C6048-F6A1-46CA-A1C1-EF6CFF603F44} 0 1
+  MARKER 87 1332.5 "" 1
+  <PROJBAY
+  >
+  <TRACK {57704768-673A-4146-A1A9-1BD22623F9F7}
+    NAME Category
+    PEAKCOL 20248642
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    LANEREC -1 -1 -1 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {57704768-673A-4146-A1A9-1BD22623F9F7}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+    <ITEM
+      POSITION 1.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {7DBED02A-1CE4-4CAA-907E-F320B39528DD}
+      IID 36196
+      <NOTES
+        |Category
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 46.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {71710286-C178-4C32-B8F1-F944824F69BD}
+      IID 36199
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 61.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {BBB09574-F3DC-436A-BD77-53E013605BF4}
+      IID 36202
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 76.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {0E378760-95CA-4370-AFF2-0E12634740D8}
+      IID 36205
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 91.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {1768030D-BD01-4AB1-804C-55C786FC70EA}
+      IID 36208
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 106.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {E423DF7F-B4D1-40BB-81DD-BC7B75D3E4A6}
+      IID 36211
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 121.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {256D0BCD-C6FC-41F9-A344-A016A35F6234}
+      IID 36214
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 136.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {802DADDC-067B-49DE-97B4-BC67D78559AC}
+      IID 36217
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 151.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {BDC94691-9EC1-44CB-8DB9-EC6E6FF2E8FA}
+      IID 36220
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 166.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {3791B543-EB8F-4A66-9A92-EBB9E632F161}
+      IID 36223
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 181.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {9E9A7167-8014-48DB-A4B1-EDB40C742453}
+      IID 36226
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 196.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {A6EC6216-E661-4B16-966E-C21F809620AD}
+      IID 36229
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 211.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {B6927C61-98F8-46FD-BF10-510E19CD68FD}
+      IID 36232
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 226.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {255EF205-2F44-4BD1-9D92-5A30E09A8B62}
+      IID 36235
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 241.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {758E2392-F0F8-42BB-BC72-FFA69AF14D11}
+      IID 36238
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 256.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {1C0CE9EE-12B6-462D-B747-209657095598}
+      IID 36241
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 271.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {540BF47A-7003-4B9A-9641-D8E474A8AC54}
+      IID 36244
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 286.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {92B9678E-C04E-4A1E-9617-E34095C3B0A5}
+      IID 36247
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 301.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {EF99BEF0-4534-49EC-B0C3-FC7316F79385}
+      IID 36250
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 316.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {A9155E06-75DD-4D44-8503-4EA520B8A3AC}
+      IID 36253
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 331.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {60E9C8B7-53EB-4619-8E3E-C0E926152E67}
+      IID 36256
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 346.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {9173AD11-6E81-4B2B-A993-4520254B49E8}
+      IID 36259
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 361.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {BBD56579-66CB-42B5-8F42-7C4A2A2004A2}
+      IID 36262
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 376.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {D69B797A-3667-481D-8EA9-4511472ED09F}
+      IID 36265
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 391.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {8346AE6E-F4DA-4CA4-B366-A3693405AF1D}
+      IID 36268
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 406.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {CCAD982E-78F2-4F42-A35E-AD5C26CA5C57}
+      IID 36271
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 421.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {BB3A183A-197E-452B-96DE-74589AF805A8}
+      IID 36274
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 436.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {4580D500-0C03-457D-8BFC-DDBF47E34CA2}
+      IID 36277
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 451.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {5985FDB1-4470-47E5-BAE6-54BC040807E8}
+      IID 36280
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 466.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {4B27F219-A2A1-425A-8961-C8F4CE56D488}
+      IID 36283
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 481.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {D46AA953-86BE-4D98-97AE-40B4B9AC6FD6}
+      IID 36286
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 496.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {818A2E37-2B7F-4F14-A2BD-9ED324397221}
+      IID 36289
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 511.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {575FBA27-C582-4B8D-9328-B3B55251295B}
+      IID 36292
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 526.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {0C9882CF-465A-402D-9833-5302479B78A3}
+      IID 36295
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 541.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {7F8AFEF1-C2CE-44B4-BCC3-C2FF830D1CFD}
+      IID 36298
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 556.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {6424E495-0C2C-442F-8CC8-F5B5853B8EDF}
+      IID 36301
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 571.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {3581CA06-F1E9-42E5-B48F-93902F339A97}
+      IID 36304
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 586.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {8E2AA2EB-492F-4614-92A3-DFFF698BB733}
+      IID 36307
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 601.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {EB043025-7AFC-4C7D-9543-F563F769FDC3}
+      IID 36310
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 616.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {AE949981-66D3-47C7-91AC-9CABAD556040}
+      IID 36313
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 631.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {BCF203BA-C2CF-43C9-A17D-31E2B753AC92}
+      IID 36316
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 646.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {9BCD9F8D-8CDF-4145-B2CE-BF7A04CC0863}
+      IID 36319
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 661.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {F27F0321-2216-42A2-89E0-DEDF35FB36DA}
+      IID 36322
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 676.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {5C08A003-7B1D-41C4-BD17-2761F31C5128}
+      IID 36325
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 691.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {582F2891-C317-40E7-B256-604543973D8A}
+      IID 36328
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 706.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {EC3700AD-3228-46A0-A571-A5A7D75CC0B0}
+      IID 36331
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 721.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {021D1F6A-9B0B-4265-ADD7-1338D849452C}
+      IID 36334
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 736.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {F2B799D4-1317-4E2B-AB00-E9BB32F7106A}
+      IID 36337
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 751.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {89ED4725-1F94-4563-B602-10998ED386A9}
+      IID 36340
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 766.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {439B4C61-8176-4ED8-B677-C028F7ED3855}
+      IID 36343
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 781.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {4FBB1231-8D85-4F16-B8B5-E560F6218061}
+      IID 36346
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 796.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {F796D24D-9339-40D8-892B-20FF9443199B}
+      IID 36349
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 811.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {52B56F29-6169-4665-AE72-51C59DF1C13E}
+      IID 36352
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 826.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {44FB6F55-9AA3-4858-8B6A-AECE680D52FC}
+      IID 36355
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 841.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {C8149F47-3820-463B-B6AF-393904E0E999}
+      IID 36358
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 856.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {87A3501F-8FA4-455F-9D56-01FE9F6C996F}
+      IID 36361
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 871.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {C8E7637B-5391-4E12-B98B-0BCC37746AB7}
+      IID 36364
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 886.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {652A174A-C995-43FD-AECF-25308840233F}
+      IID 36367
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 901.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {DC9567C1-B996-44E7-B972-592FE833E1CF}
+      IID 36370
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 916.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {17155B9A-FA6A-4ED4-B994-37EC77AE1941}
+      IID 36373
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 931.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {1B5E9026-5016-4A8E-A0F1-B925AE8F7242}
+      IID 36376
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 946.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {8A18E10B-3740-41F9-9E52-98BE2157BE3E}
+      IID 36379
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 961.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {4643EFDD-2F5A-4C9C-971B-A8E0F777959C}
+      IID 36382
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 976.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {21A70EDD-847B-4D9D-8F2C-545FF809A7BC}
+      IID 36385
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 991.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {9B54F364-CB8F-42EC-9B19-5C75178CDCFE}
+      IID 36388
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 1006.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {64156835-5151-47F9-9D6F-40F8335FDDBD}
+      IID 36391
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 1021.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {EA9FCD8A-1BBE-4E92-A74C-C40D51674101}
+      IID 36394
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 1036.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {3BC9B199-A3B0-487E-8620-AD8A69CC10D8}
+      IID 36397
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 1051.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {4828570C-57F8-481F-934B-9791722DBE9E}
+      IID 36400
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 1066.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {64504764-754C-4A51-A5A2-5A04DBB006F8}
+      IID 36403
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 1081.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {F415E5C4-EEF8-4E6C-8549-D6380F42B644}
+      IID 36406
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 1096.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {4D8D830C-B113-4F98-A8A3-CFE641548076}
+      IID 36409
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 1111.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {AF8E26E4-49F1-47F3-A01F-710A5918749B}
+      IID 36412
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 1126.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {9783B02C-3DC9-41A8-9E7E-01C6658DF809}
+      IID 36415
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 1141.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {F5179443-FE11-4B5E-8556-C87B1CDF379F}
+      IID 36418
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 1156.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {0D262B31-5770-43BE-89B3-123110C0B975}
+      IID 36421
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 1171.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {9A8C5377-6A4A-4353-A6AA-FC44DCF64D43}
+      IID 36424
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 1186.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {07E019FD-E74D-45C7-BB22-EA46C059CFA7}
+      IID 36427
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 1201.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {0894B07C-8F02-4878-BCC1-1833401E4CA2}
+      IID 36430
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 1216.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {EA477DEB-0A3E-48FE-896A-41B279D93F0F}
+      IID 36433
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 1231.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {725E6479-16D0-42FF-A5A0-E08AC109D6AE}
+      IID 36436
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 1246.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {81EFC109-83A1-4867-949C-C14ED9939E6B}
+      IID 36439
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 1261.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {04FFA62A-0661-4342-9886-3763121DE902}
+      IID 36442
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 1276.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {944D0009-5DF8-4FE8-AF54-ABC25922B126}
+      IID 36445
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 1291.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {0E5B53FE-CAEB-46A1-8206-DECEB81B8520}
+      IID 36448
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 1306.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {4D76ABBF-3A51-4130-AD1D-DD71731DB089}
+      IID 36451
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 1321.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {49A2AB19-9320-4F26-BC55-48F49FA0A309}
+      IID 36454
+      <NOTES
+        |Act5_Scene1_Graveyard
+      >
+      IMGRESOURCEFLAGS 11
+    >
+  >
+  <TRACK {CC3CC535-8CF3-4EB9-9D3A-40C6DA83BDA5}
+    NAME Entry
+    PEAKCOL 22106867
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    LANEREC -1 -1 -1 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {CC3CC535-8CF3-4EB9-9D3A-40C6DA83BDA5}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+    <ITEM
+      POSITION 1.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {F445CDC2-490A-4F13-BFC1-641F08BE7AC0}
+      IID 36197
+      <NOTES
+        |Entry
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 46.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {4E5B573A-74F8-4DFD-AFC1-D2424CC57E10}
+      IID 36200
+      <NOTES
+        |Is she to be buried in Christian burial that wilfully seeks her own salvation?
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 61.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {D9D43E27-5034-40DE-BC78-3A249D362E79}
+      IID 36203
+      <NOTES
+        |I tell thee she is; and therefore make her grave straight: the crowner hath sat on her and finds it Christian burial.
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 76.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {40B03BA6-918A-4A4D-B209-B7C193121EAE}
+      IID 36206
+      <NOTES
+        |How can that be unless she drowned herself in her own defence?
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 91.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {09884309-C572-46FF-B62B-5A222262D042}
+      IID 36209
+      <NOTES
+        |Why 'tis found so.
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 106.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {CEC30404-7F39-4222-ABF7-9DB2B971D0EF}
+      IID 36212
+      <NOTES
+        |It must be se offendendo; it cannot be else. For here lies the point: if I drown myself wittingly it argues an act: and an act hath three branches--it is to act to do to perform: argal she drowned herself wittingly.
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 121.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {76290E7C-6B18-4534-8707-19360617B180}
+      IID 36215
+      <NOTES
+        |Nay but hear you Goodman Delver--
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 136.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {24A6DD72-4A1F-4644-983A-B01F94FE46B9}
+      IID 36218
+      <NOTES
+        |Give me leave. Here lies the water; good: here stands the man; good: if the man go to this water and drown himself
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 151.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {E951C2D7-5D03-4F8D-9F47-2339DCEB257D}
+      IID 36221
+      <NOTES
+        |But is this law?
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 166.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {334BDB45-D69A-4F60-88E9-8C0156C80ED1}
+      IID 36224
+      <NOTES
+        |Ay marry is't--crowner's quest law.
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 181.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {E4720BC3-3DF4-436D-BF6B-45E04AD38BA1}
+      IID 36227
+      <NOTES
+        |Will you ha' the truth on't? If this had not been a gentlewoman she should have been buried out o' Christian burial.
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 196.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {6C077637-9DFE-4297-B8FF-127EBA2DDF0C}
+      IID 36230
+      <NOTES
+        |Why there thou say'st: and the more pity that great folk should have countenance in this world to drown or hang themselves more than their even Christian. Come
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 211.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {6FC60803-69F1-4D8D-AFFB-93001E60AD8D}
+      IID 36233
+      <NOTES
+        |Go to.
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 226.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {C3246F08-47C4-4CA8-84FC-246AC6F00056}
+      IID 36236
+      <NOTES
+        |What is he that builds stronger than either the mason the shipwright or the carpenter?
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 241.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {027B98D0-7618-46B6-B931-9BAA7B042AF3}
+      IID 36239
+      <NOTES
+        |The gallows-maker; for that frame outlives a thousand tenants.
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 256.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {8B615E3F-EAB4-4635-A344-EB7F5F53C0CA}
+      IID 36242
+      <NOTES
+        |I like thy wit well in good faith: the gallows does well; but how does it well? it does well to those that do ill: now thou dost ill to say the gallows is built stronger than the church: argal the gallows may do well to thee.
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 271.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {190141EA-9A50-4CCD-B3CA-E6C312C7F434}
+      IID 36245
+      <NOTES
+        |Who builds stronger than a mason a shipwright or a carpenter?
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 286.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {FBEC3CFB-A46A-4AC4-A221-3058F0D33278}
+      IID 36248
+      <NOTES
+        |Ay tell me that and unyoke.
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 301.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {9C6BAD3F-412A-4CE7-B2B4-1786CD23AF58}
+      IID 36251
+      <NOTES
+        |Marry now I can tell.
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 316.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {092823C2-FACA-45AE-A66E-9047ABA160D1}
+      IID 36254
+      <NOTES
+        |To't.
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 331.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {83002CB8-0AD5-459E-8876-6263174381AD}
+      IID 36257
+      <NOTES
+        |Mass I cannot tell.
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 346.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {C1C5AA1C-0E3B-4DF0-8A02-34BBAE59AB13}
+      IID 36260
+      <NOTES
+        |Cudgel thy brains no more about it for your dull ass will not mend his pace with beating; and when you are asked this question next say 'a grave-maker:' the houses that he makes last till doomsday.
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 361.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {E1487EB6-F87F-4BC9-8E62-7F9DBC9E007B}
+      IID 36263
+      <NOTES
+        |Go get thee to Yaughan; fetch me a stoup of liquor.
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 376.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {FE1FD22C-13EA-41F3-8535-0A6798869AD0}
+      IID 36266
+      <NOTES
+        |In youth when I did love did love methought it was very sweet; To contract O the time for ah my behove methought there was nothing meet.
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 391.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {89CAE1BA-6B58-4568-8EA0-4F4BE363C17B}
+      IID 36269
+      <NOTES
+        |Has this fellow no feeling of his business that he sings at grave-making?
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 406.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {A01C4D6A-19B7-4C19-898B-37FA1FF02D11}
+      IID 36272
+      <NOTES
+        |Custom hath made it in him a property of easiness.
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 421.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {C89ADDED-631F-4B7C-A4AB-258845AD369F}
+      IID 36275
+      <NOTES
+        |'Tis e'en so: the hand of little employment hath the daintier sense.
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 436.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {AAA664FB-A26A-4CC5-BBC7-C2136072D00D}
+      IID 36278
+      <NOTES
+        |But age with his stealing steps hath clawed me in his clutch; And hath shipped me intil the land as if I had never been such.
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 451.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {7BB07D2A-C4CF-4371-B263-F4A8F6CA264E}
+      IID 36281
+      <NOTES
+        |That skull had a tongue in it and could sing once: how the knave jowls it to the ground as if it were Cain's jaw-bone that did the first murder!
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 466.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {CC948F33-7611-4211-AD06-438513C0726A}
+      IID 36284
+      <NOTES
+        |It might be the pate of a politician which this ass now o'erreaches; one that would circumvent God might it not?
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 481.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {DF1C1F63-2DA7-4C52-AF8A-ED55AB69230D}
+      IID 36287
+      <NOTES
+        |It might my lord.
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 496.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {5D3DD37A-1483-4C68-B927-FC60BA3DF5E5}
+      IID 36290
+      <NOTES
+        |Or of a courtier which could say 'Good morrow sweet lord! How dost thou sweet lord?' This might be my lord such-a-one that praised my lord such-a-one's horse when he meant to beg it--might it not?
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 511.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {938CF895-1366-443B-A179-358A8EF0A04C}
+      IID 36293
+      <NOTES
+        |Ay my lord.
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 526.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {D27C62E7-01F6-4811-B064-59F9CDC684CD}
+      IID 36296
+      <NOTES
+        |Why e'en so: and now my Lady Worm's chapless and knocked about the mazard with a sexton's spade: here's fine revolution an we had the trick to see't.
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 541.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {659EC79D-C8EF-446C-A630-34C03E99C3CD}
+      IID 36299
+      <NOTES
+        |Did these bones cost no more the breeding but to play at loggats with 'em? mine ache to think on't.
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 556.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {CB86F4F7-C1E0-4E59-8507-E69BE0CEDD7E}
+      IID 36302
+      <NOTES
+        |A pick-axe and a spade a spade; For and a shrouding sheet: O a pit of clay for to be made For such a guest is meet.
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 571.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {7091A554-6A9C-4FB1-BD2E-9A18560B56AF}
+      IID 36305
+      <NOTES
+        |There's another: why may not that be the skull of a lawyer? Where be his quiddits now his quillets his cases his tenures and his tricks?
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 586.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {79B94877-E407-413C-AB9E-16653FE672B6}
+      IID 36308
+      <NOTES
+        |What's that his honour?
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 601.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {BAED14BA-063E-4A20-904E-EE8FC6157885}
+      IID 36311
+      <NOTES
+        |Is not this something more than fantasy? Think on that.
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 616.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {D849AACA-1B02-48BA-84AC-15FC9751E43D}
+      IID 36314
+      <NOTES
+        |Here lies the water; good: here stands the man; good: if the man go to this water and drown himself--
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 631.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {99E7253F-8298-43C1-BF53-174E0DE3C264}
+      IID 36317
+      <NOTES
+        |This doth well for these--but what of this man's picture? Look you.
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 646.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {E5BEF71C-3E7C-487D-B881-B7317C5BBC4B}
+      IID 36320
+      <NOTES
+        |The very conveyances of his lands will hardly lie in this box; and must the inheritor himself have no more, ha?
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 661.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {2C99B5D2-F417-44E4-98D5-138F8FDE8B6E}
+      IID 36323
+      <NOTES
+        |Not a jot more my lord.
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 676.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {7255128B-AF49-4A84-B6B9-6802C65E8306}
+      IID 36326
+      <NOTES
+        |Is not parchment made of sheep-skins?
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 691.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {7C69728E-E7A5-4291-A202-60DA5E71A889}
+      IID 36329
+      <NOTES
+        |Ay my lord And of calves-skins too.
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 706.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {53789686-9C51-4F7C-A1B9-01A38A3EFBEC}
+      IID 36332
+      <NOTES
+        |Those are sheep and calves which seek out assurance in that. I will speak to this fellow.--Whose grave's this sirrah?
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 721.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {78AAC67A-4620-4C78-925D-3C0B1E9A1EEC}
+      IID 36335
+      <NOTES
+        |Mine sir.
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 736.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {A3329D55-15D9-41B5-9468-8135203E9485}
+      IID 36338
+      <NOTES
+        |I think it be thine indeed; for thou liest in't.
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 751.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {1A98F907-B007-41C8-B2C9-464FC63AE081}
+      IID 36341
+      <NOTES
+        |You lie out on't sir and therefore it is not yours: for my part I do not lie in't.
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 766.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {7C90C8A9-5BAF-4789-8389-A6AE0E0031A2}
+      IID 36344
+      <NOTES
+        |'Tis a quick lie sir; 'twill away gain from me to you.
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 781.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {2200D881-86A3-4C0C-92C8-722C7879FD98}
+      IID 36347
+      <NOTES
+        |What man dost thou dig it for?
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 796.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {869336FB-472B-4442-A528-5ED06B29FF17}
+      IID 36350
+      <NOTES
+        |For no man madam.
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 811.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {FB869504-F815-41FE-9218-B4D52093FA0F}
+      IID 36353
+      <NOTES
+        |What woman then?
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 826.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {FAB4E116-8DA1-4A8D-85CE-C17EC518F59B}
+      IID 36356
+      <NOTES
+        |For none neither.
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 841.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {EB491547-CE41-4543-A475-F757C909EE59}
+      IID 36359
+      <NOTES
+        |Who is to be buried in't?
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 856.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {89DC8B02-D8C0-42DD-B649-19396FD3B3B0}
+      IID 36362
+      <NOTES
+        |One that was a woman sir; but rest her soul she's dead.
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 871.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {DEB42B63-65BF-4180-8B90-A669068FBFDA}
+      IID 36365
+      <NOTES
+        |How absolute the knave is! we must speak by the card or equivocation will undo us.
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 886.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {619DE4B8-BD8A-44C0-97A9-04A73E8719AD}
+      IID 36368
+      <NOTES
+        |By the Lord Horatio these three years I have taken note of it; the age is grown so picked that the toe of the peasant comes so near the heel of the courtier he galls his kibe.
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 901.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {D7D503B9-005D-4D3C-80C6-2FA8D3EA3760}
+      IID 36371
+      <NOTES
+        |How long hast thou been a grave-maker?
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 916.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {D46A80CE-C690-4AAB-B5AF-1061493F2F99}
+      IID 36374
+      <NOTES
+        |Of all the days i' the year I came to't that day that our last king Hamlet o'ercame Fortinbras.
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 931.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {ED4BA5B8-B7FE-407B-AA1A-1C8963FB53F6}
+      IID 36377
+      <NOTES
+        |How long is that since?
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 946.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {2A36D168-4102-4714-B6C6-D4806A5AA66F}
+      IID 36380
+      <NOTES
+        |Cannot you tell that? every fool can tell that: it was the very day that young Hamlet was born--
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 961.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {FC7B5788-0070-44A4-B2A4-EB66755BFA46}
+      IID 36383
+      <NOTES
+        |I' faith if he be not rotten before he die--
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 976.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {F1625896-7A19-4CA2-B25D-AF9DB093E625}
+      IID 36386
+      <NOTES
+        |Ha! ha! ha!--
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 991.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {07D9F114-7C04-4E97-B276-81994BFB5FE1}
+      IID 36389
+      <NOTES
+        |--we shall have him a piece of a carrion: Lord an he had lain i' the ground two years he would not have smelled.
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 1006.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {DDF072EB-F358-44B0-AA79-3A7D0A03FC4B}
+      IID 36392
+      <NOTES
+        |How came he mad?
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 1021.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {EC9C86E8-18AD-4BB5-93E7-6E95A9E9F266}
+      IID 36395
+      <NOTES
+        |Very strangely by a kind of madness.
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 1036.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {42E620AE-B5A1-4941-949A-90E79F9FDFE9}
+      IID 36398
+      <NOTES
+        |Of what?
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 1051.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {0DEFEE1D-50DC-4E50-A36D-1EAE16F88DE2}
+      IID 36401
+      <NOTES
+        |Why here in Denmark: I have been sexton here man and boy thirty years.
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 1066.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {0A66A20C-04BA-47A5-925E-5C74795A7E5E}
+      IID 36404
+      <NOTES
+        |How long will a man lie i' the earth ere he rot?
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 1081.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {3F300E62-831E-4D31-A57E-FB0AF28468C9}
+      IID 36407
+      <NOTES
+        |Faith if he be not rotten before he die--and we have many pocky corses now-a-days that will scarce hold the laying in--
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 1096.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {4C9D9D91-5727-437E-ACF2-B9AD51B0E067}
+      IID 36410
+      <NOTES
+        |He must build churches then.
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 1111.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {01D5534B-F4D6-4665-AFAC-2005425ED55B}
+      IID 36413
+      <NOTES
+        |No I tell thee he will keep no mean in the talking to himself: words words words.
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 1126.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {3DD58749-34AA-451F-B623-AEDE815DF9CF}
+      IID 36416
+      <NOTES
+        |Alas poor Yorick! I knew him Horatio: a fellow of infinite jest of most excellent fancy.
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 1141.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {17B497A9-BD60-4AB2-969F-0CBF930610D2}
+      IID 36419
+      <NOTES
+        |He hath borne me on his back a thousand times; and now how abhorred in my imagination it is!
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 1156.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {8E049738-436B-4000-8592-67D0BAA8F944}
+      IID 36422
+      <NOTES
+        |My gorge rises at it. Here hung those lips that I have kissed I know not how oft.
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 1171.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {589F2892-FD73-489B-8F38-34A178C4F2B1}
+      IID 36425
+      <NOTES
+        |Where be your gibes now? your gambols? your songs? your flashes of merriment that were wont to set the table on a roar?
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 1186.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {941D9D6E-2221-4B59-BCF8-7307E69CDB30}
+      IID 36428
+      <NOTES
+        |Not one now to mock your own grinning? quite chap-fallen? Now get you to my lady's chamber and tell her let her paint an inch thick to this favour she must come; make her laugh at that.
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 1201.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {DC210673-1A31-4C6A-95A4-94216B976EE4}
+      IID 36431
+      <NOTES
+        |Prithee Horatio tell me one thing.
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 1216.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {AF0C7940-99A4-4603-9003-FA95B6B06A1E}
+      IID 36434
+      <NOTES
+        |What's that my lord?
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 1231.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {47BF89C2-BCF4-4C40-BFD8-5FC5E071BAA7}
+      IID 36437
+      <NOTES
+        |Dost thou think Alexander looked o' this fashion i' the earth?
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 1246.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {1D607378-F69A-4E24-A124-901EDF7DD337}
+      IID 36440
+      <NOTES
+        |E'en so.
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 1261.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {CE475385-9C29-479E-AC59-D1103FF6A2CF}
+      IID 36443
+      <NOTES
+        |To what base uses we may return Horatio! Why may not imagination trace the noble dust of Alexander till he find it stopping a bunghole?
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 1276.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {A9743C63-16DE-4D73-BF51-B37808236B35}
+      IID 36446
+      <NOTES
+        |'Twere to consider too curiously to consider so.
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 1291.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {59231610-D1CF-4620-B2FF-79E5A94D3F74}
+      IID 36449
+      <NOTES
+        |No faith not a jot; but to follow him thither with modesty enough and likelihood to lead it: as thus: Alexander died Alexander was buried Alexander returneth into dust; the dust is earth; of earth we make loam; and why of that loam whereto he was converted might they not stop a beer-barrel?
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 1306.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {5B4B423B-C7CB-4000-814D-12D5C85AB78D}
+      IID 36452
+      <NOTES
+        |Imperious Caesar dead and turned to clay might stop a hole to keep the wind away.
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 1321.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {5F7C0823-41AF-4D6B-9A94-22689D8492AE}
+      IID 36455
+      <NOTES
+        |O that that earth which kept the world in awe should patch a wall t' expel the winter's flaw!
+      >
+      IMGRESOURCEFLAGS 11
+    >
+  >
+  <TRACK {8E585C3A-D548-484D-AAEA-589189F970EA}
+    NAME Speaker
+    PEAKCOL 26273609
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    LANEREC -1 -1 -1 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {8E585C3A-D548-484D-AAEA-589189F970EA}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+    <ITEM
+      POSITION 1.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {C3695330-6410-4923-830A-14FE7D7F1340}
+      IID 36198
+      <NOTES
+        |Speaker
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 46.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {35A56770-AE51-4AA5-A095-F12F5329083A}
+      IID 36201
+      <NOTES
+        |First Clown
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 61.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {DDAF7676-E688-47EF-93FD-10DFF63B9931}
+      IID 36204
+      <NOTES
+        |Second Clown
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 76.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {DE11DDD2-9977-45CA-B144-18C4F9966352}
+      IID 36207
+      <NOTES
+        |First Clown
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 91.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {894712BD-1FBF-4B9A-9AB8-1B997F76B613}
+      IID 36210
+      <NOTES
+        |Second Clown
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 106.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {B3B380FE-5F02-4C6A-8995-98E3E8A1C0FF}
+      IID 36213
+      <NOTES
+        |First Clown
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 121.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {03EE1E02-E2DF-4612-B369-4992865F405E}
+      IID 36216
+      <NOTES
+        |Second Clown
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 136.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {BE964137-8861-443A-AFBB-E990814E2F4C}
+      IID 36219
+      <NOTES
+        |good: or if he come to the water and drown himself
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 151.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {FF2CF44E-6FAA-4528-878B-8CB043C2093C}
+      IID 36222
+      <NOTES
+        |Second Clown
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 166.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {B07256EB-E6C4-4D8F-8903-D015C4B4B6B5}
+      IID 36225
+      <NOTES
+        |First Clown
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 181.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {080C7BCD-6F94-4AA8-BD50-4928F70F2F0C}
+      IID 36228
+      <NOTES
+        |Second Clown
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 196.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {D4912017-063A-4AE7-8517-F212CC8C98C7}
+      IID 36231
+      <NOTES
+        |my spade.
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 211.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {EE8CE92C-A5B3-46F9-914E-93D824D38A69}
+      IID 36234
+      <NOTES
+        |Second Clown
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 226.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {6F285D7C-A56C-487A-B6E6-1EC42853C27F}
+      IID 36237
+      <NOTES
+        |First Clown
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 241.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {11CC1421-3C85-4252-B1D3-222E9C724D86}
+      IID 36240
+      <NOTES
+        |Second Clown
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 256.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {3763C34B-A35F-4BC9-9678-FEE8EEE0C684}
+      IID 36243
+      <NOTES
+        |First Clown
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 271.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {CEC4A414-98E7-47A1-9100-299A95731942}
+      IID 36246
+      <NOTES
+        |Second Clown
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 286.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {1FE56DDF-1E89-4286-9E92-1E60FD5DE02C}
+      IID 36249
+      <NOTES
+        |First Clown
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 301.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {F5E30758-2478-4E08-AD7F-CB0F4443A0A0}
+      IID 36252
+      <NOTES
+        |Second Clown
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 316.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {08508625-9808-4171-8F4C-F94304134369}
+      IID 36255
+      <NOTES
+        |First Clown
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 331.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {552B964B-00C8-48D9-B7D6-BC018A7B9827}
+      IID 36258
+      <NOTES
+        |Second Clown
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 346.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {09AD2D32-188C-4550-82BC-495F5FCD93B3}
+      IID 36261
+      <NOTES
+        |First Clown
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 361.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {BC415A9E-EC97-45C2-A1AE-EF24B54CB30A}
+      IID 36264
+      <NOTES
+        |Second Clown
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 376.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {C0269F19-A499-4388-B470-4D4D60EADFA2}
+      IID 36267
+      <NOTES
+        |First Clown
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 391.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {D091AD6B-517B-4211-B27E-E071914B2DC5}
+      IID 36270
+      <NOTES
+        |Hamlet
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 406.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {1FC72BF2-7318-48A4-B221-B85DF93C6743}
+      IID 36273
+      <NOTES
+        |Horatio
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 421.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {47CACD40-677E-480F-912A-21FF9147E966}
+      IID 36276
+      <NOTES
+        |Hamlet
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 436.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {2C489576-F872-4537-923E-BF5F16A46ADB}
+      IID 36279
+      <NOTES
+        |First Clown
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 451.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {0D1A2DF2-B871-42FA-A253-67BF1BA8D5D7}
+      IID 36282
+      <NOTES
+        |Hamlet
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 466.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {0C1FE28C-43F6-4065-A745-7E2CFEA5B866}
+      IID 36285
+      <NOTES
+        |Hamlet
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 481.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {97E55C21-1FAD-4C39-858C-15B722C14FE0}
+      IID 36288
+      <NOTES
+        |Horatio
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 496.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {6A719191-AF31-44AD-96FE-CD730F9118F9}
+      IID 36291
+      <NOTES
+        |Hamlet
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 511.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {7C81D8A7-C567-4662-80A4-DDBE9A45F56E}
+      IID 36294
+      <NOTES
+        |Horatio
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 526.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {0BADF10A-1FA2-404D-A383-31A67ADF1F28}
+      IID 36297
+      <NOTES
+        |Hamlet
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 541.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {C95CDDEF-0117-4D33-801D-6A2449444CB2}
+      IID 36300
+      <NOTES
+        |Hamlet
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 556.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {A1613FE8-31A3-496C-BBA1-B846675FA2E3}
+      IID 36303
+      <NOTES
+        |First Clown
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 571.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {70699547-39FF-4CE0-A1C9-D649986C01A1}
+      IID 36306
+      <NOTES
+        |Hamlet
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 586.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {18426103-4B9E-42A7-9AAF-64501C629FF6}
+      IID 36309
+      <NOTES
+        |Horatio
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 601.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {475E7209-9897-463F-B40F-4983CE675723}
+      IID 36312
+      <NOTES
+        |Hamlet
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 616.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {B568334A-9BD2-4333-BE53-D0ADD067E836}
+      IID 36315
+      <NOTES
+        |First Clown
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 631.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {D48522CB-A718-4125-9FB9-2DD72141C54C}
+      IID 36318
+      <NOTES
+        |Hamlet
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 646.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {4D814847-E23C-41F5-A33B-19A0F2B3357C}
+      IID 36321
+      <NOTES
+        |Hamlet
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 661.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {C905EE0A-F242-4DD9-83BB-960A3E85EC00}
+      IID 36324
+      <NOTES
+        |Horatio
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 676.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {3C36EA76-AC15-4013-8FCD-12200E1BE75F}
+      IID 36327
+      <NOTES
+        |Hamlet
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 691.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {6C1BFBD6-9B16-4661-828C-346AC3C5B143}
+      IID 36330
+      <NOTES
+        |Horatio
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 706.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {41DBDF0B-6D60-49C9-93EB-E0AD3623006A}
+      IID 36333
+      <NOTES
+        |Hamlet
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 721.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {1FDC8D1C-9D92-4DEC-8F1D-7A8C54D1570D}
+      IID 36336
+      <NOTES
+        |First Clown
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 736.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {73FFC1B6-4C46-4320-B5FA-D1888C401BF0}
+      IID 36339
+      <NOTES
+        |Hamlet
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 751.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {10A43A9E-5158-43E8-A421-450543EF72BB}
+      IID 36342
+      <NOTES
+        |First Clown
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 766.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {AC9273E0-8853-435B-9A21-A566C7DA2B9B}
+      IID 36345
+      <NOTES
+        |Hamlet
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 781.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {F5EB9BB6-FC8E-48E7-9B30-1022B0072C68}
+      IID 36348
+      <NOTES
+        |Hamlet
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 796.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {7519105A-5E98-408E-AB69-7BA0B0D1DBD2}
+      IID 36351
+      <NOTES
+        |First Clown
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 811.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {B55E5087-974F-445A-B86E-D0A1AAC05210}
+      IID 36354
+      <NOTES
+        |Hamlet
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 826.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {5191C86C-0309-41CB-9E8A-899237EBA7CB}
+      IID 36357
+      <NOTES
+        |First Clown
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 841.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {5E2DA124-0BB4-460E-82FF-5075368B239D}
+      IID 36360
+      <NOTES
+        |Hamlet
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 856.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {7CF0D845-CE67-4EF5-9547-B7A8884B71EB}
+      IID 36363
+      <NOTES
+        |First Clown
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 871.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {4003A820-8B8A-482D-9F04-4517F9A1B1CD}
+      IID 36366
+      <NOTES
+        |Hamlet
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 886.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {878F5D8B-9EBC-4ABD-8069-96096065F80C}
+      IID 36369
+      <NOTES
+        |Hamlet
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 901.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {98807453-972F-4D64-81C4-5316E780105D}
+      IID 36372
+      <NOTES
+        |Hamlet
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 916.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {B77A34EC-92BD-4769-8757-081CB5C22001}
+      IID 36375
+      <NOTES
+        |First Clown
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 931.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {A705861E-AE84-4B15-BEB9-1C8D355EFF69}
+      IID 36378
+      <NOTES
+        |Hamlet
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 946.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {B1549D9B-EE6A-4033-8756-92D040C59A00}
+      IID 36381
+      <NOTES
+        |First Clown
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 961.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {0F6144C8-C759-44B5-B5BD-1051190752ED}
+      IID 36384
+      <NOTES
+        |First Clown
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 976.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {C7CC261A-22F6-442E-BA81-9982DC4C4897}
+      IID 36387
+      <NOTES
+        |Hamlet
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 991.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {91DAE413-67B0-49D4-A0E2-C483A208BC53}
+      IID 36390
+      <NOTES
+        |First Clown
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 1006.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {AFE7175C-969A-42AB-83C6-A3894604A5DA}
+      IID 36393
+      <NOTES
+        |Hamlet
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 1021.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {F3A62BF7-F9BC-40EA-B34D-6D28506FC4CF}
+      IID 36396
+      <NOTES
+        |First Clown
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 1036.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {E5B1A4FD-C543-4ED6-B36B-3A46C3FAC216}
+      IID 36399
+      <NOTES
+        |Hamlet
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 1051.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {FF6D22EA-8576-4B25-A282-9FC44CE1D2A9}
+      IID 36402
+      <NOTES
+        |First Clown
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 1066.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {E8F50510-E2A0-4CDC-A2AF-EEDBB76A98E3}
+      IID 36405
+      <NOTES
+        |Hamlet
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 1081.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {2B499EE7-9FD3-4830-8FAF-85455356B28F}
+      IID 36408
+      <NOTES
+        |First Clown
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 1096.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {8DE17CCB-CD57-4C0A-A8AB-260705F58029}
+      IID 36411
+      <NOTES
+        |Hamlet
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 1111.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {BC054605-BC50-4CDB-8978-544911391E5F}
+      IID 36414
+      <NOTES
+        |First Clown
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 1126.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {B6E19A0F-5C68-4607-A592-072649B2BE88}
+      IID 36417
+      <NOTES
+        |Hamlet
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 1141.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {C46473E2-268A-46C3-9EE5-79F7FB5E3AE0}
+      IID 36420
+      <NOTES
+        |Hamlet
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 1156.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {3FE7D2F1-E202-461C-83D1-8B9733767F49}
+      IID 36423
+      <NOTES
+        |Hamlet
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 1171.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {E4C2D70A-96C7-4561-B417-B6FE52923B84}
+      IID 36426
+      <NOTES
+        |Hamlet
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 1186.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {BD232260-C1C5-4809-A379-4D1C81CF107E}
+      IID 36429
+      <NOTES
+        |Hamlet
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 1201.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {708C666E-7558-4CC6-B899-C48A8DC534D0}
+      IID 36432
+      <NOTES
+        |Hamlet
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 1216.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {E7D77BE1-645D-4394-9524-6BC33CAB0E76}
+      IID 36435
+      <NOTES
+        |Horatio
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 1231.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {06C58D14-F484-4A43-84DD-405CEC8187A7}
+      IID 36438
+      <NOTES
+        |Hamlet
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 1246.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {F81B61F2-12A1-4130-9251-CC27E0F4DC30}
+      IID 36441
+      <NOTES
+        |Horatio
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 1261.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {07A7DFAA-3CE8-4631-851B-DDA8FD6D37DA}
+      IID 36444
+      <NOTES
+        |Hamlet
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 1276.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {FC55DB1C-FC75-42B9-AC51-91BE5A27CAFC}
+      IID 36447
+      <NOTES
+        |Horatio
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 1291.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {389335AE-49C8-4C68-B7AE-7EB8C35BDEEE}
+      IID 36450
+      <NOTES
+        |Hamlet
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 1306.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {562734E0-9030-4873-9522-7D5E2925AF1B}
+      IID 36453
+      <NOTES
+        |Hamlet
+      >
+      IMGRESOURCEFLAGS 11
+    >
+    <ITEM
+      POSITION 1321.5
+      SNAPOFFS 0
+      LENGTH 11
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 0 0 0 0 0 0 0
+      FADEOUT 0 0 0 0 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {38E098BC-55CB-483D-BD22-9BCF75B0AC8E}
+      IID 36456
+      <NOTES
+        |Hamlet
+      >
+      IMGRESOURCEFLAGS 11
+    >
+  >
+  <TRACK {79EE30C0-950C-40E1-BF09-9E5513A9B9B3}
+    NAME Act5_Scene1_Graveyard
+    PEAKCOL 18944143
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    LANEREC -1 -1 -1 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {79EE30C0-950C-40E1-BF09-9E5513A9B9B3}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {80EA45A7-E8B4-4512-88E7-9517205C549D}
+    NAME "Is she to be buried in Christian burial that wilfully seeks her own salvation?"
+    PEAKCOL 18646657
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {80EA45A7-E8B4-4512-88E7-9517205C549D}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {C2D4582B-5376-4CD3-9E88-83429F1B2897}
+    NAME "First Clown"
+    PEAKCOL 26814750
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    LANEREC -1 -1 -1 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {C2D4582B-5376-4CD3-9E88-83429F1B2897}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {37390F99-EBAC-4F00-98FA-CAEE6A35C72B}
+    NAME "I tell thee she is; and therefore make her grave straight: the crowner hath sat on her and finds it Christian burial."
+    PEAKCOL 29748744
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    LANEREC -1 -1 -1 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {37390F99-EBAC-4F00-98FA-CAEE6A35C72B}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {1590F646-1B55-444A-94CB-CEF4A997F416}
+    NAME "Second Clown"
+    PEAKCOL 19523582
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    LANEREC -1 -1 -1 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {1590F646-1B55-444A-94CB-CEF4A997F416}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {303AC375-BAB7-4F74-B11B-6385820C5505}
+    NAME "How can that be unless she drowned herself in her own defence?"
+    PEAKCOL 28755548
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    LANEREC -1 -1 -1 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {303AC375-BAB7-4F74-B11B-6385820C5505}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {F9E1336A-D52B-40C4-A34A-F4B2E3200149}
+    NAME "Why 'tis found so."
+    PEAKCOL 33158083
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    LANEREC -1 -1 -1 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {F9E1336A-D52B-40C4-A34A-F4B2E3200149}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {51E7864E-3F7F-4F08-B19C-00D2D429C7D9}
+    NAME "It must be se offendendo; it cannot be else. For here lies the point: if I drown myself wittingly it argues an act: and an act hath three branches--it is to act to do to perform: argal she drowned herself wittingly."
+    PEAKCOL 25772776
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    LANEREC -1 -1 -1 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {51E7864E-3F7F-4F08-B19C-00D2D429C7D9}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {62A41F10-A01F-4D7B-8795-7F6A01B6DDCE}
+    NAME "Nay but hear you Goodman Delver--"
+    PEAKCOL 28608033
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    LANEREC -1 -1 -1 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {62A41F10-A01F-4D7B-8795-7F6A01B6DDCE}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {807591F8-6A37-4FE7-89D6-DF0B3C599918}
+    NAME "Give me leave. Here lies the water; good: here stands the man; good: if the man go to this water and drown himself"
+    PEAKCOL 17646114
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    LANEREC -1 -1 -1 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {807591F8-6A37-4FE7-89D6-DF0B3C599918}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {97D3AA14-A70B-42A1-9D9C-3A8771C9E812}
+    NAME "good: or if he come to the water and drown himself"
+    PEAKCOL 28854982
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    LANEREC -1 -1 -1 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {97D3AA14-A70B-42A1-9D9C-3A8771C9E812}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {AAA03393-D261-4FF0-A7D0-DE305B3DAF8C}
+    NAME "But is this law?"
+    PEAKCOL 19347549
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {AAA03393-D261-4FF0-A7D0-DE305B3DAF8C}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {2CA513FF-8B47-4906-AE68-F24440281D68}
+    NAME "Ay marry is't--crowner's quest law."
+    PEAKCOL 18341716
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    LANEREC -1 -1 -1 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {2CA513FF-8B47-4906-AE68-F24440281D68}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {E059341E-9326-4B02-8025-AA04F5E7EA9F}
+    NAME "Will you ha' the truth on't? If this had not been a gentlewoman she should have been buried out o' Christian burial."
+    PEAKCOL 24879062
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    LANEREC -1 -1 -1 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {E059341E-9326-4B02-8025-AA04F5E7EA9F}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {AAC5801D-354C-4F48-86AE-64AB186B1C19}
+    NAME "Why there thou say'st: and the more pity that great folk should have countenance in this world to drown or hang themselves more than their even Christian. Come"
+    PEAKCOL 32914101
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    LANEREC -1 -1 -1 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {AAC5801D-354C-4F48-86AE-64AB186B1C19}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {8CA95608-4E8E-4F77-95E6-FD0F9C4C2F82}
+    NAME "my spade."
+    PEAKCOL 31601070
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    LANEREC -1 -1 -1 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {8CA95608-4E8E-4F77-95E6-FD0F9C4C2F82}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {35FAE4C4-DD5F-471E-AC8A-4F8983636F19}
+    NAME "Go to."
+    PEAKCOL 19358072
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    LANEREC -1 -1 -1 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {35FAE4C4-DD5F-471E-AC8A-4F8983636F19}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {D2161425-3920-4506-9BC5-744544EE9C47}
+    NAME "What is he that builds stronger than either the mason the shipwright or the carpenter?"
+    PEAKCOL 30545346
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {D2161425-3920-4506-9BC5-744544EE9C47}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {AB3D5533-492C-47CA-B811-B9452B0C9C2D}
+    NAME "The gallows-maker; for that frame outlives a thousand tenants."
+    PEAKCOL 17639942
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    LANEREC -1 -1 -1 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {AB3D5533-492C-47CA-B811-B9452B0C9C2D}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {D3BFBD35-0C80-492C-9677-972FC902DFD2}
+    NAME "I like thy wit well in good faith: the gallows does well; but how does it well? it does well to those that do ill: now thou dost ill to say the gallows is built stronger than the church: argal the gallows may do well to thee."
+    PEAKCOL 21478311
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    LANEREC -1 -1 -1 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {D3BFBD35-0C80-492C-9677-972FC902DFD2}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {9792317E-1D70-4623-AF47-FF8CE59DD4F5}
+    NAME "Who builds stronger than a mason a shipwright or a carpenter?"
+    PEAKCOL 20252872
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    LANEREC -1 -1 -1 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {9792317E-1D70-4623-AF47-FF8CE59DD4F5}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {74DF689A-45C2-40C1-B0A2-7BBD164CE710}
+    NAME "Ay tell me that and unyoke."
+    PEAKCOL 30092348
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {74DF689A-45C2-40C1-B0A2-7BBD164CE710}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {059E79A8-792C-4275-BAA8-DA2897209020}
+    NAME "Marry now I can tell."
+    PEAKCOL 19271060
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    LANEREC -1 -1 -1 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {059E79A8-792C-4275-BAA8-DA2897209020}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {8D610564-AB4F-48AF-8E34-65BDE2AFB9E8}
+    NAME To't.
+    PEAKCOL 28633471
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {8D610564-AB4F-48AF-8E34-65BDE2AFB9E8}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {DCC68031-ADC3-4BB9-A078-D889E100C0C3}
+    NAME "Mass I cannot tell."
+    PEAKCOL 21801214
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    LANEREC -1 -1 -1 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {DCC68031-ADC3-4BB9-A078-D889E100C0C3}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {6E36793F-24BB-44B4-A118-38726D568FFC}
+    NAME "Cudgel thy brains no more about it for your dull ass will not mend his pace with beating; and when you are asked this question next say 'a grave-maker:' the houses that he makes last till doomsday."
+    PEAKCOL 28227766
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {6E36793F-24BB-44B4-A118-38726D568FFC}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {8F068933-3326-4EC3-A40D-7E129C5FBEEB}
+    NAME "Go get thee to Yaughan; fetch me a stoup of liquor."
+    PEAKCOL 18467420
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    LANEREC -1 -1 -1 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {8F068933-3326-4EC3-A40D-7E129C5FBEEB}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {3BB3763B-26FC-4F7E-811A-7D92E98C2D82}
+    NAME "In youth when I did love did love methought it was very sweet; To contract O the time for ah my behove methought there was nothing meet."
+    PEAKCOL 19459847
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    LANEREC -1 -1 -1 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {3BB3763B-26FC-4F7E-811A-7D92E98C2D82}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {692BCEDC-C9D2-47A1-9A8A-DA592E60B4BE}
+    NAME "Has this fellow no feeling of his business that he sings at grave-making?"
+    PEAKCOL 27883174
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {692BCEDC-C9D2-47A1-9A8A-DA592E60B4BE}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {5DC10004-66BB-4235-A9C7-A7264175E51A}
+    NAME Hamlet
+    PEAKCOL 21108235
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    LANEREC -1 -1 -1 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {5DC10004-66BB-4235-A9C7-A7264175E51A}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {6016EC95-6AA5-4450-96A3-26D941F68701}
+    NAME "Custom hath made it in him a property of easiness."
+    PEAKCOL 25815155
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    LANEREC -1 -1 -1 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {6016EC95-6AA5-4450-96A3-26D941F68701}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {98E3C0D4-82FE-4680-B62D-D401D1E4D0B1}
+    NAME Horatio
+    PEAKCOL 21758228
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    LANEREC -1 -1 -1 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {98E3C0D4-82FE-4680-B62D-D401D1E4D0B1}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {30251038-B6A3-4A2D-85EC-C1CFBC770D7D}
+    NAME "'Tis e'en so: the hand of little employment hath the daintier sense."
+    PEAKCOL 24827840
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    LANEREC -1 -1 -1 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {30251038-B6A3-4A2D-85EC-C1CFBC770D7D}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {3BCD1C87-85A5-434E-B1FA-1D16ACB24E73}
+    NAME "But age with his stealing steps hath clawed me in his clutch; And hath shipped me intil the land as if I had never been such."
+    PEAKCOL 33007624
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    LANEREC -1 -1 -1 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {3BCD1C87-85A5-434E-B1FA-1D16ACB24E73}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {12E1EA1C-8487-4134-A3BB-5DDB6CB8D5B8}
+    NAME "That skull had a tongue in it and could sing once: how the knave jowls it to the ground as if it were Cain's jaw-bone that did the first murder!"
+    PEAKCOL 21003595
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {12E1EA1C-8487-4134-A3BB-5DDB6CB8D5B8}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {9B957269-FECB-41E6-84C8-C51894F9E90C}
+    NAME "It might be the pate of a politician which this ass now o'erreaches; one that would circumvent God might it not?"
+    PEAKCOL 29518893
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    LANEREC -1 -1 -1 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {9B957269-FECB-41E6-84C8-C51894F9E90C}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {F67768E5-3906-46A8-AED9-943FE0BAA6EB}
+    NAME "It might my lord."
+    PEAKCOL 31157405
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    LANEREC -1 -1 -1 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {F67768E5-3906-46A8-AED9-943FE0BAA6EB}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {43E21048-34B6-44A6-A94D-FB328C9217A1}
+    NAME "Or of a courtier which could say 'Good morrow sweet lord! How dost thou sweet lord?' This might be my lord such-a-one that praised my lord such-a-one's horse when he meant to beg it--might it not?"
+    PEAKCOL 22187321
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    LANEREC -1 -1 -1 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {43E21048-34B6-44A6-A94D-FB328C9217A1}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {8A9696E3-6ABB-47B9-AFF5-1C29B466CE10}
+    NAME "Ay my lord."
+    PEAKCOL 29841446
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    LANEREC -1 -1 -1 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {8A9696E3-6ABB-47B9-AFF5-1C29B466CE10}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {7FB1B36E-20FD-42DA-AA60-B4BDED9B5BCC}
+    NAME "Why e'en so: and now my Lady Worm's chapless and knocked about the mazard with a sexton's spade: here's fine revolution an we had the trick to see't."
+    PEAKCOL 28177784
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    LANEREC -1 -1 -1 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {7FB1B36E-20FD-42DA-AA60-B4BDED9B5BCC}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {FF663423-1173-4B95-96A8-F77016CF743A}
+    NAME "Did these bones cost no more the breeding but to play at loggats with 'em? mine ache to think on't."
+    PEAKCOL 17653234
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    LANEREC -1 -1 -1 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {FF663423-1173-4B95-96A8-F77016CF743A}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {74957618-6BC1-4665-9716-F1E4A19BD2F9}
+    NAME "A pick-axe and a spade a spade; For and a shrouding sheet: O a pit of clay for to be made For such a guest is meet."
+    PEAKCOL 26781174
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {74957618-6BC1-4665-9716-F1E4A19BD2F9}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {97D7D264-621D-4CB2-A9F3-62C7051A6104}
+    NAME "There's another: why may not that be the skull of a lawyer? Where be his quiddits now his quillets his cases his tenures and his tricks?"
+    PEAKCOL 21589209
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {97D7D264-621D-4CB2-A9F3-62C7051A6104}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {F4A6EED1-C488-4A4A-8064-59FF1842A3ED}
+    NAME "What's that his honour?"
+    PEAKCOL 25194722
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    LANEREC -1 -1 -1 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {F4A6EED1-C488-4A4A-8064-59FF1842A3ED}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {C06427B5-A417-4745-8270-1FA67B7DE31F}
+    NAME "Is not this something more than fantasy? Think on that."
+    PEAKCOL 33154113
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    LANEREC -1 -1 -1 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {C06427B5-A417-4745-8270-1FA67B7DE31F}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {7C6647EC-C7B4-4236-B2CD-2849186E2CC7}
+    NAME "Here lies the water; good: here stands the man; good: if the man go to this water and drown himself--"
+    PEAKCOL 29213868
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {7C6647EC-C7B4-4236-B2CD-2849186E2CC7}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {4563E017-D123-4347-A70B-AC2DABF94B12}
+    NAME "This doth well for these--but what of this man's picture? Look you."
+    PEAKCOL 27885510
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {4563E017-D123-4347-A70B-AC2DABF94B12}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {F7D5DF0B-F0A4-4B44-B173-008F901A46C0}
+    NAME "The very conveyances of his lands will hardly lie in this box; and must the inheritor himself have no more, ha?"
+    PEAKCOL 17540237
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {F7D5DF0B-F0A4-4B44-B173-008F901A46C0}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {D5416A18-FAFC-4BCB-8D91-DE11A24D0F4E}
+    NAME "Not a jot more my lord."
+    PEAKCOL 31726953
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {D5416A18-FAFC-4BCB-8D91-DE11A24D0F4E}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {641AD69A-A405-4723-8387-8F2D001032D9}
+    NAME "Is not parchment made of sheep-skins?"
+    PEAKCOL 26097007
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {641AD69A-A405-4723-8387-8F2D001032D9}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {2B1152A2-8161-49C9-A6BE-4006C9000846}
+    NAME "Ay my lord And of calves-skins too."
+    PEAKCOL 31527955
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {2B1152A2-8161-49C9-A6BE-4006C9000846}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {7FD3FE6D-4932-48E1-BB6E-9C30217C9B23}
+    NAME "Those are sheep and calves which seek out assurance in that. I will speak to this fellow.--Whose grave's this sirrah?"
+    PEAKCOL 29515390
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {7FD3FE6D-4932-48E1-BB6E-9C30217C9B23}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {D65A96AD-02C3-42F3-AC7B-909627B4BE50}
+    NAME "Mine sir."
+    PEAKCOL 24251530
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {D65A96AD-02C3-42F3-AC7B-909627B4BE50}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {74310F2D-E802-4A7F-B882-E72C89AA6F9C}
+    NAME "I think it be thine indeed; for thou liest in't."
+    PEAKCOL 18706880
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {74310F2D-E802-4A7F-B882-E72C89AA6F9C}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {D8126EEF-C02D-4124-B6F8-6ADCB2640B45}
+    NAME "You lie out on't sir and therefore it is not yours: for my part I do not lie in't."
+    PEAKCOL 27170095
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {D8126EEF-C02D-4124-B6F8-6ADCB2640B45}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {D0045FBA-8C89-45EB-AF85-5E19DBA0506B}
+    NAME "'Tis a quick lie sir; 'twill away gain from me to you."
+    PEAKCOL 22008966
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {D0045FBA-8C89-45EB-AF85-5E19DBA0506B}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {AEEA51C4-2DCB-4EDF-A09A-E5F3EA172730}
+    NAME "What man dost thou dig it for?"
+    PEAKCOL 31518494
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    LANEREC -1 -1 -1 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {AEEA51C4-2DCB-4EDF-A09A-E5F3EA172730}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {BBAB3BB2-E708-4EC0-84D9-53B4C9C9D4DC}
+    NAME "For no man madam."
+    PEAKCOL 23863451
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {BBAB3BB2-E708-4EC0-84D9-53B4C9C9D4DC}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {98ECF018-204E-498D-B2BA-AA9B01444944}
+    NAME "What woman then?"
+    PEAKCOL 18400390
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {98ECF018-204E-498D-B2BA-AA9B01444944}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {4E95F3DF-27B9-4AC2-8952-FDFFEC33B598}
+    NAME "For none neither."
+    PEAKCOL 22756209
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {4E95F3DF-27B9-4AC2-8952-FDFFEC33B598}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {12B65BEB-71DE-4401-A0C7-262BC491D154}
+    NAME "Who is to be buried in't?"
+    PEAKCOL 25019732
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {12B65BEB-71DE-4401-A0C7-262BC491D154}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {6558EA8C-3386-41B0-9261-7C1F0CF7F1E4}
+    NAME "One that was a woman sir; but rest her soul she's dead."
+    PEAKCOL 22892484
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {6558EA8C-3386-41B0-9261-7C1F0CF7F1E4}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {B9815289-D7EC-4EEA-B8F7-104807793DF8}
+    NAME "How absolute the knave is! we must speak by the card or equivocation will undo us."
+    PEAKCOL 20276099
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    LANEREC -1 -1 -1 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {B9815289-D7EC-4EEA-B8F7-104807793DF8}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {1F0183A5-3E9E-455D-B633-653245E5C9FD}
+    NAME "By the Lord Horatio these three years I have taken note of it; the age is grown so picked that the toe of the peasant comes so near the heel of the courtier he galls his kibe."
+    PEAKCOL 26782573
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {1F0183A5-3E9E-455D-B633-653245E5C9FD}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {1B8B5A88-7C3D-4F3D-9464-42FE46FAE0F6}
+    NAME "How long hast thou been a grave-maker?"
+    PEAKCOL 23666352
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    LANEREC -1 -1 -1 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {1B8B5A88-7C3D-4F3D-9464-42FE46FAE0F6}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {C70790A0-F1A0-43AF-ABCA-1769CEC6BE47}
+    NAME "Of all the days i' the year I came to't that day that our last king Hamlet o'ercame Fortinbras."
+    PEAKCOL 31060818
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {C70790A0-F1A0-43AF-ABCA-1769CEC6BE47}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {DA6B6CB2-CE40-40DA-9F38-852048270149}
+    NAME "How long is that since?"
+    PEAKCOL 31531718
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {DA6B6CB2-CE40-40DA-9F38-852048270149}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {18745096-3985-4ADA-B0BB-A70D21853C02}
+    NAME "Cannot you tell that? every fool can tell that: it was the very day that young Hamlet was born--"
+    PEAKCOL 17969852
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {18745096-3985-4ADA-B0BB-A70D21853C02}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {3CE49750-49FC-422F-ADFD-4A06A7880FBB}
+    NAME "I' faith if he be not rotten before he die--"
+    PEAKCOL 26289632
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    LANEREC -1 -1 -1 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {3CE49750-49FC-422F-ADFD-4A06A7880FBB}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {E88B56CC-9173-4C15-8157-C257BA486A0B}
+    NAME "Ha! ha! ha!--"
+    PEAKCOL 20946555
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {E88B56CC-9173-4C15-8157-C257BA486A0B}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {E1768552-618B-4A37-A516-3B294C3AEB18}
+    NAME "--we shall have him a piece of a carrion: Lord an he had lain i' the ground two years he would not have smelled."
+    PEAKCOL 27773095
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    LANEREC -1 -1 -1 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {E1768552-618B-4A37-A516-3B294C3AEB18}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {35BE1749-E809-4459-A395-0291ADD18F65}
+    NAME "How came he mad?"
+    PEAKCOL 28718748
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {35BE1749-E809-4459-A395-0291ADD18F65}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {53D02058-00A6-4FF9-9172-467AF851D85F}
+    NAME "Very strangely by a kind of madness."
+    PEAKCOL 32172768
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {53D02058-00A6-4FF9-9172-467AF851D85F}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {1C958EB7-C413-48AD-8108-1D092DD57C34}
+    NAME "Of what?"
+    PEAKCOL 17792929
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {1C958EB7-C413-48AD-8108-1D092DD57C34}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {28D15734-2065-4F63-B52B-7946E4A79ED4}
+    NAME "Why here in Denmark: I have been sexton here man and boy thirty years."
+    PEAKCOL 26519018
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {28D15734-2065-4F63-B52B-7946E4A79ED4}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {024FFFF0-2F20-41B0-906F-34607CB54F72}
+    NAME "How long will a man lie i' the earth ere he rot?"
+    PEAKCOL 19074934
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    LANEREC -1 -1 -1 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {024FFFF0-2F20-41B0-906F-34607CB54F72}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {1285214F-AB61-4DCF-8D93-156FE7A90A4C}
+    NAME "Faith if he be not rotten before he die--and we have many pocky corses now-a-days that will scarce hold the laying in--"
+    PEAKCOL 32371792
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {1285214F-AB61-4DCF-8D93-156FE7A90A4C}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {25AC8591-93A6-4D8B-9B62-1E457B5D9929}
+    NAME "He must build churches then."
+    PEAKCOL 30908573
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    LANEREC -1 -1 -1 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {25AC8591-93A6-4D8B-9B62-1E457B5D9929}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {D244E896-0677-40D4-BE5A-EEC6620B3E1A}
+    NAME "No I tell thee he will keep no mean in the talking to himself: words words words."
+    PEAKCOL 21771971
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {D244E896-0677-40D4-BE5A-EEC6620B3E1A}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {7235193C-1ED1-4B12-9695-C1A9AC77099B}
+    NAME "Alas poor Yorick! I knew him Horatio: a fellow of infinite jest of most excellent fancy."
+    PEAKCOL 28304454
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    LANEREC -1 -1 -1 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {7235193C-1ED1-4B12-9695-C1A9AC77099B}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {84383E28-2A8B-4B9B-9F9F-5F40A7E7AD27}
+    NAME "He hath borne me on his back a thousand times; and now how abhorred in my imagination it is!"
+    PEAKCOL 22152724
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {84383E28-2A8B-4B9B-9F9F-5F40A7E7AD27}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {B0F2CCF7-FA45-45D6-A4B7-D21C5254F5A2}
+    NAME "My gorge rises at it. Here hung those lips that I have kissed I know not how oft."
+    PEAKCOL 22895179
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    LANEREC -1 -1 -1 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {B0F2CCF7-FA45-45D6-A4B7-D21C5254F5A2}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {C979822D-BD99-4DAA-B478-C0739768F1AA}
+    NAME "Where be your gibes now? your gambols? your songs? your flashes of merriment that were wont to set the table on a roar?"
+    PEAKCOL 23927308
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {C979822D-BD99-4DAA-B478-C0739768F1AA}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {20E5257D-7288-49C2-AFDB-30204F48F5FF}
+    NAME "Not one now to mock your own grinning? quite chap-fallen? Now get you to my lady's chamber and tell her let her paint an inch thick to this favour she must come; make her laugh at that."
+    PEAKCOL 29148490
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {20E5257D-7288-49C2-AFDB-30204F48F5FF}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {81386D5F-560F-4DF6-86FF-0E47A0F6E4EC}
+    NAME "Prithee Horatio tell me one thing."
+    PEAKCOL 17772589
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    LANEREC -1 -1 -1 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {81386D5F-560F-4DF6-86FF-0E47A0F6E4EC}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {083A0768-B942-4BB0-926A-29474BDBF104}
+    NAME "What's that my lord?"
+    PEAKCOL 17570645
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {083A0768-B942-4BB0-926A-29474BDBF104}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {2319DCDC-34B8-4B08-B06A-842CF1611AED}
+    NAME "Dost thou think Alexander looked o' this fashion i' the earth?"
+    PEAKCOL 19084484
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {2319DCDC-34B8-4B08-B06A-842CF1611AED}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {9B2636C4-0207-4BA2-AFA0-C2465FDCA632}
+    NAME "E'en so."
+    PEAKCOL 20777454
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {9B2636C4-0207-4BA2-AFA0-C2465FDCA632}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {9CD2D167-D1ED-4946-8E4F-252909AFF8CE}
+    NAME "To what base uses we may return Horatio! Why may not imagination trace the noble dust of Alexander till he find it stopping a bunghole?"
+    PEAKCOL 26417622
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {9CD2D167-D1ED-4946-8E4F-252909AFF8CE}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {AB973614-2CA5-4C7D-99F7-7BDD78D2472F}
+    NAME "'Twere to consider too curiously to consider so."
+    PEAKCOL 27548484
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {AB973614-2CA5-4C7D-99F7-7BDD78D2472F}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {B50B3097-46E9-4AF0-B5F3-C059E17CDC86}
+    NAME "No faith not a jot; but to follow him thither with modesty enough and likelihood to lead it: as thus: Alexander died Alexander was buried Alexander returneth into dust; the dust is earth; of earth we make loam; and why of that loam whereto he was converted might they not stop a beer-barrel?"
+    PEAKCOL 17572298
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {B50B3097-46E9-4AF0-B5F3-C059E17CDC86}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {B60D86A4-F8D5-4551-9D3F-F21275F36A22}
+    NAME "Imperious Caesar dead and turned to clay might stop a hole to keep the wind away."
+    PEAKCOL 25422582
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {B60D86A4-F8D5-4551-9D3F-F21275F36A22}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <TRACK {66E14610-2E49-49BC-A160-8CAE7C597DE6}
+    NAME "O that that earth which kept the world in awe should patch a wall t' expel the winter's flaw!"
+    PEAKCOL 20941794
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    SEL 0
+    REC 0 4256 0 0 0 0 0 0
+    VU 2
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {66E14610-2E49-49BC-A160-8CAE7C597DE6}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+  >
+  <EXTENSIONS
+    <SWSAUTOCOLOR
+      {00000000-0000-0000-0000-000000000000} 0 "" "" ""
+      {57704768-673A-4146-A1A9-1BD22623F9F7} 54720564 "" "" ""
+      {CC3CC535-8CF3-4EB9-9D3A-40C6DA83BDA5} 66277969 "" "" ""
+      {8E585C3A-D548-484D-AAEA-589189F970EA} 55175056 "" "" ""
+      {79EE30C0-950C-40E1-BF09-9E5513A9B9B3} 59707425 "" "" ""
+      {80EA45A7-E8B4-4512-88E7-9517205C549D} 58820124 "" "" ""
+      {C2D4582B-5376-4CD3-9E88-83429F1B2897} 52308377 "" "" ""
+      {37390F99-EBAC-4F00-98FA-CAEE6A35C72B} 50917061 "" "" ""
+      {1590F646-1B55-444A-94CB-CEF4A997F416} 67036969 "" "" ""
+      {303AC375-BAB7-4F74-B11B-6385820C5505} 56411830 "" "" ""
+      {F9E1336A-D52B-40C4-A34A-F4B2E3200149} 63173625 "" "" ""
+      {51E7864E-3F7F-4F08-B19C-00D2D429C7D9} 65553033 "" "" ""
+      {62A41F10-A01F-4D7B-8795-7F6A01B6DDCE} 52528820 "" "" ""
+      {807591F8-6A37-4FE7-89D6-DF0B3C599918} 52576781 "" "" ""
+      {97D3AA14-A70B-42A1-9D9C-3A8771C9E812} 63326904 "" "" ""
+      {AAA03393-D261-4FF0-A7D0-DE305B3DAF8C} 56440871 "" "" ""
+      {2CA513FF-8B47-4906-AE68-F24440281D68} 55893783 "" "" ""
+      {E059341E-9326-4B02-8025-AA04F5E7EA9F} 64397179 "" "" ""
+      {AAC5801D-354C-4F48-86AE-64AB186B1C19} 62208758 "" "" ""
+      {8CA95608-4E8E-4F77-95E6-FD0F9C4C2F82} 61747682 "" "" ""
+      {35FAE4C4-DD5F-471E-AC8A-4F8983636F19} 58220839 "" "" ""
+      {D2161425-3920-4506-9BC5-744544EE9C47} 63051218 "" "" ""
+      {AB3D5533-492C-47CA-B811-B9452B0C9C2D} 50735629 "" "" ""
+      {D3BFBD35-0C80-492C-9677-972FC902DFD2} 61324103 "" "" ""
+      {9792317E-1D70-4623-AF47-FF8CE59DD4F5} 63440949 "" "" ""
+      {74DF689A-45C2-40C1-B0A2-7BBD164CE710} 54275275 "" "" ""
+      {059E79A8-792C-4275-BAA8-DA2897209020} 60034342 "" "" ""
+      {8D610564-AB4F-48AF-8E34-65BDE2AFB9E8} 58714548 "" "" ""
+      {DCC68031-ADC3-4BB9-A078-D889E100C0C3} 67020876 "" "" ""
+      {6E36793F-24BB-44B4-A118-38726D568FFC} 62306478 "" "" ""
+      {8F068933-3326-4EC3-A40D-7E129C5FBEEB} 56412697 "" "" ""
+      {3BB3763B-26FC-4F7E-811A-7D92E98C2D82} 50851624 "" "" ""
+      {692BCEDC-C9D2-47A1-9A8A-DA592E60B4BE} 61241001 "" "" ""
+      {5DC10004-66BB-4235-A9C7-A7264175E51A} 51058242 "" "" ""
+      {6016EC95-6AA5-4450-96A3-26D941F68701} 57927817 "" "" ""
+      {98E3C0D4-82FE-4680-B62D-D401D1E4D0B1} 51642700 "" "" ""
+      {30251038-B6A3-4A2D-85EC-C1CFBC770D7D} 62969722 "" "" ""
+      {3BCD1C87-85A5-434E-B1FA-1D16ACB24E73} 50899191 "" "" ""
+      {12E1EA1C-8487-4134-A3BB-5DDB6CB8D5B8} 55278912 "" "" ""
+      {9B957269-FECB-41E6-84C8-C51894F9E90C} 53308610 "" "" ""
+      {F67768E5-3906-46A8-AED9-943FE0BAA6EB} 60648667 "" "" ""
+      {43E21048-34B6-44A6-A94D-FB328C9217A1} 54103378 "" "" ""
+      {8A9696E3-6ABB-47B9-AFF5-1C29B466CE10} 52844743 "" "" ""
+      {7FB1B36E-20FD-42DA-AA60-B4BDED9B5BCC} 58258861 "" "" ""
+      {FF663423-1173-4B95-96A8-F77016CF743A} 66215181 "" "" ""
+      {74957618-6BC1-4665-9716-F1E4A19BD2F9} 66495896 "" "" ""
+      {97D7D264-621D-4CB2-A9F3-62C7051A6104} 64580681 "" "" ""
+      {F4A6EED1-C488-4A4A-8064-59FF1842A3ED} 65171584 "" "" ""
+      {C06427B5-A417-4745-8270-1FA67B7DE31F} 54650105 "" "" ""
+      {7C6647EC-C7B4-4236-B2CD-2849186E2CC7} 61654205 "" "" ""
+      {4563E017-D123-4347-A70B-AC2DABF94B12} 63340457 "" "" ""
+      {F7D5DF0B-F0A4-4B44-B173-008F901A46C0} 59614219 "" "" ""
+      {D5416A18-FAFC-4BCB-8D91-DE11A24D0F4E} 57220580 "" "" ""
+      {641AD69A-A405-4723-8387-8F2D001032D9} 57619854 "" "" ""
+      {2B1152A2-8161-49C9-A6BE-4006C9000846} 51582177 "" "" ""
+      {7FD3FE6D-4932-48E1-BB6E-9C30217C9B23} 58613442 "" "" ""
+      {D65A96AD-02C3-42F3-AC7B-909627B4BE50} 59378802 "" "" ""
+      {74310F2D-E802-4A7F-B882-E72C89AA6F9C} 62943517 "" "" ""
+      {D8126EEF-C02D-4124-B6F8-6ADCB2640B45} 53450142 "" "" ""
+      {D0045FBA-8C89-45EB-AF85-5E19DBA0506B} 59167823 "" "" ""
+      {AEEA51C4-2DCB-4EDF-A09A-E5F3EA172730} 52359136 "" "" ""
+      {BBAB3BB2-E708-4EC0-84D9-53B4C9C9D4DC} 60498028 "" "" ""
+      {98ECF018-204E-498D-B2BA-AA9B01444944} 59163672 "" "" ""
+      {4E95F3DF-27B9-4AC2-8952-FDFFEC33B598} 57752411 "" "" ""
+      {12B65BEB-71DE-4401-A0C7-262BC491D154} 55887229 "" "" ""
+      {6558EA8C-3386-41B0-9261-7C1F0CF7F1E4} 63197021 "" "" ""
+      {B9815289-D7EC-4EEA-B8F7-104807793DF8} 58942261 "" "" ""
+      {1F0183A5-3E9E-455D-B633-653245E5C9FD} 57519000 "" "" ""
+      {1B8B5A88-7C3D-4F3D-9464-42FE46FAE0F6} 61873769 "" "" ""
+      {C70790A0-F1A0-43AF-ABCA-1769CEC6BE47} 55768025 "" "" ""
+      {DA6B6CB2-CE40-40DA-9F38-852048270149} 63316705 "" "" ""
+      {18745096-3985-4ADA-B0BB-A70D21853C02} 62665234 "" "" ""
+      {3CE49750-49FC-422F-ADFD-4A06A7880FBB} 65021329 "" "" ""
+      {E88B56CC-9173-4C15-8157-C257BA486A0B} 58433087 "" "" ""
+      {E1768552-618B-4A37-A516-3B294C3AEB18} 61327527 "" "" ""
+      {35BE1749-E809-4459-A395-0291ADD18F65} 60569270 "" "" ""
+      {53D02058-00A6-4FF9-9172-467AF851D85F} 65071850 "" "" ""
+      {1C958EB7-C413-48AD-8108-1D092DD57C34} 60915471 "" "" ""
+      {28D15734-2065-4F63-B52B-7946E4A79ED4} 65709460 "" "" ""
+      {024FFFF0-2F20-41B0-906F-34607CB54F72} 58068771 "" "" ""
+      {1285214F-AB61-4DCF-8D93-156FE7A90A4C} 55637229 "" "" ""
+      {25AC8591-93A6-4D8B-9B62-1E457B5D9929} 60661975 "" "" ""
+      {D244E896-0677-40D4-BE5A-EEC6620B3E1A} 63125068 "" "" ""
+      {7235193C-1ED1-4B12-9695-C1A9AC77099B} 54977711 "" "" ""
+      {84383E28-2A8B-4B9B-9F9F-5F40A7E7AD27} 51643986 "" "" ""
+      {B0F2CCF7-FA45-45D6-A4B7-D21C5254F5A2} 55269981 "" "" ""
+      {C979822D-BD99-4DAA-B478-C0739768F1AA} 51124845 "" "" ""
+      {20E5257D-7288-49C2-AFDB-30204F48F5FF} 55231932 "" "" ""
+      {81386D5F-560F-4DF6-86FF-0E47A0F6E4EC} 53293071 "" "" ""
+      {083A0768-B942-4BB0-926A-29474BDBF104} 55909132 "" "" ""
+      {2319DCDC-34B8-4B08-B06A-842CF1611AED} 63190051 "" "" ""
+      {9B2636C4-0207-4BA2-AFA0-C2465FDCA632} 65931581 "" "" ""
+      {9CD2D167-D1ED-4946-8E4F-252909AFF8CE} 64362899 "" "" ""
+      {AB973614-2CA5-4C7D-99F7-7BDD78D2472F} 54811556 "" "" ""
+      {B50B3097-46E9-4AF0-B5F3-C059E17CDC86} 63578380 "" "" ""
+      {B60D86A4-F8D5-4551-9D3F-F21275F36A22} 66513539 "" "" ""
+      {66E14610-2E49-49BC-A160-8CAE7C597DE6} 65178431 "" "" ""
+    >
+  >
+>
