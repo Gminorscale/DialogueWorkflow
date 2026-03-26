@@ -6662,8 +6662,13 @@ updateRoleButtonAppearances()
 
 -- IMGUI MAIN LOOP (ReaImGui)
 
-local show_theme_editor = false
+local show_theme_editor  = false
+local show_teleprompter  = false
+local tele_float         = false   -- false = embedded in Record tab, true = floating window
 local font_needs_restart = false
+
+local _tele_last_active      = -1
+local _tele_scroll_to_active = false
 
 local function theme_color_edit(ctx, label, key)
     local c = THEME[key]
@@ -6943,6 +6948,8 @@ local function draw_import_tab(ctx)
     dmn_btn(ctx, "btn_cancel", "Close")
 end
 
+local draw_teleprompter_content   -- forward declaration; defined in EMBEDDED TELEPROMPTER section
+
 local function draw_record_tab(ctx)
     reaper.ImGui_TextWrapped(ctx, "Web teleprompter: install HTML into REAPER web root, enable web server, open in browser.")
     reaper.ImGui_Text(ctx, "URL pattern:")
@@ -6953,6 +6960,25 @@ local function draw_record_tab(ctx)
     dmn_btn(ctx, "btn_record_open_browser", "2) Open Web UI in browser")
     dmn_btn(ctx, "btn_record_prefs", "Open Web/OSC preferences")
     dmn_btn(ctx, "btn_record_show_webroot", "Show REAPER web root path")
+
+    reaper.ImGui_Spacing(ctx)
+    if reaper.ImGui_CollapsingHeader(ctx, "Teleprompter") then
+        if tele_float then
+            reaper.ImGui_TextColored(ctx, tcol("hint_text"), "Teleprompter is floating.")
+            reaper.ImGui_SameLine(ctx)
+            if reaper.ImGui_SmallButton(ctx, "Dock##tele_dock_hdr") then
+                tele_float        = false
+                show_teleprompter = false
+            end
+        else
+            if reaper.ImGui_SmallButton(ctx, "Pop out \xe2\x86\x97##tele_popout") then   -- ↗
+                tele_float        = true
+                show_teleprompter = true
+            end
+            reaper.ImGui_Spacing(ctx)
+            draw_teleprompter_content(ctx, 300)
+        end
+    end
 end
 
 -- Button with explicit fill-width
@@ -7537,6 +7563,280 @@ local _init_done = false
 local _last_cleanup_update_status = nil
 local _last_cleanup_assign_reaper = nil
 
+-- ============================================================================
+-- EMBEDDED TELEPROMPTER WINDOW
+-- ============================================================================
+
+-- Parse all project markers/regions into a structured list of categories + entries.
+-- Categories come from regions named "Category=<name>".
+-- Entries come from all other non-Category, non-Context regions (optional "Entry=" prefix).
+-- Character/delivery are resolved from the nearest preceding "Character="/"Speaker="
+-- and "Delivery=" plain markers before each entry region.
+local function build_teleprompter_data()
+    local _, num_m, num_r = reaper.CountProjectMarkers(0)
+    local total = (num_m or 0) + (num_r or 0)
+    if total == 0 then return {} end
+
+    -- Collect all items sorted by timeline position
+    local all_items = {}
+    for i = 0, total - 1 do
+        local ok, isrgn, pos, rend, name = reaper.EnumProjectMarkers3(0, i)
+        if ok then
+            all_items[#all_items + 1] = {
+                isrgn = isrgn, pos = pos, rend = rend,
+                name  = tostring(name or ""),
+            }
+        end
+    end
+    table.sort(all_items, function(a, b) return a.pos < b.pos end)
+
+    -- Separate plain markers (used for character/delivery attribute lookups)
+    local plain_markers = {}
+    for _, item in ipairs(all_items) do
+        if not item.isrgn then plain_markers[#plain_markers + 1] = item end
+    end
+
+    -- Collect category regions
+    local categories = {}
+    for _, item in ipairs(all_items) do
+        if item.isrgn and item.name:match("^Category=") then
+            categories[#categories + 1] = {
+                name    = item.name:match("^Category=(.+)") or "",
+                start   = item.pos,
+                rend    = item.rend,
+                entries = {},
+            }
+        end
+    end
+
+    -- Bucket for entries that fall outside any category region
+    local orphan_bucket = { name = "", start = -1e300, rend = 1e300, entries = {} }
+
+    local function get_bucket(pos)
+        for _, cat in ipairs(categories) do
+            if pos >= cat.start and pos <= cat.rend then return cat end
+        end
+        return orphan_bucket
+    end
+
+    -- Collect entry regions and resolve character/delivery metadata
+    for _, item in ipairs(all_items) do
+        if item.isrgn
+            and not item.name:match("^Category=")
+            and not item.name:match("^Context=") then
+
+            local display = item.name:gsub("^Entry=", "")
+            if display ~= "" then
+                local entry = {
+                    name      = display,
+                    start     = item.pos,
+                    rend      = item.rend,
+                    character = "",
+                    delivery  = "",
+                }
+
+                local best_char_pos = -1e300
+                local best_del_pos  = -1e300
+                for _, mk in ipairs(plain_markers) do
+                    if mk.pos <= item.pos then
+                        local ch = mk.name:match("^[Cc]haracter=(.+)")
+                                or mk.name:match("^[Ss]peaker=(.+)")
+                        if ch and mk.pos > best_char_pos then
+                            best_char_pos   = mk.pos
+                            entry.character = ch
+                        end
+                        local del = mk.name:match("^[Dd]elivery=(.+)")
+                        if del and mk.pos > best_del_pos then
+                            best_del_pos   = mk.pos
+                            entry.delivery = del
+                        end
+                    end
+                end
+
+                local bucket = get_bucket(item.pos)
+                bucket.entries[#bucket.entries + 1] = entry
+            end
+        end
+    end
+
+    -- Build final display list
+    if #categories == 0 then
+        return { orphan_bucket }   -- flat list, no category headers
+    end
+    if #orphan_bucket.entries > 0 then
+        categories[#categories + 1] = orphan_bucket
+    end
+    return categories
+end
+
+-- Shared teleprompter content: track name, transport controls, scrollable dialogue list.
+-- child_height: pixel height for the scrollable region (0 = fill remaining window space).
+draw_teleprompter_content = function(ctx, child_height)
+    local play_pos   = reaper.GetPlayPosition()
+    local play_state = reaper.GetPlayState()
+    local is_playing   = play_state == 1 or play_state == 5
+    local is_recording = play_state == 4 or play_state == 5
+
+    -- ── Track name (selected track, or first record-armed track) ──────────────
+    local track_name = ""
+    local sel_track = reaper.GetSelectedTrack(0, 0)
+    if sel_track then
+        local ok, tn = reaper.GetTrackName(sel_track)
+        if ok and tn then track_name = tn end
+    end
+    if track_name == "" then
+        local n = reaper.CountTracks(0)
+        for ti = 0, n - 1 do
+            local tr = reaper.GetTrack(0, ti)
+            if reaper.GetMediaTrackInfo_Value(tr, "I_RECARM") == 1 then
+                local ok, tn = reaper.GetTrackName(tr)
+                if ok and tn then track_name = tn end
+                break
+            end
+        end
+    end
+
+    reaper.ImGui_TextColored(ctx, rgba(0.4, 0.8, 1.0, 1.0),
+        track_name ~= "" and track_name or "(no track selected)")
+
+    -- ── Transport controls ────────────────────────────────────────────────────
+    reaper.ImGui_Spacing(ctx)
+
+    if is_playing then
+        reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(), tcol("accent"))
+    end
+    if reaper.ImGui_Button(ctx, "  \xe2\x96\xb6  ##tele_play") then   -- ▶
+        reaper.Main_OnCommand(1007, 0)
+    end
+    if is_playing then reaper.ImGui_PopStyleColor(ctx, 1) end
+
+    reaper.ImGui_SameLine(ctx)
+    if reaper.ImGui_Button(ctx, "  \xe2\x96\xa0  ##tele_stop") then   -- ■
+        reaper.Main_OnCommand(40667, 0)
+    end
+
+    reaper.ImGui_SameLine(ctx)
+    if is_recording then
+        reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(), rgba(0.75, 0.10, 0.10, 1.0))
+    end
+    if reaper.ImGui_Button(ctx, "  \xe2\x97\x8f  ##tele_rec") then    -- ●
+        reaper.Main_OnCommand(1013, 0)
+    end
+    if is_recording then reaper.ImGui_PopStyleColor(ctx, 1) end
+
+    reaper.ImGui_SameLine(ctx)
+    reaper.ImGui_TextColored(ctx, tcol("hint_text"),
+        is_recording and "  REC" or is_playing and "  PLAY" or "  STOP")
+
+    reaper.ImGui_Separator(ctx)
+
+    -- ── Parse markers/regions and find active entry ───────────────────────────
+    local categories = build_teleprompter_data()
+
+    local active_cat, active_entry = nil, nil
+    local global_active_idx = -1
+    local counter = 0
+    for ci, cat in ipairs(categories) do
+        for ei, entry in ipairs(cat.entries) do
+            counter = counter + 1
+            if play_pos >= entry.start and play_pos < entry.rend then
+                active_cat        = ci
+                active_entry      = ei
+                global_active_idx = counter
+            end
+        end
+    end
+
+    if global_active_idx ~= _tele_last_active then
+        _tele_last_active      = global_active_idx
+        _tele_scroll_to_active = true
+    end
+
+    -- ── Scrollable dialogue list ──────────────────────────────────────────────
+    reaper.ImGui_BeginChild(ctx, "##tele_list", 0, child_height, 0)
+
+    local has_any_entry = false
+    for ci, cat in ipairs(categories) do
+        if #cat.entries > 0 then has_any_entry = true end
+
+        if cat.name ~= "" then
+            reaper.ImGui_Spacing(ctx)
+            reaper.ImGui_TextColored(ctx, tcol("accent"), "\xe2\x96\xb8  " .. cat.name)   -- ▸
+            reaper.ImGui_Separator(ctx)
+            reaper.ImGui_Spacing(ctx)
+        end
+
+        for ei, entry in ipairs(cat.entries) do
+            local is_active = (ci == active_cat and ei == active_entry)
+
+            -- Character / delivery metadata line
+            if entry.character ~= "" then
+                reaper.ImGui_TextColored(ctx, rgba(0.4, 0.8, 1.0, 1.0), entry.character)
+                if entry.delivery ~= "" then
+                    reaper.ImGui_SameLine(ctx)
+                    reaper.ImGui_TextColored(ctx, rgba(1.0, 0.86, 0.31, 1.0),
+                        "  [" .. entry.delivery .. "]")
+                end
+            elseif entry.delivery ~= "" then
+                reaper.ImGui_TextColored(ctx, rgba(1.0, 0.86, 0.31, 1.0),
+                    "[" .. entry.delivery .. "]")
+            end
+
+            -- Entry selectable — highlighted when playback position is inside it
+            if is_active then
+                reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(),        tcol("accent"))
+                reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_HeaderHovered(), tcol("button_hover"))
+                reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_HeaderActive(),  tcol("button_active"))
+            end
+
+            local sel_id = "##tele_" .. tostring(ci) .. "_" .. tostring(ei)
+            if reaper.ImGui_Selectable(ctx, entry.name .. sel_id, is_active) then
+                reaper.SetEditCurPos(entry.start, true, false)
+            end
+
+            if is_active then
+                reaper.ImGui_PopStyleColor(ctx, 3)
+                if _tele_scroll_to_active then
+                    reaper.ImGui_SetScrollHereY(ctx, 0.5)
+                    _tele_scroll_to_active = false
+                end
+            end
+
+            reaper.ImGui_Spacing(ctx)
+        end
+    end
+
+    if not has_any_entry then
+        reaper.ImGui_TextColored(ctx, tcol("hint_text"),
+            "No entry regions found in this project.\n" ..
+            "Create regions (optionally prefixed with 'Entry=') to populate this view.")
+    end
+
+    reaper.ImGui_EndChild(ctx)
+end
+
+local function draw_teleprompter_window(ctx)
+    if not (show_teleprompter and tele_float) then return end
+
+    reaper.ImGui_SetNextWindowSize(ctx, 700, 600, reaper.ImGui_Cond_FirstUseEver())
+
+    local vis, open = reaper.ImGui_Begin(ctx, "DMN Actor Teleprompter", true, 0)
+    if vis then
+        if reaper.ImGui_SmallButton(ctx, "Dock##tele_dock_win") then
+            tele_float        = false
+            show_teleprompter = false
+        end
+        reaper.ImGui_SameLine(ctx)
+        reaper.ImGui_TextColored(ctx, tcol("hint_text"), "Dock into Record tab")
+        reaper.ImGui_Separator(ctx)
+
+        draw_teleprompter_content(ctx, 0)
+    end
+
+    if not open then show_teleprompter = false end
+    reaper.ImGui_End(ctx)
+end
+
 local function imgui_frame()
     if GUI.quit then return end
 
@@ -7609,6 +7909,7 @@ local function imgui_frame()
     end
 
     draw_theme_editor(ctx)
+    draw_teleprompter_window(ctx)
 
     reaper.ImGui_PopStyleVar(ctx, 2)
     reaper.ImGui_PopStyleColor(ctx, 18)
