@@ -3746,7 +3746,7 @@ local function getThemeCategoryColors()
     return out
 end
 
-local function doImport(csv_content, mappings, start_row, insert_at_cursor, index_suffix_enabled, index_source_column, timing_opts, color_opts, entry_idx, category_idx, speaker_idx)
+local function doImport(csv_content, mappings, start_row, insert_at_cursor, auto_index_enabled, auto_id_enabled, timing_opts, color_opts, entry_idx, category_idx, speaker_idx)
     -- Split CSV content into lines
     local lines = {}
     for line in csv_content:gmatch("[^\r\n]+") do
@@ -3756,21 +3756,6 @@ local function doImport(csv_content, mappings, start_row, insert_at_cursor, inde
     if #lines == 0 then
         reaper.ShowMessageBox("No data found in CSV.", "Error", 0)
         return false
-    end
-    
-    -- Find the index source mapping if enabled
-    local index_source_mapping = nil
-    if index_suffix_enabled and index_source_column ~= "" then
-        for _, m in ipairs(mappings) do
-            if m.name:lower() == index_source_column:lower() then
-                index_source_mapping = m
-                break
-            end
-        end
-        if not index_source_mapping then
-            reaper.ShowMessageBox("Index source column '" .. index_source_column .. "' not found in mappings.\n\nMake sure you have a column with that name defined above.", "Error", 0)
-            return false
-        end
     end
 
     -- Timing options (use provided or defaults)
@@ -3818,6 +3803,37 @@ local function doImport(csv_content, mappings, start_row, insert_at_cursor, inde
         end
     end
 
+    -- Pre-pass: count entries per category for auto-index numbering
+    local category_entry_counts = {}
+    if auto_index_enabled then
+        local pre_group = ""
+        local pre_start = math.min(start_row, #lines)
+        for i = pre_start, #lines do
+            local ln = lines[i]
+            if ln and ln:match("%S") then
+                local flds = parseCSV(ln)
+                local entry_val = entry_mapping and (flds[entry_mapping.col] and cleanFieldValue(flds[entry_mapping.col])) or nil
+                local cat_val = category_mapping and (flds[category_mapping.col] and cleanFieldValue(flds[category_mapping.col])) or nil
+                if cat_val then pre_group = cat_val end
+                local grp_key = (cat_val or pre_group ~= "" and pre_group) or "Default"
+                if entry_val then
+                    category_entry_counts[grp_key] = (category_entry_counts[grp_key] or 0) + 1
+                end
+            end
+        end
+    end
+
+    -- ID character set: A-Z, 0-9
+    local ID_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+    local function generateID()
+        local id = {}
+        for _ = 1, 4 do
+            local idx = math.random(1, #ID_CHARS)
+            id[#id + 1] = ID_CHARS:sub(idx, idx)
+        end
+        return table.concat(id)
+    end
+
     reaper.Undo_BeginBlock()
 
     local start_index = math.min(start_row, #lines)
@@ -3827,6 +3843,7 @@ local function doImport(csv_content, mappings, start_row, insert_at_cursor, inde
     local group_item_count = 0
     local group_regions = {}
     local current_group_start = nil
+    local category_index_counter = {}  -- per-category running index for auto-index
 
     -- Pre-compute max column needed (once, outside the loop)
     local max_col = 0
@@ -3932,27 +3949,19 @@ local function doImport(csv_content, mappings, start_row, insert_at_cursor, inde
                         end
                     end
 
-                    -- Create Index marker from suffix if enabled
-                    if index_source_mapping then
-                        local source_val = values[index_source_mapping.name]
-                        local suffix_num = source_val and extractSuffixNumber(source_val) or nil
-                        -- Fallback: if the configured source column didn't yield a number,
-                        -- look for a column named "Index" and use its raw numeric value
-                        if not suffix_num then
-                            for _, m in ipairs(mappings) do
-                                if m.name:lower() == "index" and values[m.name] then
-                                    local raw = values[m.name]:match("(%d+)")
-                                    if raw then
-                                        suffix_num = string.format("%02d", tonumber(raw))
-                                        break
-                                    end
-                                end
-                            end
-                        end
-                        if suffix_num then
-                            local index_marker = "Index=" .. suffix_num
-                            reaper.AddProjectMarker2(0, false, current_pos - 1, 0, index_marker, -1, 0)
-                        end
+                    -- Auto-place Index= marker 1 second before entry
+                    if auto_index_enabled then
+                        local grp_key = (current_group ~= "" and current_group) or "Default"
+                        category_index_counter[grp_key] = (category_index_counter[grp_key] or 0) + 1
+                        local total = category_entry_counts[grp_key] or 1
+                        local digits = #tostring(total) < 2 and 2 or #tostring(total)
+                        local idx_str = string.format("%0" .. digits .. "d", category_index_counter[grp_key])
+                        reaper.AddProjectMarker2(0, false, current_pos - 1, 0, "Index=" .. idx_str, -1, 0)
+                    end
+
+                    -- Auto-place unique ID= marker 1 second before entry
+                    if auto_id_enabled then
+                        reaper.AddProjectMarker2(0, false, current_pos - 1, 0, "ID=" .. generateID(), -1, 0)
                     end
                     
                     -- Create items for each mapping that has create_item enabled
@@ -4650,37 +4659,39 @@ GUI.New("lbl_cursor", "Label", {
 })
 registerTabElement("Import", "lbl_cursor")
 
--- Row 2: Extract Index from suffix
-GUI.New("chk_index_suffix", "Checklist", {
+-- Row 2: Auto-place Index markers from Entries
+GUI.New("chk_auto_index", "Checklist", {
     z = 11, x = 36, y = options_y + 38, w = 24, h = 26,
     caption = "", optarray = {""},
     dir = "h", font_a = 3, font_b = 3,
     col_txt = "txt", col_fill = "elm_fill", bg = "wnd_bg",
     frame = false, shadow = false, opt_size = 20
 })
-registerTabElement("Import", "chk_index_suffix")
+registerTabElement("Import", "chk_auto_index")
 
-GUI.New("lbl_index_suffix", "Label", {
+GUI.New("lbl_auto_index", "Label", {
     z = 11, x = 60, y = options_y + 42,
-    caption = "Derive index numbers from name",
+    caption = "Automatically place Index markers from Entries",
     font = 3, color = "txt", bg = "wnd_bg"
 })
-registerTabElement("Import", "lbl_index_suffix")
+registerTabElement("Import", "lbl_auto_index")
 
-GUI.New("txt_index_source", "Textbox", {
-    z = 11, x = 268, y = options_y + 38, w = 100, h = 24,
-    caption = "", font_a = 3, font_b = 5,
-    color = "txt", bg = "wnd_bg",
-    shadow = true, pad = 4
+-- Row 3 (extra): Auto-place unique ID markers
+GUI.New("chk_auto_id", "Checklist", {
+    z = 11, x = 36, y = options_y + 64, w = 24, h = 26,
+    caption = "", optarray = {""},
+    dir = "h", font_a = 3, font_b = 3,
+    col_txt = "txt", col_fill = "elm_fill", bg = "wnd_bg",
+    frame = false, shadow = false, opt_size = 20
 })
-registerTabElement("Import", "txt_index_source")
+registerTabElement("Import", "chk_auto_id")
 
-GUI.New("lbl_index_hint", "Label", {
-    z = 11, x = 374, y = options_y + 42,
-    caption = "(column name)",
-    font = 4, color = "shadow", bg = "wnd_bg"
+GUI.New("lbl_auto_id", "Label", {
+    z = 11, x = 60, y = options_y + 68,
+    caption = "Create unique ID= markers for each entry",
+    font = 3, color = "txt", bg = "wnd_bg"
 })
-registerTabElement("Import", "lbl_index_hint")
+registerTabElement("Import", "lbl_auto_id")
 
 -- Row 3: Preset with dropdown menu
 GUI.New("lbl_preset", "Label", {z = 11, x = 36, y = options_y + 72, caption = "Presets:", font = 3, color = "txt", bg = "wnd_bg"})
@@ -4999,8 +5010,8 @@ runImport = function()
     local csv_content, mappings = getCSVAndMappings()
     if not csv_content then return end
     local insert_cursor = chkBool(GUI.Val("chk_cursor"))
-    local index_suffix_enabled = chkBool(GUI.Val("chk_index_suffix"))
-    local index_source_column = GUI.Val("txt_index_source") or ""
+    local auto_index_enabled = chkBool(GUI.Val("chk_auto_index"))
+    local auto_id_enabled = chkBool(GUI.Val("chk_auto_id"))
     local start_row = tonumber(GUI.Val("txt_startrow")) or 2
     local timing_opts = {
         region_length = tonumber(GUI.Val("txt_region_len")) or 10,
@@ -5008,7 +5019,7 @@ runImport = function()
         category_gap  = tonumber(GUI.Val("txt_cat_gap"))    or 30,
     }
     local color_opts = { use_colors = THEME.color_regions ~= false }
-    doImport(csv_content, mappings, start_row, insert_cursor, index_suffix_enabled, index_source_column, timing_opts, color_opts, entry_row, category_row, speaker_row)
+    doImport(csv_content, mappings, start_row, insert_cursor, auto_index_enabled, auto_id_enabled, timing_opts, color_opts, entry_row, category_row, speaker_row)
 end
 
 -- Import button
@@ -6032,6 +6043,8 @@ local render_channels         = 2
 local render_normalize        = false
 local render_normalize_mode   = 0
 local render_normalize_target = "-24"
+local render_fadeout          = false
+local render_fadeout_ms       = "300"
 -- Source dropdown — mirrors REAPER's Render dialog Source list.
 -- Each entry: { label, render_settings_bits }
 -- RENDER_SETTINGS bitmask (from REAPER API):
@@ -6062,6 +6075,20 @@ local render_bounds_idx = 4  -- 1-based index into RENDER_BOUNDS  (default: All 
 local render_folder_tokens    = { "$marker(Speaker)" }
 local render_file_tokens      = { "VO_", "$marker(Speaker)", "_", "$marker(Category)", "_", "$marker(Index)" }
 
+-- BWF metadata embed options — mirrors REAPER's Render → Write BWF metadata dropdown.
+-- RENDER_METADATA project info integer: 0 = off, 1-6 = embed modes below.
+local BWF_EMBED_MODES = {
+    { label = "Do not include markers or regions", value = 0 },
+    { label = "Markers + regions",                 value = 1 },
+    { label = "Markers + regions starting with #", value = 2 },
+    { label = "Markers only",                      value = 3 },
+    { label = "Markers starting with # only",      value = 4 },
+    { label = "Regions only",                      value = 5 },
+    { label = "Regions starting with # only",      value = 6 },
+}
+local render_write_metadata    = false
+local render_metadata_mode_idx = 4  -- 1-based into BWF_EMBED_MODES; default = "Markers only"
+
 local function saveRenderSettings()
     local EXT = "DMN_DialogueWorkflow"
     reaper.SetExtState(EXT, "render_output_path",      render_output_path,              true)
@@ -6074,6 +6101,10 @@ local function saveRenderSettings()
     reaper.SetExtState(EXT, "render_bounds_idx",       tostring(render_bounds_idx),     true)
     reaper.SetExtState(EXT, "render_folder_tokens",    table.concat(render_folder_tokens, "|"), true)
     reaper.SetExtState(EXT, "render_file_tokens",      table.concat(render_file_tokens,  "|"), true)
+    reaper.SetExtState(EXT, "render_write_metadata",    render_write_metadata and "1" or "0",   true)
+    reaper.SetExtState(EXT, "render_metadata_mode_idx", tostring(render_metadata_mode_idx),      true)
+    reaper.SetExtState(EXT, "render_fadeout",           render_fadeout and "1" or "0",           true)
+    reaper.SetExtState(EXT, "render_fadeout_ms",        render_fadeout_ms,                       true)
 end
 
 do -- load render settings from ExtState
@@ -6114,6 +6145,11 @@ do -- load render settings from ExtState
             if tok ~= "" then render_file_tokens[#render_file_tokens + 1] = tok end
         end
     end
+    render_write_metadata = reaper.GetExtState(EXT, "render_write_metadata") == "1"
+    local mmi = tonumber(reaper.GetExtState(EXT, "render_metadata_mode_idx"))
+    if mmi and mmi >= 1 and mmi <= #BWF_EMBED_MODES then render_metadata_mode_idx = mmi end
+    render_fadeout = reaper.GetExtState(EXT, "render_fadeout") == "1"
+    local foms = reaper.GetExtState(EXT, "render_fadeout_ms"); if foms ~= "" then render_fadeout_ms = foms end
 end
 
 -- Database row: shows the active preset (set in Notion section above)
@@ -6863,8 +6899,8 @@ local function draw_import_tab(ctx)
     if reaper.ImGui_CollapsingHeader(ctx, "Options") then
         uim_text(ctx, "txt_startrow", "Start row", 60)
         uim_checkbox(ctx, "chk_cursor", "Insert at edit cursor")
-        uim_checkbox(ctx, "chk_index_suffix", "Derive index from name suffix")
-        uim_text(ctx, "txt_index_source", "Index source column name", 200)
+        uim_checkbox(ctx, "chk_auto_index", "Automatically place Index markers from Entries")
+        uim_checkbox(ctx, "chk_auto_id", "Create unique ID= markers for each entry")
         reaper.ImGui_Separator(ctx)
         uim_text(ctx, "txt_region_len", "Region length (sec)", 80)
         uim_text(ctx, "txt_region_gap", "Gap (sec)", 80)
@@ -7314,6 +7350,36 @@ local function draw_render_tab(ctx)
             local rv_nt, new_nt = reaper.ImGui_InputText(ctx, "dB##ntarget", render_normalize_target, reaper.ImGui_InputTextFlags_EnterReturnsTrue())
             if rv_nt then render_normalize_target = new_nt; saveRenderSettings() end
         end
+
+        reaper.ImGui_Spacing(ctx)
+
+        -- BWF metadata
+        local rv_bwf, new_bwf = reaper.ImGui_Checkbox(ctx, "Write BWF metadata##bwf", render_write_metadata)
+        if rv_bwf then render_write_metadata = new_bwf; saveRenderSettings() end
+        if render_write_metadata then
+            reaper.ImGui_SameLine(ctx)
+            reaper.ImGui_SetNextItemWidth(ctx, 290)
+            if reaper.ImGui_BeginCombo(ctx, "##bwf_mode", BWF_EMBED_MODES[render_metadata_mode_idx].label) then
+                for mi, mode in ipairs(BWF_EMBED_MODES) do
+                    local is_sel = (mi == render_metadata_mode_idx)
+                    if reaper.ImGui_Selectable(ctx, mode.label .. "##bwfm" .. mi, is_sel) then
+                        render_metadata_mode_idx = mi; saveRenderSettings()
+                    end
+                    if is_sel then reaper.ImGui_SetItemDefaultFocus(ctx) end
+                end
+                reaper.ImGui_EndCombo(ctx)
+            end
+        end
+
+        -- Fade-out
+        local rv_fo, new_fo = reaper.ImGui_Checkbox(ctx, "Fade-out##fadeout", render_fadeout)
+        if rv_fo then render_fadeout = new_fo; saveRenderSettings() end
+        if render_fadeout then
+            reaper.ImGui_SameLine(ctx)
+            reaper.ImGui_SetNextItemWidth(ctx, 80)
+            local rv_foms, new_foms = reaper.ImGui_InputText(ctx, "ms##fadeout_ms", render_fadeout_ms, reaper.ImGui_InputTextFlags_EnterReturnsTrue())
+            if rv_foms then render_fadeout_ms = new_foms; saveRenderSettings() end
+        end
     end
 
     -- ── Source ────────────────────────────────────────────────────────────────
@@ -7453,6 +7519,14 @@ local function draw_render_tab(ctx)
             reaper.GetSetProjectInfo(0, "RENDER_NORMALIZE_MODE",   render_normalize_mode,                      true)
             reaper.GetSetProjectInfo(0, "RENDER_NORMALIZE_TARGET", tonumber(render_normalize_target) or -24.0, true)
         end
+
+        -- BWF metadata embed mode (RENDER_METADATA: 0 = off, 1-6 = embed modes)
+        local meta_value = render_write_metadata and BWF_EMBED_MODES[render_metadata_mode_idx].value or 0
+        reaper.GetSetProjectInfo(0, "RENDER_METADATA", meta_value, true)
+
+        -- Fade-out (RENDER_FADEOUT in seconds; 0 disables)
+        local fadeout_sec = render_fadeout and ((tonumber(render_fadeout_ms) or 300) / 1000.0) or 0
+        reaper.GetSetProjectInfo(0, "RENDER_FADEOUT", fadeout_sec, true)
 
         -- Open native REAPER render dialog (user confirms + clicks Render there)
         reaper.Main_OnCommand(40015, 0)
