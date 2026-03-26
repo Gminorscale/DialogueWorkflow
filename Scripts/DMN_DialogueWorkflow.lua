@@ -349,7 +349,7 @@ local CONTENT_START_Y = TAB_BAR_Y + TAB_HEIGHT + 22
 local ROW_START_Y = 0
 local HIDDEN_Y = -5000
 
-local TABS = {"Import", "Record", "Edit", "Render"}
+local TABS = {"Import", "Record", "Navigator", "Edit", "Render"}
 local active_tab = 1
 local tab_elements = {}
 local tab_scroll = { Import = 0, Record = 0, Edit = 0, Render = 0 }
@@ -6663,12 +6663,12 @@ updateRoleButtonAppearances()
 -- IMGUI MAIN LOOP (ReaImGui)
 
 local show_theme_editor  = false
-local show_teleprompter  = false
-local tele_float         = false   -- false = embedded in Record tab, true = floating window
+local show_navigator     = false
+local nav_float          = false   -- false = docked in Navigator tab, true = floating window
 local font_needs_restart = false
 
-local _tele_last_active      = -1
-local _tele_scroll_to_active = false
+local _nav_last_active      = -1
+local _nav_scroll_to_active = false
 
 local function theme_color_edit(ctx, label, key)
     local c = THEME[key]
@@ -6948,7 +6948,7 @@ local function draw_import_tab(ctx)
     dmn_btn(ctx, "btn_cancel", "Close")
 end
 
-local draw_teleprompter_content   -- forward declaration; defined in EMBEDDED TELEPROMPTER section
+local draw_navigator_content    -- forward declaration; defined in NAVIGATOR/TELEPROMPTER section
 
 local function draw_record_tab(ctx)
     reaper.ImGui_TextWrapped(ctx, "Web teleprompter: install HTML into REAPER web root, enable web server, open in browser.")
@@ -6961,24 +6961,6 @@ local function draw_record_tab(ctx)
     dmn_btn(ctx, "btn_record_prefs", "Open Web/OSC preferences")
     dmn_btn(ctx, "btn_record_show_webroot", "Show REAPER web root path")
 
-    reaper.ImGui_Spacing(ctx)
-    if reaper.ImGui_CollapsingHeader(ctx, "Teleprompter") then
-        if tele_float then
-            reaper.ImGui_TextColored(ctx, tcol("hint_text"), "Teleprompter is floating.")
-            reaper.ImGui_SameLine(ctx)
-            if reaper.ImGui_SmallButton(ctx, "Dock##tele_dock_hdr") then
-                tele_float        = false
-                show_teleprompter = false
-            end
-        else
-            if reaper.ImGui_SmallButton(ctx, "Pop out \xe2\x86\x97##tele_popout") then   -- ↗
-                tele_float        = true
-                show_teleprompter = true
-            end
-            reaper.ImGui_Spacing(ctx)
-            draw_teleprompter_content(ctx, 300)
-        end
-    end
 end
 
 -- Button with explicit fill-width
@@ -7564,7 +7546,7 @@ local _last_cleanup_update_status = nil
 local _last_cleanup_assign_reaper = nil
 
 -- ============================================================================
--- EMBEDDED TELEPROMPTER WINDOW
+-- NAVIGATOR AND TELEPROMPTER
 -- ============================================================================
 
 -- Parse all project markers/regions into a structured list of categories + entries.
@@ -7669,15 +7651,8 @@ local function build_teleprompter_data()
     return categories
 end
 
--- Shared teleprompter content: track name, transport controls, scrollable dialogue list.
--- child_height: pixel height for the scrollable region (0 = fill remaining window space).
-draw_teleprompter_content = function(ctx, child_height)
-    local play_pos   = reaper.GetPlayPosition()
-    local play_state = reaper.GetPlayState()
-    local is_playing   = play_state == 1 or play_state == 5
-    local is_recording = play_state == 4 or play_state == 5
-
-    -- ── Track name (selected track, or first record-armed track) ──────────────
+-- Helper: resolve current track name (selected track, then first record-armed track).
+local function get_current_track_name()
     local track_name = ""
     local sel_track = reaper.GetSelectedTrack(0, 0)
     if sel_track then
@@ -7695,33 +7670,32 @@ draw_teleprompter_content = function(ctx, child_height)
             end
         end
     end
+    return track_name
+end
+
+-- ── Navigator: full scrollable list of all entries ────────────────────────────
+-- child_height: pixel height of the scrollable region (0 = fill remaining space).
+draw_navigator_content = function(ctx, child_height)
+    local play_pos   = reaper.GetPlayPosition()
+    local play_state = reaper.GetPlayState()
+    local is_playing   = play_state == 1 or play_state == 5
+    local is_recording = play_state == 4 or play_state == 5
 
     reaper.ImGui_TextColored(ctx, rgba(0.4, 0.8, 1.0, 1.0),
-        track_name ~= "" and track_name or "(no track selected)")
+        (function() local t = get_current_track_name(); return t ~= "" and t or "(no track selected)" end)())
 
-    -- ── Transport controls ────────────────────────────────────────────────────
     reaper.ImGui_Spacing(ctx)
 
-    if is_playing then
-        reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(), tcol("accent"))
-    end
-    if reaper.ImGui_Button(ctx, "  \xe2\x96\xb6  ##tele_play") then   -- ▶
-        reaper.Main_OnCommand(1007, 0)
-    end
+    if is_playing then reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(), tcol("accent")) end
+    if reaper.ImGui_Button(ctx, "  \xe2\x96\xb6  ##nav_play") then reaper.Main_OnCommand(1007, 0) end   -- ▶
     if is_playing then reaper.ImGui_PopStyleColor(ctx, 1) end
 
     reaper.ImGui_SameLine(ctx)
-    if reaper.ImGui_Button(ctx, "  \xe2\x96\xa0  ##tele_stop") then   -- ■
-        reaper.Main_OnCommand(40667, 0)
-    end
+    if reaper.ImGui_Button(ctx, "  \xe2\x96\xa0  ##nav_stop") then reaper.Main_OnCommand(40667, 0) end  -- ■
 
     reaper.ImGui_SameLine(ctx)
-    if is_recording then
-        reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(), rgba(0.75, 0.10, 0.10, 1.0))
-    end
-    if reaper.ImGui_Button(ctx, "  \xe2\x97\x8f  ##tele_rec") then    -- ●
-        reaper.Main_OnCommand(1013, 0)
-    end
+    if is_recording then reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(), rgba(0.75, 0.10, 0.10, 1.0)) end
+    if reaper.ImGui_Button(ctx, "  \xe2\x97\x8f  ##nav_rec") then reaper.Main_OnCommand(1013, 0) end    -- ●
     if is_recording then reaper.ImGui_PopStyleColor(ctx, 1) end
 
     reaper.ImGui_SameLine(ctx)
@@ -7730,9 +7704,7 @@ draw_teleprompter_content = function(ctx, child_height)
 
     reaper.ImGui_Separator(ctx)
 
-    -- ── Parse markers/regions and find active entry ───────────────────────────
     local categories = build_teleprompter_data()
-
     local active_cat, active_entry = nil, nil
     local global_active_idx = -1
     local counter = 0
@@ -7740,68 +7712,53 @@ draw_teleprompter_content = function(ctx, child_height)
         for ei, entry in ipairs(cat.entries) do
             counter = counter + 1
             if play_pos >= entry.start and play_pos < entry.rend then
-                active_cat        = ci
-                active_entry      = ei
-                global_active_idx = counter
+                active_cat = ci; active_entry = ei; global_active_idx = counter
             end
         end
     end
 
-    if global_active_idx ~= _tele_last_active then
-        _tele_last_active      = global_active_idx
-        _tele_scroll_to_active = true
+    if global_active_idx ~= _nav_last_active then
+        _nav_last_active      = global_active_idx
+        _nav_scroll_to_active = true
     end
 
-    -- ── Scrollable dialogue list ──────────────────────────────────────────────
-    reaper.ImGui_BeginChild(ctx, "##tele_list", 0, child_height, 0)
+    reaper.ImGui_BeginChild(ctx, "##nav_list", 0, child_height, 0)
 
     local has_any_entry = false
     for ci, cat in ipairs(categories) do
         if #cat.entries > 0 then has_any_entry = true end
-
         if cat.name ~= "" then
             reaper.ImGui_Spacing(ctx)
-            reaper.ImGui_TextColored(ctx, tcol("accent"), "\xe2\x96\xb8  " .. cat.name)   -- ▸
+            reaper.ImGui_TextColored(ctx, tcol("accent"), "\xe2\x96\xb8  " .. cat.name)
             reaper.ImGui_Separator(ctx)
             reaper.ImGui_Spacing(ctx)
         end
-
         for ei, entry in ipairs(cat.entries) do
             local is_active = (ci == active_cat and ei == active_entry)
-
-            -- Character / delivery metadata line
             if entry.character ~= "" then
                 reaper.ImGui_TextColored(ctx, rgba(0.4, 0.8, 1.0, 1.0), entry.character)
                 if entry.delivery ~= "" then
                     reaper.ImGui_SameLine(ctx)
-                    reaper.ImGui_TextColored(ctx, rgba(1.0, 0.86, 0.31, 1.0),
-                        "  [" .. entry.delivery .. "]")
+                    reaper.ImGui_TextColored(ctx, rgba(1.0, 0.86, 0.31, 1.0), "  [" .. entry.delivery .. "]")
                 end
             elseif entry.delivery ~= "" then
-                reaper.ImGui_TextColored(ctx, rgba(1.0, 0.86, 0.31, 1.0),
-                    "[" .. entry.delivery .. "]")
+                reaper.ImGui_TextColored(ctx, rgba(1.0, 0.86, 0.31, 1.0), "[" .. entry.delivery .. "]")
             end
-
-            -- Entry selectable — highlighted when playback position is inside it
             if is_active then
                 reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(),        tcol("accent"))
                 reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_HeaderHovered(), tcol("button_hover"))
                 reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_HeaderActive(),  tcol("button_active"))
             end
-
-            local sel_id = "##tele_" .. tostring(ci) .. "_" .. tostring(ei)
-            if reaper.ImGui_Selectable(ctx, entry.name .. sel_id, is_active) then
+            if reaper.ImGui_Selectable(ctx, entry.name .. "##nav_" .. ci .. "_" .. ei, is_active) then
                 reaper.SetEditCurPos(entry.start, true, false)
             end
-
             if is_active then
                 reaper.ImGui_PopStyleColor(ctx, 3)
-                if _tele_scroll_to_active then
+                if _nav_scroll_to_active then
                     reaper.ImGui_SetScrollHereY(ctx, 0.5)
-                    _tele_scroll_to_active = false
+                    _nav_scroll_to_active = false
                 end
             end
-
             reaper.ImGui_Spacing(ctx)
         end
     end
@@ -7815,25 +7772,41 @@ draw_teleprompter_content = function(ctx, child_height)
     reaper.ImGui_EndChild(ctx)
 end
 
-local function draw_teleprompter_window(ctx)
-    if not (show_teleprompter and tele_float) then return end
+-- ── Navigator: tab drawing (full-tab embedded mode + pop-out) ─────────────────
+local function draw_navigator_tab(ctx)
+    if nav_float then
+        reaper.ImGui_TextColored(ctx, tcol("hint_text"), "Navigator is floating.")
+        reaper.ImGui_SameLine(ctx)
+        if reaper.ImGui_SmallButton(ctx, "Dock##nav_dock_tab") then
+            nav_float      = false
+            show_navigator = false
+        end
+    else
+        if reaper.ImGui_SmallButton(ctx, "Pop out \xe2\x86\x97##nav_popout_tab") then   -- ↗
+            nav_float      = true
+            show_navigator = true
+        end
+        reaper.ImGui_Spacing(ctx)
+        draw_navigator_content(ctx, 0)
+    end
+end
 
+-- ── Navigator floating window ─────────────────────────────────────────────────
+local function draw_navigator_window(ctx)
+    if not (show_navigator and nav_float) then return end
     reaper.ImGui_SetNextWindowSize(ctx, 700, 600, reaper.ImGui_Cond_FirstUseEver())
-
-    local vis, open = reaper.ImGui_Begin(ctx, "DMN Actor Teleprompter", true, 0)
+    local vis, open = reaper.ImGui_Begin(ctx, "DMN Navigator", true, 0)
     if vis then
-        if reaper.ImGui_SmallButton(ctx, "Dock##tele_dock_win") then
-            tele_float        = false
-            show_teleprompter = false
+        if reaper.ImGui_SmallButton(ctx, "Dock##nav_dock_win") then
+            nav_float      = false
+            show_navigator = false
         end
         reaper.ImGui_SameLine(ctx)
-        reaper.ImGui_TextColored(ctx, tcol("hint_text"), "Dock into Record tab")
+        reaper.ImGui_TextColored(ctx, tcol("hint_text"), "Dock into Navigator tab")
         reaper.ImGui_Separator(ctx)
-
-        draw_teleprompter_content(ctx, 0)
+        draw_navigator_content(ctx, 0)
     end
-
-    if not open then show_teleprompter = false end
+    if not open then show_navigator = false end
     reaper.ImGui_End(ctx)
 end
 
@@ -7897,6 +7870,7 @@ local function imgui_frame()
                     active_tab = i
                     if tab == "Import" then draw_import_tab(ctx)
                     elseif tab == "Record" then draw_record_tab(ctx)
+                    elseif tab == "Navigator" then draw_navigator_tab(ctx)
                     elseif tab == "Edit" then draw_edit_tab(ctx)
                     elseif tab == "Render" then draw_render_tab(ctx)
                     end
@@ -7909,7 +7883,7 @@ local function imgui_frame()
     end
 
     draw_theme_editor(ctx)
-    draw_teleprompter_window(ctx)
+    draw_navigator_window(ctx)
 
     reaper.ImGui_PopStyleVar(ctx, 2)
     reaper.ImGui_PopStyleColor(ctx, 18)
