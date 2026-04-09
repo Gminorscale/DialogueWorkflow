@@ -8,7 +8,9 @@ Tools for **Cockos REAPER** that connect spreadsheet-driven dialogue data, optio
 DialogueWorkflow/
 ├── Scripts/
 │   ├── DMN_DialogueWorkflow.lua        # Main REAPER script (Import / Record / Edit / Render)
-│   └── DMN_ActorTeleprompter.html      # REAPER Web Interface — actor teleprompter
+│   ├── DMN_ActorTeleprompter.html      # REAPER Web Interface — actor teleprompter
+│   └── DMN_DialogueWorkflow/           # Lua modules loaded by the main script
+│       └── edit_tools.lua              # Timeline editing utilities (snap, markers, speaker mover)
 ├── Samples/
 │   ├── demo_shakespeare_hamlet_act5_scene1.csv
 │   ├── demo_shakespeare_multi_scene.csv
@@ -135,6 +137,29 @@ In-app help with role and flag descriptions, Google Sheets setup instructions, a
 - **Open Web/OSC preferences** — jump to REAPER preferences to enable the web server
 - **Show REAPER web root path** — displays the `reaper_www_root` folder location
 
+#### Actor Teleprompter — keyboard shortcuts
+
+The teleprompter web page supports keyboard shortcuts for all major actions. Open the **Preferences** panel (gear icon) and click **? View & Customize** to see all bindings or reassign them. Custom bindings are saved in the browser's local storage.
+
+Default shortcuts:
+
+| Key | Action |
+|-----|--------|
+| `Space` | Play |
+| `Q` | Stop |
+| `R` | Record |
+| `←` / `→` | Previous / Next entry |
+| `Shift+←` / `Shift+→` | Previous / Next entry for active speaker |
+| `↑` / `↓` | Previous / Next speaker (track) |
+| `,` / `.` | Previous / Next category |
+| `T` | Arm track for current speaker |
+| `C` | Toggle context lines |
+| `B` | Toggle browse panel |
+| `P` | Toggle preferences |
+| `-` / `+` | Decrease / Increase font size |
+
+Shortcuts are disabled while typing in the browse search field.
+
 ---
 
 ### Edit tab — timeline tools & Notion sync
@@ -143,7 +168,8 @@ In-app help with role and flag descriptions, Google Sheets setup instructions, a
 
 - **Apply to time selection only** — scopes the actions below to the current time selection
 - **Snap items to regions** — aligns selected media items to region start positions
-- **Marker from region** — creates point markers from region names within the selection
+- **Marker from region** — creates point markers from region names within the selection (strips `Tag=` prefixes, e.g. `Entry=Hello` becomes `Hello`)
+- **Move items to speaker track** — moves selected items vertically to the track matching their preceding `Speaker=` marker
 
 #### Notion
 
