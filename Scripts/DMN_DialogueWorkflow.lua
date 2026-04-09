@@ -262,6 +262,20 @@ end
 
 local SCRIPT_DIR = getScriptDirectory()
 
+-- ============================================================================
+-- MODULE LOADER
+-- ============================================================================
+
+local function loadModule(name)
+    local path = SCRIPT_DIR .. "DMN_DialogueWorkflow/" .. name .. ".lua"
+    local chunk, err = loadfile(path)
+    if not chunk then
+        reaper.ShowConsoleMsg("DMN DialogueWorkflow: failed to load module '" .. name .. "': " .. tostring(err) .. "\n")
+        return nil
+    end
+    return chunk()
+end
+
 -- External tool paths (relative to script directory)
 local EXTERNAL_TOOLS = {
     HandCompTool = {
@@ -3160,125 +3174,10 @@ local function renameMarkersToIndexFromName(opts)
 end
 
 -- ============================================================================
--- EDIT TAB: Incorporated utilities (ported from standalone scripts)
+-- EDIT TAB: Utilities (loaded from DMN_DialogueWorkflow/edit_tools.lua)
 -- ============================================================================
 
-local function getTimeSelectionOrWholeProject()
-    local start_time, end_time = reaper.GetSet_LoopTimeRange2(0, false, false, 0, 0, false)
-    if start_time == end_time then
-        start_time = 0
-        end_time = reaper.GetProjectLength(0)
-    end
-    return start_time, end_time
-end
-
-local function snapSelectedItemsToNearestRegionStart()
-    local num_sel_items = reaper.CountSelectedMediaItems(0)
-    if num_sel_items == 0 then
-        reaper.ShowMessageBox("Select at least one media item.", "Snap to nearest region", 0)
-        return
-    end
-
-    local _, num_markers, num_regions = reaper.CountProjectMarkers(0)
-    if num_regions == 0 then
-        reaper.ShowMessageBox("No regions in project.", "Snap to nearest region", 0)
-        return
-    end
-
-    local regions = {}
-    for i = 0, (num_markers + num_regions - 1) do
-        local ok, isrgn, pos, rgnend = reaper.EnumProjectMarkers(i)
-        if ok and isrgn then
-            regions[#regions + 1] = { start = pos, ["end"] = rgnend }
-        end
-    end
-    if #regions == 0 then
-        reaper.ShowMessageBox("No regions found.", "Snap to nearest region", 0)
-        return
-    end
-
-    reaper.PreventUIRefresh(1)
-    reaper.Undo_BeginBlock()
-
-    for i = 0, (num_sel_items - 1) do
-        local item = reaper.GetSelectedMediaItem(0, i)
-        local item_pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
-        local item_length = reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
-        local item_center = item_pos + (item_length / 2)
-
-        local nearest_dist = math.huge
-        local nearest_region_pos = nil
-        for _, r in ipairs(regions) do
-            local dist = math.abs(item_center - r.start)
-            if dist < nearest_dist then
-                nearest_dist = dist
-                nearest_region_pos = r.start
-            end
-        end
-
-        if nearest_region_pos ~= nil then
-            reaper.SetMediaItemPosition(item, nearest_region_pos, false)
-        end
-    end
-
-    reaper.Undo_EndBlock("Snap items to nearest region start", -1)
-    reaper.PreventUIRefresh(-1)
-    reaper.UpdateArrange()
-end
-
-local function createOrMoveMarkersFromRegionNamesInTimeSelection()
-    local time_start, time_end = reaper.GetSet_LoopTimeRange(false, false, 0, 0, false)
-    if time_start == time_end then
-        reaper.ShowMessageBox("Make a time selection first (the script will process regions fully inside it).", "Markers from region names", 0)
-        return
-    end
-
-    local _, num_markers, num_regions = reaper.CountProjectMarkers(0)
-    if (num_markers + num_regions) == 0 then return end
-
-    local regions = {}
-    local markers = {}
-
-    for i = 0, (num_markers + num_regions - 1) do
-        local ok, isrgn, pos, rgnend, name, markrgnindexnumber = reaper.EnumProjectMarkers(i)
-        if ok then
-            if isrgn and pos >= time_start and rgnend <= time_end then
-                regions[#regions + 1] = { start = pos, ["end"] = rgnend, name = name or "" }
-            elseif not isrgn then
-                markers[#markers + 1] = { pos = pos, name = name or "", id = markrgnindexnumber }
-            end
-        end
-    end
-
-    reaper.PreventUIRefresh(1)
-    reaper.Undo_BeginBlock()
-
-    for _, r in ipairs(regions) do
-        local region_name = r.name
-        if region_name and region_name ~= "" then
-            local marker_pos = r.start + 0.2
-
-            -- Find an existing marker with same name within this region bounds
-            local existing_id = nil
-            for _, m in ipairs(markers) do
-                if m.name == region_name and m.pos >= r.start and m.pos <= r["end"] then
-                    existing_id = m.id
-                    break
-                end
-            end
-
-            if existing_id ~= nil then
-                reaper.SetProjectMarker2(0, existing_id, false, marker_pos, 0, region_name)
-            else
-                reaper.AddProjectMarker2(0, false, marker_pos, 0, region_name, -1, 0)
-            end
-        end
-    end
-
-    reaper.Undo_EndBlock("Create markers from region names (time selection)", -1)
-    reaper.PreventUIRefresh(-1)
-    reaper.UpdateArrange()
-end
+local EditTools = loadModule("edit_tools")
 
 local function markDuplicateRegionsByName()
     local _, num_markers, num_regions = reaper.CountProjectMarkers(0)
@@ -3331,7 +3230,7 @@ local function markDuplicateRegionsByName()
 end
 
 local function detectDuplicateIndexMarkersAndSelectItems()
-    local start_time, end_time = getTimeSelectionOrWholeProject()
+    local start_time, end_time = EditTools.getTimeSelectionOrWholeProject()
 
     local _, num_markers, num_regions = reaper.CountProjectMarkers(0)
     local total = num_markers + num_regions
@@ -5258,7 +5157,7 @@ GUI.New("btn_edit_snap_items", "Button", {
     z = 11, x = 36, y = utils_sec_y + 14, w = 280, h = 22,
     caption = "Snap items to nearest region", font = 3,
     col_txt = "txt", col_fill = "elm_frame",
-    func = snapSelectedItemsToNearestRegionStart
+    func = EditTools.snapSelectedItemsToNearestRegionStart
 })
 registerTabElement("Edit", "btn_edit_snap_items")
 
@@ -5266,9 +5165,21 @@ GUI.New("btn_edit_marker_from_region", "Button", {
     z = 11, x = 326, y = utils_sec_y + 14, w = 254, h = 22,
     caption = "Marker from region name", font = 3,
     col_txt = "txt", col_fill = "elm_frame",
-    func = createOrMoveMarkersFromRegionNamesInTimeSelection
+    func = EditTools.createOrMoveMarkersFromRegionNamesInTimeSelection
 })
 registerTabElement("Edit", "btn_edit_marker_from_region")
+
+GUI.New("btn_edit_move_to_speaker_track", "Button", {
+    z = 11, x = 36, y = utils_sec_y + 14, w = 544, h = 22,
+    caption = "Move items to speaker track", font = 3,
+    col_txt = "txt", col_fill = "elm_frame",
+    func = function()
+        EditTools.moveItemsToSpeakerTrack(function()
+            return chkBool(GUI.Val("chk_edit_timesel_global"))
+        end)
+    end
+})
+registerTabElement("Edit", "btn_edit_move_to_speaker_track")
 
 GUI.New("btn_edit_dup_regions", "Button", {
     z = 11, x = 36, y = utils_sec_y + 40, w = 280, h = 22,
@@ -6980,6 +6891,9 @@ local function draw_edit_tab(ctx)
         dmn_btn_w(ctx, "btn_edit_snap_items",          "Snap items to regions",   hw)
         reaper.ImGui_SameLine(ctx)
         dmn_btn_w(ctx, "btn_edit_marker_from_region",  "Marker from region",      hw)
+        -- Row 2
+        local fw = reaper.ImGui_GetContentRegionAvail(ctx)
+        dmn_btn_w(ctx, "btn_edit_move_to_speaker_track", "Move items to speaker track", fw)
     end
 
     -- ── Notion ────────────────────────────────────────────────────────────────
