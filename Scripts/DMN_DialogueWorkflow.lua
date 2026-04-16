@@ -3179,6 +3179,15 @@ end
 
 local EditTools = loadModule("edit_tools")
 
+-- ============================================================================
+-- PROJECT SEARCH (loaded from DMN_DialogueWorkflow/project_search.lua)
+-- ============================================================================
+
+local ProjectSearch = loadModule("project_search")
+if ProjectSearch then
+    ProjectSearch.init({ rgba = rgba, tcol = tcol, THEME = THEME })
+end
+
 local function markDuplicateRegionsByName()
     local _, num_markers, num_regions = reaper.CountProjectMarkers(0)
     local total = num_markers + num_regions
@@ -6580,6 +6589,7 @@ local font_needs_restart = false
 
 local _nav_last_active      = -1
 local _nav_scroll_to_active = false
+local nav_subtab            = 0   -- 0 = Navigator, 1 = Project Search
 
 local function theme_color_edit(ctx, label, key)
     local c = THEME[key]
@@ -7687,6 +7697,26 @@ draw_navigator_content = function(ctx, child_height)
 end
 
 -- ── Navigator: tab drawing (full-tab embedded mode + pop-out) ─────────────────
+
+local function draw_navigator_inner(ctx)
+    if reaper.ImGui_BeginTabBar(ctx, "nav_subtabs", 0) then
+        if reaper.ImGui_BeginTabItem(ctx, "Navigator##nav_sub") then
+            nav_subtab = 0
+            draw_navigator_content(ctx, 0)
+            reaper.ImGui_EndTabItem(ctx)
+        end
+        if ProjectSearch then
+            if reaper.ImGui_BeginTabItem(ctx, "Project Search##nav_sub") then
+                nav_subtab = 1
+                ProjectSearch.tick()
+                ProjectSearch.draw_full(ctx)
+                reaper.ImGui_EndTabItem(ctx)
+            end
+        end
+        reaper.ImGui_EndTabBar(ctx)
+    end
+end
+
 local function draw_navigator_tab(ctx)
     if nav_float then
         reaper.ImGui_TextColored(ctx, tcol("hint_text"), "Navigator is floating.")
@@ -7696,12 +7726,12 @@ local function draw_navigator_tab(ctx)
             show_navigator = false
         end
     else
-        if reaper.ImGui_SmallButton(ctx, "Pop out \xe2\x86\x97##nav_popout_tab") then   -- ↗
+        if reaper.ImGui_SmallButton(ctx, "Pop out \xe2\x86\x97##nav_popout_tab") then
             nav_float      = true
             show_navigator = true
         end
         reaper.ImGui_Spacing(ctx)
-        draw_navigator_content(ctx, 0)
+        draw_navigator_inner(ctx)
     end
 end
 
@@ -7718,7 +7748,7 @@ local function draw_navigator_window(ctx)
         reaper.ImGui_SameLine(ctx)
         reaper.ImGui_TextColored(ctx, tcol("hint_text"), "Dock into Navigator tab")
         reaper.ImGui_Separator(ctx)
-        draw_navigator_content(ctx, 0)
+        draw_navigator_inner(ctx)
     end
     if not open then show_navigator = false end
     reaper.ImGui_End(ctx)

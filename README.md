@@ -10,7 +10,8 @@ DialogueWorkflow/
 │   ├── DMN_DialogueWorkflow.lua        # Main REAPER script (Import / Record / Edit / Render)
 │   ├── DMN_ActorTeleprompter.html      # REAPER Web Interface — actor teleprompter
 │   └── DMN_DialogueWorkflow/           # Lua modules loaded by the main script
-│       └── edit_tools.lua              # Timeline editing utilities (snap, markers, speaker mover)
+│       ├── edit_tools.lua              # Timeline editing utilities (snap, markers, speaker mover)
+│       └── project_search.lua          # Cross-project search engine (RPP parser, find & replace)
 ├── Samples/
 │   ├── demo_shakespeare_hamlet_act5_scene1.csv
 │   ├── demo_shakespeare_multi_scene.csv
@@ -74,7 +75,7 @@ Use your machine's LAN IP when opening from a tablet or another device (allow th
 
 ## Feature reference
 
-The script opens a **single window** with four tabs: **Import**, **Record**, **Edit**, and **Render**.
+The script opens a **single window** with five tabs: **Import**, **Record**, **Navigator**, **Edit**, and **Render**.
 
 ---
 
@@ -162,6 +163,38 @@ Shortcuts are disabled while typing in the browse search field.
 
 ---
 
+### Navigator tab — timeline navigation & cross-project search
+
+The Navigator tab has two sub-tabs: **Navigator** and **Project Search**. Both are available docked inside the main window or in a **pop-out** floating window.
+
+#### Navigator (sub-tab)
+
+Lists all dialogue entries, categories, and speakers currently on the timeline. Click any row to move the edit cursor. Tracks the active entry and auto-scrolls to keep it visible.
+
+#### Project Search (sub-tab)
+
+Searches markers, regions, tracks, and items across multiple REAPER `.rpp` project files **without opening them** — the scanner reads `.rpp` files as text.
+
+**Setup** — add project folders or individual `.rpp` file paths. Options:
+- **Include subfolders** — scan nested directories recursively
+- **Discover .rpp files** — auto-find all `.rpp` files in configured folders
+- **Presets** — save and load folder lists for different projects
+- **Scan Projects** — parse all configured `.rpp` files and index their contents
+
+**Search** — type a query to filter across all indexed results. Toggle filters for **Markers**, **Regions**, **Tracks**, and **Items**. Results are displayed in a sortable table. Double-click any result to open the project and jump to that position.
+
+**Find & Replace** — batch rename markers, regions, tracks, or items across `.rpp` files:
+1. Enter find/replace text and select target types
+2. Click **Preview** to see a before/after table
+3. Select or deselect individual matches
+4. Click **Replace All** or **Replace Selected** — original files are backed up as `.bak`
+
+**Help** — usage tips and an optional debug log for troubleshooting.
+
+> **Standalone mode:** `DMN_ProjectSearch.lua` can also run independently outside DialogueWorkflow. It loads the same `project_search.lua` module and provides identical functionality in its own window.
+
+---
+
 ### Edit tab — timeline tools & Notion sync
 
 #### Timeline Tools
@@ -246,6 +279,7 @@ To try: paste a CSV file path into the Import tab, click **Auto Suggest**, revie
 1. **Import only** — Import tab → CSV → regions/markers → edit and record normally.
 2. **Record with teleprompter** — After import, install the web UI (Record tab), open the actor page on a browser/tablet; the actor reads `Speaker=` / `Entry=` lines while you manage transport.
 3. **Notion-linked pipeline** — Import CSV → record → add `ID=` markers (Edit → Notion → Add ID markers) → sync `Index=` markers → run Clean Up to push status back to Notion → use Render tab to configure and export.
+4. **Cross-project search** — Navigator tab → Project Search → add project folders → Scan → search or batch-rename markers, regions, tracks, and items across your `.rpp` library without opening each project.
 
 ---
 
@@ -288,6 +322,8 @@ The teleprompter and the import script use these naming rules.
 | Notion actions fail | Check token, database ID, integration permissions, and the REAPER console for error details |
 | `Speaker=` not showing in teleprompter | Make sure the Speaker column has **[Sp]** role assigned before importing |
 | Render settings not applied | Click **Open Render Dialog…** — settings are written to the project when the button is pressed |
+| Project Search finds 0 `.rpp` files | Ensure paths don't contain surrounding quotes; use the **Discover** button to auto-scan folders |
+| Standalone `DMN_ProjectSearch.lua` can't find module | Place `project_search.lua` in a `DMN_DialogueWorkflow/` subfolder next to the standalone script, or ensure the DialogueWorkflow repo is at the expected path |
 
 ---
 
