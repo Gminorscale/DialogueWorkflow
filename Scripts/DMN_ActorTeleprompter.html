@@ -987,6 +987,12 @@
             <div id="sub-progress-fill" style="height:100%;width:0%;background:linear-gradient(90deg,var(--yellow) 0%,#ffb366 100%);transition:width 0.3s;"></div>
         </div>
     </div>
+    <div id="rec-progress-container" style="width:80%;margin-top:10px;display:flex;flex-direction:column;align-items:center;">
+        <div id="rec-progress-label" style="color:#ccc;font-size:0.5em;margin-bottom:2px;text-shadow:0 2px 4px #0005;"></div>
+        <div style="width:100%;background:#333;border-radius:4px;height:6px;box-shadow:0 2px 8px #0006;overflow:hidden;">
+            <div id="rec-progress-fill" style="height:100%;width:0%;background:linear-gradient(90deg,#29b6f6 0%,#00e5ff 100%);transition:width 0.3s;"></div>
+        </div>
+    </div>
 </div>
 
 <!-- ── Header ────────────────────────────────────────────────────────────── -->
@@ -1167,7 +1173,8 @@
             'prefs-panel','prefs-toggle','prefs-font-label','prefs-ctx-btn',
             'text-offset-slider','offset-display','prefs-browse-toggle',
             'delivery','logo',
-            'vis-transport','vis-progress','vis-logo','vis-sideinfo'
+            'vis-transport','vis-progress','vis-logo','vis-sideinfo',
+            'rec-progress-label','rec-progress-fill','rec-progress-container'
         ].forEach(function(id) { getCachedElement(id); });
     }
 
@@ -1184,6 +1191,7 @@
         lastRegionCount: 0, lastCategoryCount: 0, lastDeliveryCount: 0, lastCharacterCount: 0,
         lastRegionDataString: '', lastCategoryDataString: '',
         lastDeliveryDataString: '', lastCharacterDataString: '',
+        recTotal: 0, recRecorded: 0,
     };
 
     var regionData = [];
@@ -1511,6 +1519,21 @@
         }
     }
 
+    function updateRecordingProgress() {
+        var lbl  = getCachedElement('rec-progress-label');
+        var fill = getCachedElement('rec-progress-fill');
+        var total = dataCache.recTotal || 0;
+        var rec   = dataCache.recRecorded || 0;
+        if (total > 0) {
+            var pct = Math.round((rec / total) * 100);
+            lbl.textContent  = 'Recorded: ' + rec + ' / ' + total + ' (' + pct + '%)';
+            fill.style.width = pct + '%';
+        } else {
+            lbl.textContent  = '';
+            fill.style.width = '0%';
+        }
+    }
+
     // ── Data processing ────────────────────────────────────────────────────
     function processData(lines) {
         var region = '', category = '', delivery = '', track = '', armedTrack = '';
@@ -1526,6 +1549,10 @@
                 if (tok[2] === 'region_text')   region   = tok[3];
                 if (tok[2] === 'category_text') category = tok[3];
                 if (tok[2] === 'delivery_text') delivery = tok[3];
+            }
+            if (tok[1] === 'DMN_DialogueWorkflow') {
+                if (tok[2] === 'rec_total')    dataCache.recTotal    = parseInt(tok[3]) || 0;
+                if (tok[2] === 'rec_recorded') dataCache.recRecorded = parseInt(tok[3]) || 0;
             }
             if (tok[0] === 'REGION' && tok.length > 4) {
                 var color = '#888';
@@ -1783,6 +1810,7 @@
         }
 
         updateProgressBar(progressRegionName);
+        updateRecordingProgress();
 
         // ── Previous / next lines
         var prevDialogue = '', prevSpeaker = '', nextDialogue = '', nextSpeaker = '';
@@ -2290,7 +2318,7 @@
                     setTimeout(poll, self.currentInterval);
                 };
                 wwrreqloopxhr.onerror = function() { setTimeout(poll, 1000); };
-                wwrreqloopxhr.open("GET", "/_/TRACK;GET/PROJEXTSTATE/XR_Lyrics/region_text;GET/PROJEXTSTATE/XR_Lyrics/category_text;GET/PROJEXTSTATE/XR_Lyrics/delivery_text;TRANSPORT;REGION;MARKER", true);
+                wwrreqloopxhr.open("GET", "/_/TRACK;GET/PROJEXTSTATE/XR_Lyrics/region_text;GET/PROJEXTSTATE/XR_Lyrics/category_text;GET/PROJEXTSTATE/XR_Lyrics/delivery_text;GET/PROJEXTSTATE/DMN_DialogueWorkflow/rec_total;GET/PROJEXTSTATE/DMN_DialogueWorkflow/rec_recorded;TRANSPORT;REGION;MARKER", true);
                 wwrreqloopxhr.send(null);
             }
             poll();

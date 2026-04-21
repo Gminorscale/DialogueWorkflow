@@ -204,6 +204,13 @@ Searches markers, regions, tracks, and items across multiple REAPER `.rpp` proje
 - **Marker from region** — creates point markers from region names within the selection (strips `Tag=` prefixes, e.g. `Entry=Hello` becomes `Hello`)
 - **Move items to speaker track** — moves selected items vertically to the track matching their preceding `Speaker=` marker
 
+#### Utilities
+
+- **Find duplicate regions** — appends a `_duplicate` suffix and colours duplicate region names
+- **Detect duplicate Index** — finds `Index=` markers that share the same value within a category and selects nearby items
+- **Find missing ID= / Index=** — entry regions without a nearby `ID=` or `Index=` marker: selects overlapping media items and prints details to the REAPER console
+- **Fix missing ID= from Notion** — for entry regions that **already have no nearby `ID=`** marker, fetches the Notion database (same workflow as **Add ID markers**) and creates only the missing `ID=<numeric>` point markers. Respects **Apply to time selection only**. Use this when **Sync Index markers** cannot run yet because `ID=` markers are absent.
+
 #### Notion
 
 Requires a **Notion integration token** and a configured database.
@@ -218,8 +225,9 @@ Requires a **Notion integration token** and a configured database.
 
 **Actions:**
 
-- **Add ID markers** — matches entry regions to Notion rows by name and places `ID=<notion-id>` point markers (async, shows progress)
-- **Sync Index markers** — reads `ID=` markers already on the timeline and fetches index/filename data from Notion to write `Index=NN` markers
+- **Add ID markers** — matches entry regions to Notion rows by name and places `ID=<notion-id>` point markers (async fetch + progress; skips regions that already have that Notion ID assigned)
+- **Sync Index markers** — requires a nearby `ID=` marker per entry region (same spatial rules as the diagnostics). Reads those IDs, fetches index data from Notion, and writes `Index=NN` markers. Regions without `ID=` are skipped.
+- **Fix missing ID** (also under **Utilities**) — same Notion fetch as **Add ID markers**, but only processes entry regions that are **missing** a nearby `ID=` marker (complements **Sync Index markers** when IDs were never created)
 
 **Clean Up** — update Notion from recorded audio:
 
@@ -257,6 +265,10 @@ Supported wildcards include `$marker(Speaker)`, `$marker(Category)`, `$marker(In
 
 **Open Render Dialog…** applies all configured settings (output path, pattern, sample rate, channels, normalize, source, bounds) to the REAPER project and opens the native **Render to File** dialog for final confirmation.
 
+#### Debug before render
+
+When **Debug project before rendering** is enabled, the script runs timeline checks before opening the render dialog. If problems are found (duplicate names, missing markers, etc.), a popup summarizes them and offers actions such as selecting affected items (no extra confirmation dialog), marking duplicates, or running Notion **Add ID markers**, **Fix missing ID**, or **Sync Index markers** — mirroring **Edit → Utilities** where applicable.
+
 ---
 
 ## Samples
@@ -278,7 +290,7 @@ To try: paste a CSV file path into the Import tab, click **Auto Suggest**, revie
 
 1. **Import only** — Import tab → CSV → regions/markers → edit and record normally.
 2. **Record with teleprompter** — After import, install the web UI (Record tab), open the actor page on a browser/tablet; the actor reads `Speaker=` / `Entry=` lines while you manage transport.
-3. **Notion-linked pipeline** — Import CSV → record → add `ID=` markers (Edit → Notion → Add ID markers) → sync `Index=` markers → run Clean Up to push status back to Notion → use Render tab to configure and export.
+3. **Notion-linked pipeline** — Import CSV → record → add `ID=` markers (Edit → Notion → **Add ID markers**, or **Utilities → Fix missing ID= from Notion** if only some lines lack `ID=`) → **Sync Index markers** → run Clean Up to push status back to Notion → use Render tab to configure and export.
 4. **Cross-project search** — Navigator tab → Project Search → add project folders → Scan → search or batch-rename markers, regions, tracks, and items across your `.rpp` library without opening each project.
 
 ---
