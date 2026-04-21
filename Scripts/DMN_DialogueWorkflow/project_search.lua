@@ -1,5 +1,5 @@
 --[[
-    DMN Project Search — module
+    DMN Cross-Project Search — module
 
     Loaded by DMN_DialogueWorkflow.lua via loadModule("project_search")
     or by the standalone DMN_ProjectSearch.lua wrapper.
@@ -550,7 +550,27 @@ end
 
 -- ── Draw: Setup ──────────────────────────────────────────────────────────────
 
+local function get_current_project_folder()
+    local _, proj_path = reaper.EnumProjects(-1)
+    if proj_path and proj_path ~= "" then
+        local dir = proj_path:match("^(.*)[/\\][^/\\]+$")
+        if dir and dir ~= "" then return dir end
+    end
+    local proj_dir = reaper.GetProjectPath("")
+    if proj_dir and proj_dir ~= "" then return proj_dir end
+    return nil
+end
+
 local function draw_setup(ctx)
+    reaper.ImGui_Spacing(ctx)
+
+    reaper.ImGui_TextColored(ctx, tcol("accent"), "How it works:")
+    reaper.ImGui_TextWrapped(ctx,
+        "1) Add folders containing your REAPER projects below  " ..
+        "2) Hit Scan  " ..
+        "3) Switch to the Search tab to find markers, regions, tracks, or items across all scanned projects")
+    reaper.ImGui_Spacing(ctx)
+    reaper.ImGui_Separator(ctx)
     reaper.ImGui_Spacing(ctx)
 
     if reaper.ImGui_CollapsingHeader(ctx, "Project Folders", reaper.ImGui_TreeNodeFlags_DefaultOpen()) then
@@ -576,6 +596,24 @@ local function draw_setup(ctx)
                     project_paths[#project_paths + 1] = folder
                     save_paths()
                 end
+            end
+        end
+
+        local cur_folder = get_current_project_folder()
+        if cur_folder then
+            local already_added = false
+            local norm_cur = cur_folder:lower():gsub("/", "\\")
+            for _, p in ipairs(project_paths) do
+                if p:lower():gsub("/", "\\") == norm_cur then already_added = true; break end
+            end
+            if not already_added then
+                reaper.ImGui_Spacing(ctx)
+                if reaper.ImGui_Button(ctx, "Add Current Project Folder##ps_add_cur") then
+                    project_paths[#project_paths + 1] = cur_folder
+                    save_paths()
+                end
+                reaper.ImGui_SameLine(ctx)
+                reaper.ImGui_TextColored(ctx, tcol("hint_text"), cur_folder)
             end
         end
 
@@ -727,6 +765,15 @@ end
 
 local function draw_search(ctx)
     reaper.ImGui_Spacing(ctx)
+    if #all_results == 0 and not is_scanning then
+        reaper.ImGui_TextColored(ctx, tcol("hint_text"),
+            "No data yet. Go to the Setup tab, add project folders, and click Scan Projects.")
+        reaper.ImGui_Spacing(ctx)
+    else
+        reaper.ImGui_TextColored(ctx, tcol("hint_text"),
+            "Type below to search. Double-click a result to open that project and jump to it.")
+        reaper.ImGui_Spacing(ctx)
+    end
     reaper.ImGui_PushItemWidth(ctx, -1)
     local changed
     changed, search_buf = reaper.ImGui_InputTextWithHint(
@@ -805,6 +852,28 @@ local function draw_search(ctx)
                 selected_result = i
                 if reaper.ImGui_IsMouseDoubleClicked(ctx, 0) then navigate_to_result(r) end
             end
+            if reaper.ImGui_BeginPopupContextItem(ctx, "##ps_ctx_" .. i) then
+                if reaper.ImGui_MenuItem(ctx, "Open project") then
+                    navigate_to_result(r)
+                end
+                if reaper.ImGui_MenuItem(ctx, "Open project in new tab") then
+                    if r.projpath then
+                        reaper.Main_OnCommand(40859, 0)  -- New project tab
+                        reaper.Main_openProject(r.projpath)
+                        if r.position and r.position > 0 then
+                            reaper.SetEditCurPos(r.position, true, false)
+                        end
+                    end
+                end
+                reaper.ImGui_Separator(ctx)
+                if reaper.ImGui_MenuItem(ctx, "Copy name") then
+                    if reaper.CF_SetClipboard then reaper.CF_SetClipboard(r.name) end
+                end
+                if reaper.ImGui_MenuItem(ctx, "Copy project path") then
+                    if reaper.CF_SetClipboard and r.projpath then reaper.CF_SetClipboard(r.projpath) end
+                end
+                reaper.ImGui_EndPopup(ctx)
+            end
             if reaper.ImGui_IsItemHovered(ctx) then
                 reaper.ImGui_BeginTooltip(ctx)
                 reaper.ImGui_Text(ctx, r.type .. ": " .. r.name)
@@ -813,7 +882,7 @@ local function draw_search(ctx)
                 if r.track ~= "" then reaper.ImGui_Text(ctx, "Track: " .. r.track) end
                 reaper.ImGui_Text(ctx, "Project: " .. r.project)
                 reaper.ImGui_Separator(ctx)
-                reaper.ImGui_TextColored(ctx, tcol("hint_text"), "Double-click to open project and navigate")
+                reaper.ImGui_TextColored(ctx, tcol("hint_text"), "Double-click to open  |  Right-click for options")
                 reaper.ImGui_EndTooltip(ctx)
             end
             reaper.ImGui_TableNextColumn(ctx)
@@ -1053,8 +1122,8 @@ end
 local function draw_help(ctx)
     reaper.ImGui_Spacing(ctx)
     reaper.ImGui_TextWrapped(ctx,
-        "DMN Project Search scans .rpp project files as text and indexes all "
-        .. "markers, regions, tracks, and items for fast cross-project searching.\n\n"
+        "Cross-Project Search scans .rpp project files as text and indexes all "
+        .. "markers, regions, tracks, and items so you can search across multiple projects.\n\n"
         .. "Getting started:\n"
         .. "1. Go to the Setup section\n"
         .. "2. Add one or more folders containing .rpp files (or individual .rpp paths)\n"
@@ -1127,6 +1196,13 @@ local function init(deps)
         if not THEME[k] then THEME[k] = v end
     end
     load_paths()
+    if #project_paths == 0 then
+        local cur = get_current_project_folder()
+        if cur then
+            project_paths[#project_paths + 1] = cur
+            save_paths()
+        end
+    end
 end
 
 -- ── Module export ────────────────────────────────────────────────────────────

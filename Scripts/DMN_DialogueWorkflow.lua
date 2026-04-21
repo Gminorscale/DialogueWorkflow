@@ -6586,10 +6586,118 @@ local show_theme_editor  = false
 local show_navigator     = false
 local nav_float          = false   -- false = docked in Navigator tab, true = floating window
 local font_needs_restart = false
+local _main_dock_request = nil     -- set to a dock ID to apply next frame (nil = no pending request)
 
 local _nav_last_active      = -1
 local _nav_scroll_to_active = false
-local nav_subtab            = 0   -- 0 = Navigator, 1 = Project Search
+local nav_subtab            = 0   -- 0 = Navigator, 1 = Cross-Project Search, 2 = Shortcuts
+
+local nav_search_buf   = ""
+local nav_search_query = ""
+local nav_filter       = "all"   -- "all" | "entries" | "categories"
+
+-- Display toggles (persisted via ExtState)
+local nav_show_index   = reaper.GetExtState(EXTSTATE_SECTION, "nav_show_index")   ~= "0"
+local nav_show_id      = reaper.GetExtState(EXTSTATE_SECTION, "nav_show_id")      ~= "0"
+local nav_show_speaker = reaper.GetExtState(EXTSTATE_SECTION, "nav_show_speaker") ~= "0"
+
+-- Cache for keyboard-shortcut navigation helpers
+local _nav_categories_cache = nil
+
+-- ── Navigator keyboard shortcut definitions & customisation ──────────────────
+
+-- ImGui key constant lookup by name string (resolved lazily).
+local _imgui_key_cache = {}
+local function imgui_key_by_name(name)
+    if _imgui_key_cache[name] ~= nil then return _imgui_key_cache[name] end
+    local fn = reaper["ImGui_Key_" .. name]
+    local val = fn and fn() or nil
+    _imgui_key_cache[name] = val or false
+    return val or nil
+end
+
+-- Display-friendly label for an ImGui key name.
+local _key_display_map = {
+    Space = "Space", Escape = "Esc",
+    LeftArrow = "\xe2\x86\x90", RightArrow = "\xe2\x86\x92",
+    UpArrow = "\xe2\x86\x91",   DownArrow = "\xe2\x86\x93",
+    Comma = ",", Period = ".", Slash = "/",
+    Minus = "\xe2\x88\x92", Equal = "=", Backquote = "`",
+    Semicolon = ";", Quote = "'", Backslash = "\\",
+    BracketLeft = "[", BracketRight = "]",
+    Tab = "Tab", Enter = "Enter", Backspace = "Bksp",
+    Delete = "Del", Insert = "Ins",
+}
+local function key_display(name, shift)
+    local d = _key_display_map[name] or name
+    if shift then return "Shift + " .. d end
+    return d
+end
+
+-- Shortcut definition table — mirrors the ActorTeleprompter shortcuts (transport subset).
+-- Each entry: { id, label, group, default_key, default_shift }
+-- The `action` is resolved at dispatch time (not stored).
+local NAV_SHORTCUT_DEFS = {
+    { id = "play",          label = "Play / Pause",        group = "Transport",  default_key = "Space",      default_shift = false },
+    { id = "stop",          label = "Stop",                group = "Transport",  default_key = "Q",          default_shift = false },
+    { id = "record",        label = "Record",              group = "Transport",  default_key = "R",          default_shift = false },
+    { id = "prevEntry",     label = "Previous Entry",      group = "Transport",  default_key = "LeftArrow",  default_shift = false },
+    { id = "nextEntry",     label = "Next Entry",          group = "Transport",  default_key = "RightArrow", default_shift = false },
+    { id = "prevSpkEntry",  label = "Prev Speaker Entry",  group = "Transport",  default_key = "LeftArrow",  default_shift = true  },
+    { id = "nextSpkEntry",  label = "Next Speaker Entry",  group = "Transport",  default_key = "RightArrow", default_shift = true  },
+    { id = "prevCategory",  label = "Previous Category",   group = "Navigation", default_key = "Comma",      default_shift = false },
+    { id = "nextCategory",  label = "Next Category",       group = "Navigation", default_key = "Period",     default_shift = false },
+    { id = "prevSpeaker",   label = "Previous Speaker",    group = "Navigation", default_key = "UpArrow",    default_shift = false },
+    { id = "nextSpeaker",   label = "Next Speaker",        group = "Navigation", default_key = "DownArrow",  default_shift = false },
+    { id = "armSpeaker",    label = "Arm Speaker Track",   group = "Navigation", default_key = "T",          default_shift = false },
+}
+
+-- Persistent bindings: { [id] = { key = "KeyName", shift = bool } }
+local nav_shortcut_bindings = {}
+
+local function nav_shortcuts_load()
+    local defaults = {}
+    for _, def in ipairs(NAV_SHORTCUT_DEFS) do
+        defaults[def.id] = { key = def.default_key, shift = def.default_shift }
+    end
+    local raw = reaper.GetExtState(EXTSTATE_SECTION, "nav_shortcut_bindings")
+    if raw and raw ~= "" then
+        for pair in raw:gmatch("[^;]+") do
+            local id, key, sh = pair:match("^(.-)=(.-)=(.-)$")
+            if id and defaults[id] then
+                nav_shortcut_bindings[id] = { key = key, shift = sh == "1" }
+            end
+        end
+        for id, d in pairs(defaults) do
+            if not nav_shortcut_bindings[id] then nav_shortcut_bindings[id] = d end
+        end
+    else
+        nav_shortcut_bindings = defaults
+    end
+end
+
+local function nav_shortcuts_save()
+    local parts = {}
+    for _, def in ipairs(NAV_SHORTCUT_DEFS) do
+        local b = nav_shortcut_bindings[def.id]
+        if b then
+            parts[#parts + 1] = def.id .. "=" .. b.key .. "=" .. (b.shift and "1" or "0")
+        end
+    end
+    reaper.SetExtState(EXTSTATE_SECTION, "nav_shortcut_bindings", table.concat(parts, ";"), true)
+end
+
+local function nav_shortcuts_reset()
+    for _, def in ipairs(NAV_SHORTCUT_DEFS) do
+        nav_shortcut_bindings[def.id] = { key = def.default_key, shift = def.default_shift }
+    end
+    nav_shortcuts_save()
+end
+
+nav_shortcuts_load()
+
+-- State for the "press a key" rebinding flow
+local _nav_sc_listening_id = nil
 
 local function theme_color_edit(ctx, label, key)
     local c = THEME[key]
@@ -6994,89 +7102,250 @@ end
 --   $date            → YYYYMMDD
 --   $project         → project name (no extension)
 -- Falls back to placeholder text when no project data is available.
-local function resolveTokensPreview(tokens)
-    -- ── Collect project data ──────────────────────────────────────────────────
-    local named_markers = {}  -- keyed by lowercase prefix name → value
+-- Resolve named markers at a specific timeline position (nearest preceding marker wins).
+-- This mirrors how REAPER resolves $marker(Name) during render: for each rendered
+-- item/region it finds the closest preceding marker with the matching prefix.
+local function resolveMarkersAtPosition(all_markers, pos)
+    local resolved = {}
+    for i = #all_markers, 1, -1 do
+        local mk = all_markers[i]
+        if mk.pos <= pos then
+            local prefix, val = mk.name:match("^([^=]+)=(.+)$")
+            if prefix then
+                local key = prefix:lower()
+                if not resolved[key] then resolved[key] = val end
+            end
+        end
+    end
+    return resolved
+end
+
+-- Resolve the file-name template tokens at a specific timeline position.
+-- Returns the resolved string with all wildcards substituted using markers/regions
+-- nearest to `pos`, plus the supplied base context (track, project, date, etc.).
+local function resolveTokensAtPosition(tokens, all_markers, all_regions, pos, base_ctx)
+    local markers_at_pos = resolveMarkersAtPosition(all_markers, pos)
+
+    -- Find the region containing (or nearest to) this position
+    local rgn_name = ""
+    local rgn_num  = 0
+    local named_regions = {}
+    for _, rgn in ipairs(all_regions) do
+        local prefix, val = rgn.name:match("^([^=]+)=(.+)$")
+        if prefix then named_regions[prefix:lower()] = val end
+        if rgn.pos <= pos and rgn.rend >= pos then
+            rgn_name = rgn.name:gsub("^Entry=", "")
+            rgn_num  = rgn.idx or 0
+        end
+    end
+
     local first_marker_name = ""
     local first_marker_num  = 0
-    local region_name   = ""
-    local region_num    = 0
-    local named_regions = {}  -- keyed by lowercase prefix name → value
+    for _, mk in ipairs(all_markers) do
+        if mk.name ~= "" then
+            first_marker_name = mk.name
+            first_marker_num  = mk.idx or 0
+            break
+        end
+    end
+
+    local function resolveOne(tok)
+        tok = tok:gsub("%$marker%(([^%)]+)%)", function(name)
+            return markers_at_pos[name:lower()] or ("$marker(" .. name .. ")")
+        end)
+        tok = tok:gsub("%$region%(([^%)]+)%)", function(name)
+            return named_regions[name:lower()] or ("$region(" .. name .. ")")
+        end)
+        tok = tok:gsub("%$markername", first_marker_name ~= "" and first_marker_name or "$markername")
+        tok = tok:gsub("%$markernumber", tostring(first_marker_num))
+        tok = tok:gsub("%$regionname",   rgn_name ~= "" and rgn_name or "$regionname")
+        tok = tok:gsub("%$regionnumber", tostring(rgn_num))
+        tok = tok:gsub("%$region",       rgn_name ~= "" and rgn_name or "$region")
+        tok = tok:gsub("%$track", base_ctx.track_val or "Track")
+        tok = tok:gsub("%$date", os.date("%Y%m%d"))
+        tok = tok:gsub("%$project", base_ctx.proj_name or "Project")
+        return tok
+    end
+
+    local out = ""
+    for _, tok in ipairs(tokens) do out = out .. resolveOne(tok) end
+    return out
+end
+
+local function collectRenderContext()
+    local ctx_info = {
+        all_markers = {},
+        all_regions = {},
+        named_markers = {},
+        named_regions = {},
+        first_marker_name = "",
+        first_marker_num = 0,
+        region_name = "",
+        region_num = 0,
+        track_val = "Track",
+        proj_name = "",
+        affected_label = "",
+        affected_positions = {},  -- { pos = number } for each affected item/region
+        preview_pos = nil,
+    }
 
     local num_markers = reaper.CountProjectMarkers(0)
-
-    -- Pass 1: collect all markers and regions
-    local all_markers = {}
-    local all_regions = {}
     for mi = 0, num_markers - 1 do
         local _, is_rgn, pos, rend, name, idx = reaper.EnumProjectMarkers(mi)
         if is_rgn then
-            all_regions[#all_regions + 1] = { pos = pos, rend = rend, name = name or "", idx = idx }
-            -- named region: "Prefix=value"
+            ctx_info.all_regions[#ctx_info.all_regions + 1] = { pos = pos, rend = rend, name = name or "", idx = idx }
             local prefix, val = (name or ""):match("^([^=]+)=(.+)$")
-            if prefix then named_regions[prefix:lower()] = val end
+            if prefix then ctx_info.named_regions[prefix:lower()] = val end
         else
-            all_markers[#all_markers + 1] = { pos = pos, name = name or "", idx = idx }
-            -- named marker: "Prefix=value"
-            local prefix, val = (name or ""):match("^([^=]+)=(.+)$")
-            if prefix then
-                if not named_markers[prefix:lower()] then
-                    named_markers[prefix:lower()] = val
-                end
-            end
-            if first_marker_name == "" then
-                first_marker_name = name or ""
-                first_marker_num  = idx or 0
+            ctx_info.all_markers[#ctx_info.all_markers + 1] = { pos = pos, name = name or "", idx = idx }
+            if ctx_info.first_marker_name == "" then
+                ctx_info.first_marker_name = name or ""
+                ctx_info.first_marker_num  = idx or 0
             end
         end
     end
 
-    -- Use first region as the "current" region for $region wildcards
-    if #all_regions > 0 then
-        local r = all_regions[1]
-        region_name = r.name:gsub("^Entry=", "")  -- strip "Entry=" prefix if present
-        region_num  = r.idx or 1
+    if #ctx_info.all_regions > 0 then
+        local r = ctx_info.all_regions[1]
+        ctx_info.region_name = r.name:gsub("^Entry=", "")
+        ctx_info.region_num  = r.idx or 1
     end
 
-    -- Track name
-    local track_val = "Track"
     local sel_track = reaper.GetSelectedTrack(0, 0)
     if sel_track then
         local ok, tname = reaper.GetTrackName(sel_track)
-        if ok and tname and tname ~= "" then track_val = tname end
+        if ok and tname and tname ~= "" then ctx_info.track_val = tname end
     end
 
-    -- Project name
-    local proj_name = ""
     local proj_path = reaper.GetProjectPath("")
     if proj_path and proj_path ~= "" then
-        proj_name = proj_path:match("([^\\/]+)$") or ""
-        proj_name = proj_name:gsub("%.rpp$", "")
+        ctx_info.proj_name = proj_path:match("([^\\/]+)$") or ""
+        ctx_info.proj_name = ctx_info.proj_name:gsub("%.rpp$", "")
     end
-    if proj_name == "" then proj_name = "Project" end
+    if ctx_info.proj_name == "" then ctx_info.proj_name = "Project" end
 
-    -- ── Substitution function for a single token ──────────────────────────────
+    local source = RENDER_SOURCES[render_source_idx]
+    local bounds = RENDER_BOUNDS[render_bounds_idx]
+    local positions = {}
+
+    if source.settings == 32 or source.settings == 64 then
+        local n = reaper.CountSelectedMediaItems(0)
+        for i = 0, n - 1 do
+            local item = reaper.GetSelectedMediaItem(0, i)
+            if item then
+                positions[#positions + 1] = { pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION") }
+            end
+        end
+        ctx_info.affected_label = n .. " selected media item" .. (n ~= 1 and "s" or "")
+        ctx_info.affected_positions = positions
+        if #positions > 0 then ctx_info.preview_pos = positions[1].pos end
+
+    elseif bounds.value == 3 then
+        local dialogue_regions = {}
+        for _, rgn in ipairs(ctx_info.all_regions) do
+            local nm = rgn.name:lower()
+            if not nm:match("^category=") and not nm:match("^scene=") and not nm:match("^context=") then
+                dialogue_regions[#dialogue_regions + 1] = rgn
+            end
+        end
+        for _, rgn in ipairs(dialogue_regions) do
+            positions[#positions + 1] = { pos = rgn.pos }
+        end
+        ctx_info.affected_label = #dialogue_regions .. " project region" .. (#dialogue_regions ~= 1 and "s" or "")
+        ctx_info.affected_positions = positions
+        if #dialogue_regions > 0 then
+            ctx_info.region_name = dialogue_regions[1].name:gsub("^Entry=", "")
+            ctx_info.region_num  = dialogue_regions[1].idx or 1
+            ctx_info.preview_pos = dialogue_regions[1].pos
+        end
+
+    elseif bounds.value == 5 then
+        for _, rgn in ipairs(ctx_info.all_regions) do
+            positions[#positions + 1] = { pos = rgn.pos }
+        end
+        local n_sel = #positions
+        ctx_info.affected_label = n_sel .. " region" .. (n_sel ~= 1 and "s" or "") .. " (check Region Manager for selection)"
+        ctx_info.affected_positions = positions
+        if n_sel > 0 then ctx_info.preview_pos = positions[1].pos end
+
+    elseif bounds.value == 2 then
+        local ts_start, ts_end = reaper.GetSet_LoopTimeRange(false, false, 0, 0, false)
+        if ts_end > ts_start then
+            local function fmt_tc(s)
+                local m = math.floor(s / 60)
+                local sec = s - m * 60
+                return string.format("%d:%05.2f", m, sec)
+            end
+            ctx_info.affected_label = "Time selection: " .. fmt_tc(ts_start) .. " - " .. fmt_tc(ts_end)
+            for _, rgn in ipairs(ctx_info.all_regions) do
+                if rgn.pos < ts_end and rgn.rend > ts_start then
+                    positions[#positions + 1] = { pos = rgn.pos }
+                end
+            end
+            ctx_info.affected_positions = positions
+            ctx_info.preview_pos = ts_start
+        else
+            ctx_info.affected_label = "No time selection set"
+        end
+
+    elseif bounds.value == 4 then
+        local n = reaper.CountSelectedMediaItems(0)
+        for i = 0, n - 1 do
+            local item = reaper.GetSelectedMediaItem(0, i)
+            if item then
+                positions[#positions + 1] = { pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION") }
+            end
+        end
+        ctx_info.affected_label = n .. " selected media item" .. (n ~= 1 and "s" or "")
+        ctx_info.affected_positions = positions
+        if #positions > 0 then ctx_info.preview_pos = positions[1].pos end
+
+    elseif bounds.value == 1 then
+        ctx_info.affected_label = "Entire project"
+    else
+        ctx_info.affected_label = "Custom time bounds"
+    end
+
+    -- Resolve $marker(Name) wildcards at the preview position (for the main preview line)
+    if ctx_info.preview_pos then
+        ctx_info.named_markers = resolveMarkersAtPosition(ctx_info.all_markers, ctx_info.preview_pos)
+    else
+        for _, mk in ipairs(ctx_info.all_markers) do
+            local prefix, val = mk.name:match("^([^=]+)=(.+)$")
+            if prefix then
+                local key = prefix:lower()
+                if not ctx_info.named_markers[key] then ctx_info.named_markers[key] = val end
+            end
+        end
+    end
+
+    return ctx_info
+end
+
+local function resolveTokensPreview(tokens, rctx)
+    local named_markers = rctx.named_markers
+    local named_regions = rctx.named_regions
+    local first_marker_name = rctx.first_marker_name
+    local first_marker_num  = rctx.first_marker_num
+    local region_name = rctx.region_name
+    local region_num  = rctx.region_num
+    local track_val   = rctx.track_val
+    local proj_name   = rctx.proj_name
+
     local function resolveOne(tok)
-        -- $marker(Name)  → named marker value (case-insensitive prefix match)
         tok = tok:gsub("%$marker%(([^%)]+)%)", function(name)
             return named_markers[name:lower()] or ("$marker(" .. name .. ")")
         end)
-        -- $region(Name)  → named region value
         tok = tok:gsub("%$region%(([^%)]+)%)", function(name)
             return named_regions[name:lower()] or ("$region(" .. name .. ")")
         end)
-        -- $markername / $marker  → first marker's full name
         tok = tok:gsub("%$markername", first_marker_name ~= "" and first_marker_name or "$markername")
         tok = tok:gsub("%$markernumber", tostring(first_marker_num))
-        -- $regionname / $region  → first region's name
         tok = tok:gsub("%$regionname",   region_name ~= "" and region_name or "$regionname")
         tok = tok:gsub("%$regionnumber", tostring(region_num))
         tok = tok:gsub("%$region",       region_name ~= "" and region_name or "$region")
-        -- $track
         tok = tok:gsub("%$track", track_val)
-        -- $date
         tok = tok:gsub("%$date", os.date("%Y%m%d"))
-        -- $project
         tok = tok:gsub("%$project", proj_name)
         return tok
     end
@@ -7385,28 +7654,60 @@ local function draw_render_tab(ctx)
         reaper.ImGui_Spacing(ctx)
 
         -- ── Live preview ────────────────────────────────────────────────────────
-        -- Shows wildcards resolved from the current project, plus source/time-sel context.
-        local folder_preview = resolveTokensPreview(render_folder_tokens)
-        local file_preview   = resolveTokensPreview(render_file_tokens)
+        local rctx = collectRenderContext()
+        local base_ctx = { track_val = rctx.track_val, proj_name = rctx.proj_name }
 
         local base_path = render_output_path ~= "" and render_output_path or "<output path>"
-        -- Normalise separators for display
         local sep = base_path:find("\\") and "\\" or "/"
-        base_path = base_path:gsub("[/\\]$", "")  -- strip trailing slash
+        base_path = base_path:gsub("[/\\]$", "")
 
-        local preview_str = base_path .. sep .. folder_preview:gsub("[/\\]", sep) ..
-                            sep .. file_preview .. ".wav"
-
-        -- Show active source & bounds for context
         reaper.ImGui_TextColored(ctx, tcol("hint_text"),
             "Source: " .. RENDER_SOURCES[render_source_idx].label ..
             "  |  Bounds: " .. RENDER_BOUNDS[render_bounds_idx].label)
-        reaper.ImGui_TextColored(ctx, tcol("hint_text"), "Preview:")
-        reaper.ImGui_SameLine(ctx)
-        reaper.ImGui_TextWrapped(ctx, preview_str)
+
+        if rctx.affected_label ~= "" then
+            reaper.ImGui_TextColored(ctx, rgba(0.4, 0.8, 1.0, 1.0), "Affects: " .. rctx.affected_label)
+        end
+
+        -- Show resolved render filenames for each affected item/region
+        local positions = rctx.affected_positions or {}
+        local MAX_PREVIEW = 10
+        local show_count = math.min(#positions, MAX_PREVIEW)
+
+        if show_count > 0 then
+            reaper.ImGui_TextColored(ctx, tcol("hint_text"), "Output files:")
+            reaper.ImGui_Indent(ctx, 10)
+            for i = 1, show_count do
+                local pos = positions[i].pos
+                local folder_resolved = resolveTokensAtPosition(render_folder_tokens, rctx.all_markers, rctx.all_regions, pos, base_ctx)
+                local file_resolved   = resolveTokensAtPosition(render_file_tokens,   rctx.all_markers, rctx.all_regions, pos, base_ctx)
+                local full_path = base_path .. sep .. folder_resolved:gsub("[/\\]", sep) .. sep .. file_resolved .. ".wav"
+                reaper.ImGui_TextColored(ctx, rgba(0.85, 0.85, 0.85, 1.0), file_resolved .. ".wav")
+                if reaper.ImGui_IsItemHovered(ctx) then
+                    reaper.ImGui_BeginTooltip(ctx)
+                    reaper.ImGui_Text(ctx, full_path)
+                    reaper.ImGui_EndTooltip(ctx)
+                end
+            end
+            if #positions > MAX_PREVIEW then
+                reaper.ImGui_TextColored(ctx, tcol("hint_text"),
+                    string.format("... and %d more", #positions - MAX_PREVIEW))
+            end
+            reaper.ImGui_Unindent(ctx, 10)
+            reaper.ImGui_Spacing(ctx)
+        else
+            -- Fallback: single preview line using first-match context
+            local folder_preview = resolveTokensPreview(render_folder_tokens, rctx)
+            local file_preview   = resolveTokensPreview(render_file_tokens, rctx)
+            local preview_str = base_path .. sep .. folder_preview:gsub("[/\\]", sep) ..
+                                sep .. file_preview .. ".wav"
+            reaper.ImGui_TextColored(ctx, tcol("hint_text"), "Preview:")
+            reaper.ImGui_SameLine(ctx)
+            reaper.ImGui_TextWrapped(ctx, preview_str)
+        end
+
         reaper.ImGui_TextColored(ctx, tcol("hint_text"),
-            "  Note: wildcards like $marker(Speaker) resolve from the first matching\n"..
-            "  marker in your project. The exact names depend on what is in the timeline.")
+            "  Wildcards resolve per item/region from nearest preceding markers.")
     end
 
     -- ── Render button ─────────────────────────────────────────────────────────
@@ -7525,7 +7826,9 @@ local function build_teleprompter_data()
         return orphan_bucket
     end
 
-    -- Collect entry regions and resolve character/delivery metadata
+    -- Collect entry regions and resolve metadata from nearest preceding markers.
+    -- Gathers Character/Speaker, Delivery, Index, ID, and any arbitrary Name=Value
+    -- tag markers so the navigator can display all relevant info per entry.
     for _, item in ipairs(all_items) do
         if item.isrgn
             and not item.name:match("^Category=")
@@ -7539,25 +7842,45 @@ local function build_teleprompter_data()
                     rend      = item.rend,
                     character = "",
                     delivery  = "",
+                    index_val = "",
+                    id_val    = "",
+                    tags      = {},   -- other Name=Value tags not covered above
                 }
 
-                local best_char_pos = -1e300
-                local best_del_pos  = -1e300
+                -- For each tag key, track the best (nearest preceding) position
+                local best_pos = {}  -- key(lower) -> pos
+                local best_val = {}  -- key(lower) -> value
+
                 for _, mk in ipairs(plain_markers) do
                     if mk.pos <= item.pos then
-                        local ch = mk.name:match("^[Cc]haracter=(.+)")
-                                or mk.name:match("^[Ss]peaker=(.+)")
-                        if ch and mk.pos > best_char_pos then
-                            best_char_pos   = mk.pos
-                            entry.character = ch
-                        end
-                        local del = mk.name:match("^[Dd]elivery=(.+)")
-                        if del and mk.pos > best_del_pos then
-                            best_del_pos   = mk.pos
-                            entry.delivery = del
+                        local key, val = mk.name:match("^([^=]+)=(.+)")
+                        if key then
+                            local kl = key:lower()
+                            if not best_pos[kl] or mk.pos > best_pos[kl] then
+                                best_pos[kl] = mk.pos
+                                best_val[kl] = val
+                            end
                         end
                     end
                 end
+
+                entry.character = best_val["character"] or best_val["speaker"] or ""
+                entry.delivery  = best_val["delivery"]  or ""
+                entry.index_val = best_val["index"]     or ""
+                entry.id_val    = best_val["id"]        or ""
+
+                -- Collect remaining tags (skip the ones we already extracted)
+                local skip_keys = {
+                    character = true, speaker = true, delivery = true,
+                    index = true, id = true,
+                    category = true, scene = true, context = true, entry = true,
+                }
+                for kl, val in pairs(best_val) do
+                    if not skip_keys[kl] then
+                        entry.tags[#entry.tags + 1] = { key = kl, val = val }
+                    end
+                end
+                table.sort(entry.tags, function(a, b) return a.key < b.key end)
 
                 local bucket = get_bucket(item.pos)
                 bucket.entries[#bucket.entries + 1] = entry
@@ -7573,6 +7896,70 @@ local function build_teleprompter_data()
         categories[#categories + 1] = orphan_bucket
     end
     return categories
+end
+
+-- Scan project items and determine which entry regions contain recorded audio.
+-- Returns { total_recorded, total_entries, per_cat = { [ci] = { recorded, total } } }
+-- Cached and refreshed every ~1 second to avoid scanning every frame.
+local _rec_scan_cache     = nil
+local _rec_scan_time      = 0
+local _rec_scan_item_hash = 0
+local REC_SCAN_INTERVAL   = 1.0
+
+local function scan_recording_progress(categories)
+    local now = reaper.time_precise()
+    local n_items = reaper.CountMediaItems(0)
+    local hash = n_items
+    if _rec_scan_cache and (now - _rec_scan_time) < REC_SCAN_INTERVAL and hash == _rec_scan_item_hash then
+        return _rec_scan_cache
+    end
+
+    -- Build a flat list of all audio items (position + end) for overlap checking
+    local audio_items = {}
+    for i = 0, n_items - 1 do
+        local item = reaper.GetMediaItem(0, i)
+        local take = reaper.GetActiveTake(item)
+        if take and not reaper.TakeIsMIDI(take) then
+            local ipos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
+            local ilen = reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
+            -- Skip empty items (items with notes but no audio source)
+            local src = reaper.GetMediaItemTake_Source(take)
+            if src then
+                local src_type = reaper.GetMediaSourceType(src, "")
+                if src_type ~= "" and src_type ~= "EMPTY" then
+                    audio_items[#audio_items + 1] = { pos = ipos, rend = ipos + ilen }
+                end
+            end
+        end
+    end
+
+    local total_recorded = 0
+    local total_entries  = 0
+    local per_cat = {}
+
+    for ci, cat in ipairs(categories) do
+        local cat_rec = 0
+        local cat_total = #cat.entries
+        for _, entry in ipairs(cat.entries) do
+            total_entries = total_entries + 1
+            local has_audio = false
+            for _, ai in ipairs(audio_items) do
+                if ai.pos < entry.rend and ai.rend > entry.start then
+                    has_audio = true; break
+                end
+            end
+            if has_audio then
+                cat_rec = cat_rec + 1
+                total_recorded = total_recorded + 1
+            end
+        end
+        per_cat[ci] = { recorded = cat_rec, total = cat_total }
+    end
+
+    _rec_scan_cache = { total_recorded = total_recorded, total_entries = total_entries, per_cat = per_cat }
+    _rec_scan_time = now
+    _rec_scan_item_hash = hash
+    return _rec_scan_cache
 end
 
 -- Helper: resolve current track name (selected track, then first record-armed track).
@@ -7597,13 +7984,148 @@ local function get_current_track_name()
     return track_name
 end
 
+-- ── Navigator keyboard-shortcut helpers ───────────────────────────────────────
+
+-- Get the speaker for the active entry at `pos` from the teleprompter data.
+local function nav_get_active_speaker(categories, pos)
+    for _, cat in ipairs(categories) do
+        for _, entry in ipairs(cat.entries) do
+            if pos >= entry.start and pos < entry.rend then
+                return entry.character
+            end
+        end
+    end
+    return ""
+end
+
+-- Navigate to the previous/next entry for the current speaker.
+local function nav_navigate_speaker_entry(categories, pos, direction)
+    local speaker = nav_get_active_speaker(categories, pos)
+    if speaker == "" then
+        local sel = reaper.GetSelectedTrack(0, 0)
+        if sel then
+            local ok, tn = reaper.GetTrackName(sel)
+            if ok then speaker = tn end
+        end
+    end
+    if speaker == "" then return end
+    local spk_lower = speaker:lower()
+
+    local spk_entries = {}
+    local cur_idx = nil
+    for _, cat in ipairs(categories) do
+        for _, entry in ipairs(cat.entries) do
+            if entry.character:lower() == spk_lower then
+                spk_entries[#spk_entries + 1] = entry
+                if pos >= entry.start and pos < entry.rend then
+                    cur_idx = #spk_entries
+                end
+            end
+        end
+    end
+    if #spk_entries == 0 then return end
+
+    if cur_idx then
+        local target = spk_entries[cur_idx + direction]
+        if target then reaper.SetEditCurPos(target.start, true, false) end
+    else
+        if direction > 0 then
+            for _, e in ipairs(spk_entries) do
+                if e.start > pos then reaper.SetEditCurPos(e.start, true, false); return end
+            end
+        else
+            for i = #spk_entries, 1, -1 do
+                if spk_entries[i].start < pos then reaper.SetEditCurPos(spk_entries[i].start, true, false); return end
+            end
+        end
+    end
+end
+
+-- Navigate to the first entry of the previous/next category.
+local function nav_navigate_category(categories, pos, direction)
+    local cur_ci = nil
+    for ci, cat in ipairs(categories) do
+        for _, entry in ipairs(cat.entries) do
+            if pos >= entry.start and pos < entry.rend then cur_ci = ci; break end
+        end
+        if cur_ci then break end
+    end
+
+    if not cur_ci then
+        if direction > 0 then
+            for ci, cat in ipairs(categories) do
+                if #cat.entries > 0 and cat.entries[1].start > pos then
+                    reaper.SetEditCurPos(cat.entries[1].start, true, false); return
+                end
+            end
+        else
+            for ci = #categories, 1, -1 do
+                local cat = categories[ci]
+                if #cat.entries > 0 and cat.entries[1].start < pos then
+                    reaper.SetEditCurPos(cat.entries[1].start, true, false); return
+                end
+            end
+        end
+        return
+    end
+
+    local target_ci = cur_ci + direction
+    if target_ci >= 1 and target_ci <= #categories then
+        local tcat = categories[target_ci]
+        if #tcat.entries > 0 then
+            reaper.SetEditCurPos(tcat.entries[1].start, true, false)
+        end
+    end
+end
+
+-- Navigate to the previous/next track (select + arm it).
+local function nav_navigate_speaker(direction)
+    local n = reaper.CountTracks(0)
+    if n == 0 then return end
+    local armed_idx = -1
+    for ti = 0, n - 1 do
+        local tr = reaper.GetTrack(0, ti)
+        if reaper.GetMediaTrackInfo_Value(tr, "I_RECARM") == 1 then
+            armed_idx = ti; break
+        end
+    end
+    local target_idx = armed_idx + direction
+    if target_idx < 0 or target_idx >= n then return end
+    for ti = 0, n - 1 do
+        local tr = reaper.GetTrack(0, ti)
+        reaper.SetTrackSelected(tr, ti == target_idx)
+        reaper.SetMediaTrackInfo_Value(tr, "I_RECARM", ti == target_idx and 1 or 0)
+    end
+end
+
+-- Arm the track matching the current speaker name.
+local function nav_arm_speaker_track(categories, pos)
+    local speaker = nav_get_active_speaker(categories, pos)
+    if speaker == "" then return end
+    local spk_lower = speaker:lower()
+    local n = reaper.CountTracks(0)
+    local found = false
+    for ti = 0, n - 1 do
+        local tr = reaper.GetTrack(0, ti)
+        local ok, tn = reaper.GetTrackName(tr)
+        if ok and tn:lower() == spk_lower then
+            reaper.SetTrackSelected(tr, true)
+            reaper.SetMediaTrackInfo_Value(tr, "I_RECARM", 1)
+            found = true
+        else
+            reaper.SetTrackSelected(tr, false)
+            reaper.SetMediaTrackInfo_Value(tr, "I_RECARM", 0)
+        end
+    end
+end
+
 -- ── Navigator: full scrollable list of all entries ────────────────────────────
 -- child_height: pixel height of the scrollable region (0 = fill remaining space).
 draw_navigator_content = function(ctx, child_height)
-    local play_pos   = reaper.GetPlayPosition()
     local play_state = reaper.GetPlayState()
     local is_playing   = play_state == 1 or play_state == 5
     local is_recording = play_state == 4 or play_state == 5
+    local play_pos = (is_playing or is_recording) and reaper.GetPlayPosition() or reaper.GetCursorPosition()
 
     reaper.ImGui_TextColored(ctx, rgba(0.4, 0.8, 1.0, 1.0),
         (function() local t = get_current_track_name(); return t ~= "" and t or "(no track selected)" end)())
@@ -7611,15 +8133,15 @@ draw_navigator_content = function(ctx, child_height)
     reaper.ImGui_Spacing(ctx)
 
     if is_playing then reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(), tcol("accent")) end
-    if reaper.ImGui_Button(ctx, "  \xe2\x96\xb6  ##nav_play") then reaper.Main_OnCommand(1007, 0) end   -- ▶
+    if reaper.ImGui_Button(ctx, "  \xe2\x96\xb6  ##nav_play") then reaper.Main_OnCommand(1007, 0) end
     if is_playing then reaper.ImGui_PopStyleColor(ctx, 1) end
 
     reaper.ImGui_SameLine(ctx)
-    if reaper.ImGui_Button(ctx, "  \xe2\x96\xa0  ##nav_stop") then reaper.Main_OnCommand(40667, 0) end  -- ■
+    if reaper.ImGui_Button(ctx, "  \xe2\x96\xa0  ##nav_stop") then reaper.Main_OnCommand(40667, 0) end
 
     reaper.ImGui_SameLine(ctx)
     if is_recording then reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(), rgba(0.75, 0.10, 0.10, 1.0)) end
-    if reaper.ImGui_Button(ctx, "  \xe2\x97\x8f  ##nav_rec") then reaper.Main_OnCommand(1013, 0) end    -- ●
+    if reaper.ImGui_Button(ctx, "  \xe2\x97\x8f  ##nav_rec") then reaper.Main_OnCommand(1013, 0) end
     if is_recording then reaper.ImGui_PopStyleColor(ctx, 1) end
 
     reaper.ImGui_SameLine(ctx)
@@ -7628,12 +8150,74 @@ draw_navigator_content = function(ctx, child_height)
 
     reaper.ImGui_Separator(ctx)
 
+    -- Search bar
+    reaper.ImGui_PushItemWidth(ctx, -1)
+    local search_changed
+    search_changed, nav_search_buf = reaper.ImGui_InputTextWithHint(
+        ctx, "##nav_search", "Search entries & categories...", nav_search_buf, 0)
+    reaper.ImGui_PopItemWidth(ctx)
+    if search_changed then nav_search_query = nav_search_buf:lower() end
+
+    reaper.ImGui_Spacing(ctx)
+
+    -- Filter chips (each needs a unique ImGui ID)
+    local filters = { { id = "all", label = "All" }, { id = "entries", label = "Entries" }, { id = "categories", label = "Categories" } }
+    for fi, f in ipairs(filters) do
+        if fi > 1 then reaper.ImGui_SameLine(ctx) end
+        local is_sel = (nav_filter == f.id)
+        if is_sel then
+            reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(),        tcol("accent"))
+            reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), tcol("button_hover"))
+            reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(),  tcol("button_active"))
+        end
+        if reaper.ImGui_SmallButton(ctx, f.label .. "##nav_flt_" .. f.id) then
+            nav_filter = f.id
+        end
+        if is_sel then reaper.ImGui_PopStyleColor(ctx, 3) end
+    end
+
+    -- Display toggles: Index / ID / Speaker (right-aligned on same row as filter chips)
+    reaper.ImGui_SameLine(ctx)
+    local toggles_x = reaper.ImGui_GetContentRegionAvail(ctx)
+    local toggle_defs = {
+        { key = "nav_show_index",   label = "Idx",     get = function() return nav_show_index   end, set = function(v) nav_show_index   = v end },
+        { key = "nav_show_id",      label = "ID",      get = function() return nav_show_id      end, set = function(v) nav_show_id      = v end },
+        { key = "nav_show_speaker", label = "Speaker",  get = function() return nav_show_speaker end, set = function(v) nav_show_speaker = v end },
+    }
+    local total_toggle_w = 0
+    for _, td in ipairs(toggle_defs) do
+        total_toggle_w = total_toggle_w + reaper.ImGui_CalcTextSize(ctx, td.label) + 26
+    end
+    if toggles_x > total_toggle_w + 10 then
+        reaper.ImGui_SetCursorPosX(ctx, reaper.ImGui_GetCursorPosX(ctx) + toggles_x - total_toggle_w)
+    end
+    for ti, td in ipairs(toggle_defs) do
+        if ti > 1 then reaper.ImGui_SameLine(ctx) end
+        local cur = td.get()
+        local pushed = not cur
+        if pushed then
+            reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(), rgba(0.25, 0.25, 0.25, 0.6))
+            reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(),   rgba(0.5, 0.5, 0.5, 0.6))
+        end
+        if reaper.ImGui_SmallButton(ctx, td.label .. "##nav_tgl_" .. td.key) then
+            cur = not cur
+            td.set(cur)
+            reaper.SetExtState(EXTSTATE_SECTION, td.key, cur and "1" or "0", true)
+        end
+        if pushed then reaper.ImGui_PopStyleColor(ctx, 2) end
+    end
+
+    reaper.ImGui_Separator(ctx)
+
     local categories = build_teleprompter_data()
+    _nav_categories_cache = categories
     local active_cat, active_entry = nil, nil
     local global_active_idx = -1
+    local total_entries = 0
     local counter = 0
     for ci, cat in ipairs(categories) do
         for ei, entry in ipairs(cat.entries) do
+            total_entries = total_entries + 1
             counter = counter + 1
             if play_pos >= entry.start and play_pos < entry.rend then
                 active_cat = ci; active_entry = ei; global_active_idx = counter
@@ -7646,54 +8230,381 @@ draw_navigator_content = function(ctx, child_height)
         _nav_scroll_to_active = true
     end
 
+    -- ── Progress bars: Position (green) left, Recorded (cyan) right ────────
+    local rec_data = scan_recording_progress(categories)
+
+    if total_entries > 0 then
+        local avail_w = reaper.ImGui_GetContentRegionAvail(ctx)
+        local half = math.floor(avail_w * 0.5) - 4
+        local bar_h = 7
+
+        -- Position progress
+        local pos_pct = global_active_idx > 0 and (global_active_idx / total_entries) or 0
+        local pos_lbl = global_active_idx > 0
+            and string.format("Position: %d / %d", global_active_idx, total_entries)
+            or "Not on entry"
+
+        -- Recording progress
+        local rec_pct = rec_data.total_entries > 0
+            and (rec_data.total_recorded / rec_data.total_entries) or 0
+        local rec_lbl = string.format("Recorded: %d / %d", rec_data.total_recorded, rec_data.total_entries)
+
+        -- Row 1: labels side by side
+        reaper.ImGui_TextColored(ctx, rgba(0.6, 1.0, 0.7, 0.8), pos_lbl)
+        reaper.ImGui_SameLine(ctx)
+        local rec_lbl_w = reaper.ImGui_CalcTextSize(ctx, rec_lbl)
+        reaper.ImGui_SetCursorPosX(ctx, reaper.ImGui_GetCursorPosX(ctx) + reaper.ImGui_GetContentRegionAvail(ctx) - rec_lbl_w)
+        reaper.ImGui_TextColored(ctx, rgba(0.4, 0.85, 1.0, 0.8), rec_lbl)
+
+        -- Row 2: bars side by side
+        reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_PlotHistogram(), rgba(0.12, 0.80, 0.31, 1.0))
+        reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_FrameBg(),       rgba(0.20, 0.20, 0.20, 1.0))
+        reaper.ImGui_ProgressBar(ctx, pos_pct, half, bar_h, "")
+        reaper.ImGui_PopStyleColor(ctx, 2)
+
+        reaper.ImGui_SameLine(ctx, 0, 8)
+
+        reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_PlotHistogram(), rgba(0.25, 0.70, 1.0, 1.0))
+        reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_FrameBg(),       rgba(0.20, 0.20, 0.20, 1.0))
+        reaper.ImGui_ProgressBar(ctx, rec_pct, half, bar_h, "")
+        reaper.ImGui_PopStyleColor(ctx, 2)
+
+        -- Category sub-row (if active)
+        if active_cat and categories[active_cat] then
+            local cat_obj = categories[active_cat]
+            local cat_total = #cat_obj.entries
+            local cat_idx   = active_entry or 0
+            if cat_total > 0 and cat_idx > 0 then
+                local cat_pct  = cat_idx / cat_total
+                local cat_name = cat_obj.name ~= "" and cat_obj.name or "Uncategorized"
+
+                local rc = rec_data.per_cat[active_cat]
+                local cat_rec_pct = (rc and rc.total > 0) and (rc.recorded / rc.total) or 0
+
+                local cat_pos_lbl = string.format("%s: %d / %d", cat_name, cat_idx, cat_total)
+                local cat_rec_lbl = (rc and rc.total > 0)
+                    and string.format("%s: %d / %d", cat_name, rc.recorded, rc.total) or ""
+
+                reaper.ImGui_TextColored(ctx, rgba(1.0, 0.92, 0.55, 0.65), cat_pos_lbl)
+                if cat_rec_lbl ~= "" then
+                    reaper.ImGui_SameLine(ctx)
+                    local crl_w = reaper.ImGui_CalcTextSize(ctx, cat_rec_lbl)
+                    reaper.ImGui_SetCursorPosX(ctx, reaper.ImGui_GetCursorPosX(ctx) + reaper.ImGui_GetContentRegionAvail(ctx) - crl_w)
+                    reaper.ImGui_TextColored(ctx, rgba(0.4, 0.85, 1.0, 0.55), cat_rec_lbl)
+                end
+
+                local sub_half = math.floor(half * 0.7)
+                local indent   = math.floor((half - sub_half) * 0.5)
+                reaper.ImGui_Indent(ctx, indent)
+
+                reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_PlotHistogram(), rgba(1.0, 0.88, 0.4, 1.0))
+                reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_FrameBg(),       rgba(0.20, 0.20, 0.20, 1.0))
+                reaper.ImGui_ProgressBar(ctx, cat_pct, sub_half, 5, "")
+                reaper.ImGui_PopStyleColor(ctx, 2)
+
+                if cat_rec_lbl ~= "" then
+                    reaper.ImGui_SameLine(ctx, 0, half - sub_half + 8)
+                    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_PlotHistogram(), rgba(0.25, 0.70, 1.0, 0.8))
+                    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_FrameBg(),       rgba(0.20, 0.20, 0.20, 1.0))
+                    reaper.ImGui_ProgressBar(ctx, cat_rec_pct, sub_half, 5, "")
+                    reaper.ImGui_PopStyleColor(ctx, 2)
+                end
+                reaper.ImGui_Unindent(ctx, indent)
+            end
+        end
+        reaper.ImGui_Spacing(ctx)
+    end
+
+    local show_entries    = (nav_filter == "all" or nav_filter == "entries")
+    local show_categories = (nav_filter == "all" or nav_filter == "categories")
+    local q = nav_search_query
+
+    -- Sticky column header (outside the scrollable child so it stays visible)
+    local hdr_parts = {}
+    if nav_show_index then hdr_parts[#hdr_parts + 1] = "Index" end
+    if nav_show_id    then hdr_parts[#hdr_parts + 1] = "#ID" end
+    if nav_show_speaker then hdr_parts[#hdr_parts + 1] = "Speaker" end
+    hdr_parts[#hdr_parts + 1] = "Entry"
+    local hdr_text = table.concat(hdr_parts, "   ")
+    reaper.ImGui_TextColored(ctx, rgba(0.5, 0.5, 0.5, 0.6), hdr_text)
+    reaper.ImGui_Separator(ctx)
+
     reaper.ImGui_BeginChild(ctx, "##nav_list", 0, child_height, 0)
 
-    local has_any_entry = false
+    local has_any_visible = false
     for ci, cat in ipairs(categories) do
-        if #cat.entries > 0 then has_any_entry = true end
-        if cat.name ~= "" then
-            reaper.ImGui_Spacing(ctx)
-            reaper.ImGui_TextColored(ctx, tcol("accent"), "\xe2\x96\xb8  " .. cat.name)
-            reaper.ImGui_Separator(ctx)
-            reaper.ImGui_Spacing(ctx)
+        local cat_matches_query = (q == "" or cat.name:lower():find(q, 1, true))
+
+        local has_matching_entries = false
+        if show_entries and not cat_matches_query and q ~= "" then
+            for _, entry in ipairs(cat.entries) do
+                if entry.name:lower():find(q, 1, true)
+                    or entry.character:lower():find(q, 1, true)
+                    or entry.delivery:lower():find(q, 1, true)
+                    or entry.index_val:lower():find(q, 1, true)
+                    or entry.id_val:lower():find(q, 1, true) then
+                    has_matching_entries = true; break
+                end
+                for _, tag in ipairs(entry.tags) do
+                    if tag.val:lower():find(q, 1, true) then
+                        has_matching_entries = true; break
+                    end
+                end
+                if has_matching_entries then break end
+            end
         end
-        for ei, entry in ipairs(cat.entries) do
-            local is_active = (ci == active_cat and ei == active_entry)
-            if entry.character ~= "" then
-                reaper.ImGui_TextColored(ctx, rgba(0.4, 0.8, 1.0, 1.0), entry.character)
-                if entry.delivery ~= "" then
-                    reaper.ImGui_SameLine(ctx)
-                    reaper.ImGui_TextColored(ctx, rgba(1.0, 0.86, 0.31, 1.0), "  [" .. entry.delivery .. "]")
+
+        local show_cat_header = show_categories and cat.name ~= ""
+                                and (cat_matches_query or has_matching_entries)
+
+        if nav_filter == "categories" then
+            if cat.name ~= "" and (q == "" or cat.name:lower():find(q, 1, true)) then
+                has_any_visible = true
+                reaper.ImGui_Spacing(ctx)
+                if reaper.ImGui_Selectable(ctx, "\xe2\x96\xb8  " .. cat.name .. "##nav_cat_" .. ci, false) then
+                    if #cat.entries > 0 then
+                        reaper.SetEditCurPos(cat.entries[1].start, true, false)
+                    end
                 end
-            elseif entry.delivery ~= "" then
-                reaper.ImGui_TextColored(ctx, rgba(1.0, 0.86, 0.31, 1.0), "[" .. entry.delivery .. "]")
+                reaper.ImGui_Spacing(ctx)
             end
-            if is_active then
-                reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(),        tcol("accent"))
-                reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_HeaderHovered(), tcol("button_hover"))
-                reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_HeaderActive(),  tcol("button_active"))
+        else
+            if show_cat_header then
+                reaper.ImGui_Spacing(ctx)
+                reaper.ImGui_TextColored(ctx, tcol("accent"), "\xe2\x96\xb8  " .. cat.name)
+                reaper.ImGui_Separator(ctx)
+                reaper.ImGui_Spacing(ctx)
             end
-            if reaper.ImGui_Selectable(ctx, entry.name .. "##nav_" .. ci .. "_" .. ei, is_active) then
-                reaper.SetEditCurPos(entry.start, true, false)
-            end
-            if is_active then
-                reaper.ImGui_PopStyleColor(ctx, 3)
-                if _nav_scroll_to_active then
-                    reaper.ImGui_SetScrollHereY(ctx, 0.5)
-                    _nav_scroll_to_active = false
+
+            if show_entries then
+                for ei, entry in ipairs(cat.entries) do
+                    local entry_visible = q == ""
+                    if not entry_visible then
+                        entry_visible = entry.name:lower():find(q, 1, true)
+                            or entry.character:lower():find(q, 1, true)
+                            or entry.delivery:lower():find(q, 1, true)
+                            or entry.index_val:lower():find(q, 1, true)
+                            or entry.id_val:lower():find(q, 1, true)
+                            or (cat.name ~= "" and cat.name:lower():find(q, 1, true))
+                        if not entry_visible then
+                            for _, tag in ipairs(entry.tags) do
+                                if tag.val:lower():find(q, 1, true)
+                                    or tag.key:lower():find(q, 1, true) then
+                                    entry_visible = true; break
+                                end
+                            end
+                        end
+                    end
+
+                    if entry_visible then
+                        has_any_visible = true
+                        local is_active = (ci == active_cat and ei == active_entry)
+
+                        -- Prefix: Index and ID side by side
+                        local prefix = ""
+                        if nav_show_index and entry.index_val ~= "" then
+                            prefix = prefix .. entry.index_val
+                        end
+                        if nav_show_id and entry.id_val ~= "" then
+                            if prefix ~= "" then prefix = prefix .. "  " end
+                            prefix = prefix .. "#" .. entry.id_val
+                        end
+
+                        -- Draw prefix labels before the selectable
+                        if prefix ~= "" then
+                            reaper.ImGui_TextColored(ctx, rgba(0.55, 0.55, 0.55, 0.8), prefix)
+                            reaper.ImGui_SameLine(ctx)
+                        end
+
+                        -- Speaker inline before the entry name (if toggled on)
+                        if nav_show_speaker and entry.character ~= "" then
+                            reaper.ImGui_TextColored(ctx, rgba(0.4, 0.8, 1.0, 0.9), entry.character)
+                            reaper.ImGui_SameLine(ctx)
+                        end
+
+                        -- Delivery tag inline
+                        if entry.delivery ~= "" then
+                            reaper.ImGui_TextColored(ctx, rgba(1.0, 0.86, 0.31, 0.85), "[" .. entry.delivery .. "]")
+                            reaper.ImGui_SameLine(ctx)
+                        end
+
+                        if is_active then
+                            reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(),        tcol("accent"))
+                            reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_HeaderHovered(), tcol("button_hover"))
+                            reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_HeaderActive(),  tcol("button_active"))
+                        end
+                        if reaper.ImGui_Selectable(ctx, entry.name .. "##nav_" .. ci .. "_" .. ei, is_active) then
+                            reaper.SetEditCurPos(entry.start, true, false)
+                        end
+                        if is_active then
+                            reaper.ImGui_PopStyleColor(ctx, 3)
+                            if _nav_scroll_to_active then
+                                reaper.ImGui_SetScrollHereY(ctx, 0.5)
+                                _nav_scroll_to_active = false
+                            end
+                        end
+
+                        -- Extra tags (Notes, etc.) as a subtle subtitle if any exist
+                        if #entry.tags > 0 then
+                            reaper.ImGui_Indent(ctx, 8)
+                            for ti, tag in ipairs(entry.tags) do
+                                if ti > 1 then
+                                    reaper.ImGui_SameLine(ctx)
+                                    reaper.ImGui_TextColored(ctx, rgba(0.4, 0.4, 0.4, 0.5), " \xc2\xb7 ")
+                                    reaper.ImGui_SameLine(ctx)
+                                end
+                                local lbl = tag.key:sub(1,1):upper() .. tag.key:sub(2) .. ": " .. tag.val
+                                reaper.ImGui_TextColored(ctx, rgba(0.65, 0.65, 0.65, 0.7), lbl)
+                                if ti < #entry.tags then reaper.ImGui_SameLine(ctx) end
+                            end
+                            reaper.ImGui_Unindent(ctx, 8)
+                        end
+
+                        reaper.ImGui_Spacing(ctx)
+                    end
                 end
             end
-            reaper.ImGui_Spacing(ctx)
         end
     end
 
-    if not has_any_entry then
-        reaper.ImGui_TextColored(ctx, tcol("hint_text"),
-            "No entry regions found in this project.\n" ..
-            "Create regions (optionally prefixed with 'Entry=') to populate this view.")
+    if not has_any_visible then
+        if q ~= "" then
+            reaper.ImGui_TextColored(ctx, tcol("hint_text"),
+                "No matches for \"" .. nav_search_buf .. "\".")
+        else
+            reaper.ImGui_TextColored(ctx, tcol("hint_text"),
+                "No entry regions found in this project.\n" ..
+                "Create regions (optionally prefixed with 'Entry=') to populate this view.")
+        end
     end
 
     reaper.ImGui_EndChild(ctx)
+
+    -- ── Keyboard shortcuts (active only in Navigator tab, not when search is focused) ──
+    local want_kb = reaper.ImGui_IsWindowFocused(ctx, reaper.ImGui_FocusedFlags_RootAndChildWindows())
+                    and not reaper.ImGui_IsAnyItemActive(ctx)
+                    and not _nav_sc_listening_id
+    if want_kb then
+        local mods  = reaper.ImGui_GetKeyMods(ctx)
+        local shift = (mods & reaper.ImGui_Mod_Shift()) ~= 0
+
+        -- Dispatch table: id → action
+        local actions = {
+            play         = function() reaper.Main_OnCommand(1007, 0) end,
+            stop         = function() reaper.Main_OnCommand(40667, 0) end,
+            record       = function()
+                               local ps = reaper.GetPlayState()
+                               reaper.Main_OnCommand((ps == 5 or ps == 4) and 1016 or 1013, 0)
+                           end,
+            prevEntry    = function() reaper.Main_OnCommand(41801, 0) end,
+            nextEntry    = function() reaper.Main_OnCommand(41802, 0) end,
+            prevSpkEntry = function() nav_navigate_speaker_entry(categories, play_pos, -1) end,
+            nextSpkEntry = function() nav_navigate_speaker_entry(categories, play_pos,  1) end,
+            prevCategory = function() nav_navigate_category(categories, play_pos, -1) end,
+            nextCategory = function() nav_navigate_category(categories, play_pos,  1) end,
+            prevSpeaker  = function() nav_navigate_speaker(-1) end,
+            nextSpeaker  = function() nav_navigate_speaker( 1) end,
+            armSpeaker   = function() nav_arm_speaker_track(categories, play_pos) end,
+        }
+
+        for _, def in ipairs(NAV_SHORTCUT_DEFS) do
+            local b = nav_shortcut_bindings[def.id]
+            if b then
+                local key_code = imgui_key_by_name(b.key)
+                if key_code and reaper.ImGui_IsKeyPressed(ctx, key_code) and shift == b.shift then
+                    local fn = actions[def.id]
+                    if fn then fn() end
+                    break
+                end
+            end
+        end
+    end
+end
+
+-- ── Navigator: shortcuts customisation tab ────────────────────────────────────
+
+-- All ImGui key names we allow for rebinding
+local _NAV_REBINDABLE_KEYS = {
+    "A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z",
+    "0","1","2","3","4","5","6","7","8","9",
+    "Space","Enter","Tab","Backspace","Delete","Insert",
+    "LeftArrow","RightArrow","UpArrow","DownArrow",
+    "Comma","Period","Slash","Semicolon","Quote","Backslash","Minus","Equal","Backquote",
+    "BracketLeft","BracketRight",
+    "F1","F2","F3","F4","F5","F6","F7","F8","F9","F10","F11","F12",
+}
+
+local function draw_navigator_shortcuts(ctx)
+    reaper.ImGui_Spacing(ctx)
+
+    -- Rebinding capture: when listening, check every key
+    if _nav_sc_listening_id then
+        -- Escape cancels without binding
+        local esc = imgui_key_by_name("Escape")
+        if esc and reaper.ImGui_IsKeyPressed(ctx, esc) then
+            _nav_sc_listening_id = nil
+        else
+            local mods = reaper.ImGui_GetKeyMods(ctx)
+            local shift = (mods & reaper.ImGui_Mod_Shift()) ~= 0
+            for _, kn in ipairs(_NAV_REBINDABLE_KEYS) do
+                local kc = imgui_key_by_name(kn)
+                if kc and reaper.ImGui_IsKeyPressed(ctx, kc) then
+                    nav_shortcut_bindings[_nav_sc_listening_id] = { key = kn, shift = shift }
+                    nav_shortcuts_save()
+                    _nav_sc_listening_id = nil
+                    break
+                end
+            end
+        end
+    end
+
+    local last_group = ""
+    for _, def in ipairs(NAV_SHORTCUT_DEFS) do
+        if def.group ~= last_group then
+            last_group = def.group
+            reaper.ImGui_Spacing(ctx)
+            reaper.ImGui_TextColored(ctx, tcol("accent"), def.group)
+            reaper.ImGui_Separator(ctx)
+        end
+
+        local b = nav_shortcut_bindings[def.id] or { key = def.default_key, shift = def.default_shift }
+        local is_listening = (_nav_sc_listening_id == def.id)
+
+        reaper.ImGui_Text(ctx, "  " .. def.label)
+        reaper.ImGui_SameLine(ctx)
+
+        -- Right-align the key button
+        local btn_label = is_listening and "Press key..." or key_display(b.key, b.shift)
+        local btn_w = reaper.ImGui_CalcTextSize(ctx, btn_label) + 24
+        if btn_w < 90 then btn_w = 90 end
+        local avail = reaper.ImGui_GetContentRegionAvail(ctx)
+        if avail > btn_w + 4 then
+            reaper.ImGui_SetCursorPosX(ctx, reaper.ImGui_GetCursorPosX(ctx) + avail - btn_w)
+        end
+
+        if is_listening then
+            reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(),        rgba(1.0, 0.5, 0.15, 0.25))
+            reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), rgba(1.0, 0.5, 0.15, 0.35))
+            reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(),          rgba(1.0, 0.7, 0.3, 1.0))
+        end
+        if reaper.ImGui_Button(ctx, btn_label .. "##sc_" .. def.id, btn_w, 0) then
+            _nav_sc_listening_id = is_listening and nil or def.id
+        end
+        if is_listening then
+            reaper.ImGui_PopStyleColor(ctx, 3)
+        end
+    end
+
+    reaper.ImGui_Spacing(ctx)
+    reaper.ImGui_Spacing(ctx)
+    reaper.ImGui_Separator(ctx)
+    reaper.ImGui_Spacing(ctx)
+    if reaper.ImGui_Button(ctx, "Reset to defaults##nav_sc_reset") then
+        nav_shortcuts_reset()
+        _nav_sc_listening_id = nil
+    end
+    reaper.ImGui_SameLine(ctx)
+    reaper.ImGui_TextColored(ctx, tcol("hint_text"), "Shortcuts are active in the Navigator tab")
 end
 
 -- ── Navigator: tab drawing (full-tab embedded mode + pop-out) ─────────────────
@@ -7706,12 +8617,17 @@ local function draw_navigator_inner(ctx)
             reaper.ImGui_EndTabItem(ctx)
         end
         if ProjectSearch then
-            if reaper.ImGui_BeginTabItem(ctx, "Project Search##nav_sub") then
+            if reaper.ImGui_BeginTabItem(ctx, "Cross-Project Search##nav_sub") then
                 nav_subtab = 1
                 ProjectSearch.tick()
                 ProjectSearch.draw_full(ctx)
                 reaper.ImGui_EndTabItem(ctx)
             end
+        end
+        if reaper.ImGui_BeginTabItem(ctx, "Shortcuts##nav_sub") then
+            nav_subtab = 2
+            draw_navigator_shortcuts(ctx)
+            reaper.ImGui_EndTabItem(ctx)
         end
         reaper.ImGui_EndTabBar(ctx)
     end
@@ -7804,9 +8720,21 @@ local function imgui_frame()
     reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_GrabRounding(), THEME.grab_rounding)
 
     reaper.ImGui_SetNextWindowSize(ctx, 960, 780, reaper.ImGui_Cond_FirstUseEver())
+    if _main_dock_request then
+        pcall(reaper.ImGui_SetNextWindowDockID, ctx, _main_dock_request)
+        _main_dock_request = nil
+    end
     local vis, open = reaper.ImGui_Begin(ctx, "DMN Dialogue Workflow", true)
     if vis then
+        local is_docked = false
+        pcall(function() is_docked = reaper.ImGui_IsWindowDocked(ctx) end)
         if reaper.ImGui_Button(ctx, "Theme...") then show_theme_editor = not show_theme_editor end
+        reaper.ImGui_SameLine(ctx)
+        if is_docked then
+            if reaper.ImGui_Button(ctx, "Undock") then _main_dock_request = 0 end
+        else
+            if reaper.ImGui_Button(ctx, "Dock in REAPER") then _main_dock_request = ~0 end
+        end
         reaper.ImGui_Separator(ctx)
         if reaper.ImGui_BeginTabBar(ctx, "dmntabs", 0) then
             for i, tab in ipairs(TABS) do
