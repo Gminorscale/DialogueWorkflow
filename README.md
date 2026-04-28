@@ -8,7 +8,10 @@ Tools for **Cockos REAPER** that connect spreadsheet-driven dialogue data, optio
 DialogueWorkflow/
 ├── Scripts/
 │   ├── DMN_DialogueWorkflow.lua        # Main REAPER script (Import / Record / Edit / Render)
-│   └── DMN_ActorTeleprompter.html      # REAPER Web Interface — actor teleprompter
+│   ├── DMN_ActorTeleprompter.html      # REAPER Web Interface — actor teleprompter
+│   └── DMN_DialogueWorkflow/           # Lua modules loaded by the main script
+│       ├── edit_tools.lua              # Timeline editing utilities (snap, markers, speaker mover)
+│       └── project_search.lua          # Cross-project search engine (RPP parser, find & replace)
 ├── Samples/
 │   ├── demo_shakespeare_hamlet_act5_scene1.csv
 │   ├── demo_shakespeare_multi_scene.csv
@@ -72,7 +75,7 @@ Use your machine's LAN IP when opening from a tablet or another device (allow th
 
 ## Feature reference
 
-The script opens a **single window** with four tabs: **Import**, **Record**, **Edit**, and **Render**.
+The script opens a **single window** with five tabs: **Import**, **Record**, **Navigator**, **Edit**, and **Render**.
 
 ---
 
@@ -135,6 +138,61 @@ In-app help with role and flag descriptions, Google Sheets setup instructions, a
 - **Open Web/OSC preferences** — jump to REAPER preferences to enable the web server
 - **Show REAPER web root path** — displays the `reaper_www_root` folder location
 
+#### Actor Teleprompter — keyboard shortcuts
+
+The teleprompter web page supports keyboard shortcuts for all major actions. Open the **Preferences** panel (gear icon) and click **? View & Customize** to see all bindings or reassign them. Custom bindings are saved in the browser's local storage.
+
+Default shortcuts:
+
+| Key | Action |
+|-----|--------|
+| `Space` | Play |
+| `Q` | Stop |
+| `R` | Record |
+| `←` / `→` | Previous / Next entry |
+| `Shift+←` / `Shift+→` | Previous / Next entry for active speaker |
+| `↑` / `↓` | Previous / Next speaker (track) |
+| `,` / `.` | Previous / Next category |
+| `T` | Arm track for current speaker |
+| `C` | Toggle context lines |
+| `B` | Toggle browse panel |
+| `P` | Toggle preferences |
+| `-` / `+` | Decrease / Increase font size |
+
+Shortcuts are disabled while typing in the browse search field.
+
+---
+
+### Navigator tab — timeline navigation & cross-project search
+
+The Navigator tab has two sub-tabs: **Navigator** and **Project Search**. Both are available docked inside the main window or in a **pop-out** floating window.
+
+#### Navigator (sub-tab)
+
+Lists all dialogue entries, categories, and speakers currently on the timeline. Click any row to move the edit cursor. Tracks the active entry and auto-scrolls to keep it visible.
+
+#### Project Search (sub-tab)
+
+Searches markers, regions, tracks, and items across multiple REAPER `.rpp` project files **without opening them** — the scanner reads `.rpp` files as text.
+
+**Setup** — add project folders or individual `.rpp` file paths. Options:
+- **Include subfolders** — scan nested directories recursively
+- **Discover .rpp files** — auto-find all `.rpp` files in configured folders
+- **Presets** — save and load folder lists for different projects
+- **Scan Projects** — parse all configured `.rpp` files and index their contents
+
+**Search** — type a query to filter across all indexed results. Toggle filters for **Markers**, **Regions**, **Tracks**, and **Items**. Results are displayed in a sortable table. Double-click any result to open the project and jump to that position.
+
+**Find & Replace** — batch rename markers, regions, tracks, or items across `.rpp` files:
+1. Enter find/replace text and select target types
+2. Click **Preview** to see a before/after table
+3. Select or deselect individual matches
+4. Click **Replace All** or **Replace Selected** — original files are backed up as `.bak`
+
+**Help** — usage tips and an optional debug log for troubleshooting.
+
+> **Standalone mode:** `DMN_ProjectSearch.lua` can also run independently outside DialogueWorkflow. It loads the same `project_search.lua` module and provides identical functionality in its own window.
+
 ---
 
 ### Edit tab — timeline tools & Notion sync
@@ -143,7 +201,15 @@ In-app help with role and flag descriptions, Google Sheets setup instructions, a
 
 - **Apply to time selection only** — scopes the actions below to the current time selection
 - **Snap items to regions** — aligns selected media items to region start positions
-- **Marker from region** — creates point markers from region names within the selection
+- **Marker from region** — creates point markers from region names within the selection (strips `Tag=` prefixes, e.g. `Entry=Hello` becomes `Hello`)
+- **Move items to speaker track** — moves selected items vertically to the track matching their preceding `Speaker=` marker
+
+#### Utilities
+
+- **Find duplicate regions** — appends a `_duplicate` suffix and colours duplicate region names
+- **Detect duplicate Index** — finds `Index=` markers that share the same value within a category and selects nearby items
+- **Find missing ID= / Index=** — entry regions without a nearby `ID=` or `Index=` marker: selects overlapping media items and prints details to the REAPER console
+- **Fix missing ID= from Notion** — for entry regions that **already have no nearby `ID=`** marker, fetches the Notion database (same workflow as **Add ID markers**) and creates only the missing `ID=<numeric>` point markers. Respects **Apply to time selection only**. Use this when **Sync Index markers** cannot run yet because `ID=` markers are absent.
 
 #### Notion
 
@@ -159,8 +225,9 @@ Requires a **Notion integration token** and a configured database.
 
 **Actions:**
 
-- **Add ID markers** — matches entry regions to Notion rows by name and places `ID=<notion-id>` point markers (async, shows progress)
-- **Sync Index markers** — reads `ID=` markers already on the timeline and fetches index/filename data from Notion to write `Index=NN` markers
+- **Add ID markers** — matches entry regions to Notion rows by name and places `ID=<notion-id>` point markers (async fetch + progress; skips regions that already have that Notion ID assigned)
+- **Sync Index markers** — requires a nearby `ID=` marker per entry region (same spatial rules as the diagnostics). Reads those IDs, fetches index data from Notion, and writes `Index=NN` markers. Regions without `ID=` are skipped.
+- **Fix missing ID** (also under **Utilities**) — same Notion fetch as **Add ID markers**, but only processes entry regions that are **missing** a nearby `ID=` marker (complements **Sync Index markers** when IDs were never created)
 
 **Clean Up** — update Notion from recorded audio:
 
@@ -198,6 +265,10 @@ Supported wildcards include `$marker(Speaker)`, `$marker(Category)`, `$marker(In
 
 **Open Render Dialog…** applies all configured settings (output path, pattern, sample rate, channels, normalize, source, bounds) to the REAPER project and opens the native **Render to File** dialog for final confirmation.
 
+#### Debug before render
+
+When **Debug project before rendering** is enabled, the script runs timeline checks before opening the render dialog. If problems are found (duplicate names, missing markers, etc.), a popup summarizes them and offers actions such as selecting affected items (no extra confirmation dialog), marking duplicates, or running Notion **Add ID markers**, **Fix missing ID**, or **Sync Index markers** — mirroring **Edit → Utilities** where applicable.
+
 ---
 
 ## Samples
@@ -219,7 +290,8 @@ To try: paste a CSV file path into the Import tab, click **Auto Suggest**, revie
 
 1. **Import only** — Import tab → CSV → regions/markers → edit and record normally.
 2. **Record with teleprompter** — After import, install the web UI (Record tab), open the actor page on a browser/tablet; the actor reads `Speaker=` / `Entry=` lines while you manage transport.
-3. **Notion-linked pipeline** — Import CSV → record → add `ID=` markers (Edit → Notion → Add ID markers) → sync `Index=` markers → run Clean Up to push status back to Notion → use Render tab to configure and export.
+3. **Notion-linked pipeline** — Import CSV → record → add `ID=` markers (Edit → Notion → **Add ID markers**, or **Utilities → Fix missing ID= from Notion** if only some lines lack `ID=`) → **Sync Index markers** → run Clean Up to push status back to Notion → use Render tab to configure and export.
+4. **Cross-project search** — Navigator tab → Project Search → add project folders → Scan → search or batch-rename markers, regions, tracks, and items across your `.rpp` library without opening each project.
 
 ---
 
@@ -262,6 +334,8 @@ The teleprompter and the import script use these naming rules.
 | Notion actions fail | Check token, database ID, integration permissions, and the REAPER console for error details |
 | `Speaker=` not showing in teleprompter | Make sure the Speaker column has **[Sp]** role assigned before importing |
 | Render settings not applied | Click **Open Render Dialog…** — settings are written to the project when the button is pressed |
+| Project Search finds 0 `.rpp` files | Ensure paths don't contain surrounding quotes; use the **Discover** button to auto-scan folders |
+| Standalone `DMN_ProjectSearch.lua` can't find module | Place `project_search.lua` in a `DMN_DialogueWorkflow/` subfolder next to the standalone script, or ensure the DialogueWorkflow repo is at the expected path |
 
 ---
 
