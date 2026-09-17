@@ -489,8 +489,180 @@ function parseCSV(line)
     if string.sub(line, -1) == sep then
         table.insert(res, "")
     end
-    
+
     return res
+end
+
+-- Split a whole CSV document into records (RFC 4180): a quoted field may hold
+-- commas, doubled quotes and line breaks, so the text is walked character by
+-- character instead of being split on newlines first (which tore a multi-line
+-- Notes cell into two bogus rows). Returns a list of field arrays; each carries
+-- its 1-based record number in `.row`, which matches the spreadsheet row.
+-- Records with no non-whitespace content are dropped but still count in `.row`.
+function parseCSVRecords(content)
+    local records = {}
+    if not content or content == "" then return records end
+    local fields, buf = {}, {}
+    local in_quotes = false
+    local i, n = 1, #content
+    local row = 0
+
+    local function flush_field()
+        fields[#fields + 1] = table.concat(buf)
+        buf = {}
+    end
+    local function flush_record()
+        flush_field()
+        row = row + 1
+        local has_content = false
+        for _, f in ipairs(fields) do
+            if f:match("%S") then has_content = true break end
+        end
+        if has_content then
+            fields.row = row
+            records[#records + 1] = fields
+        end
+        fields = {}
+    end
+
+    while i <= n do
+        local c = content:sub(i, i)
+        if in_quotes then
+            if c == '"' then
+                if content:sub(i + 1, i + 1) == '"' then
+                    buf[#buf + 1] = '"'
+                    i = i + 1
+                else
+                    in_quotes = false
+                end
+            else
+                buf[#buf + 1] = c
+            end
+        else
+            if c == '"' then
+                in_quotes = true
+            elseif c == "," then
+                flush_field()
+            elseif c == "\r" then
+                if content:sub(i + 1, i + 1) == "\n" then i = i + 1 end
+                flush_record()
+            elseif c == "\n" then
+                flush_record()
+            else
+                buf[#buf + 1] = c
+            end
+        end
+        i = i + 1
+    end
+    -- Last record when the file has no trailing newline (or an unclosed quote).
+    if #buf > 0 or #fields > 0 then flush_record() end
+    return records
+end
+
+-- Marker and region names are single-line in REAPER, so a multi-line cell is
+-- flattened to one line with the breaks (and surrounding whitespace) as a space.
+function collapseLineBreaks(value)
+    if not value then return value end
+    return (value:gsub("%s*\r?\n%s*", " "))
+end
+
+-- Header text lookup used for column reconciliation and header-row detection.
+function normHeader(s)
+    return trimWS(s or ""):lower()
+end
+
+-- A record is the header row when at least one mapped cell equals either the
+-- mapping's label or the header text remembered for that column. Catches an
+-- import run with Start row = 1, which otherwise produced ID=ID / Index=Index.
+function isCSVHeaderRecord(fields, mappings, snapshot)
+    for _, m in ipairs(mappings) do
+        local cell = normHeader(fields[m.col])
+        if cell ~= "" then
+            if cell == normHeader(m.name) then return true end
+            if snapshot and snapshot[m.col] and cell == normHeader(snapshot[m.col]) then return true end
+        end
+    end
+    return false
+end
+
+-- Header snapshot: which CSV header text each mapped column pointed at on the
+-- last import. On the next import a column whose header moved (the sheet gained
+-- or lost a column) is followed to its new position. The mapping label is not
+-- used for this because labels are user-chosen marker prefixes (e.g. "Category"
+-- on a column headed "Shout Name") and need not equal the header.
+HEADER_SNAPSHOT_KEY = "column_headers_v3"
+
+function loadHeaderSnapshot()
+    local raw = reaper.GetExtState("DMN_GoogleSheetsToRegionsAndMarkers", HEADER_SNAPSHOT_KEY) or ""
+    local snap = {}
+    for rec in raw:gmatch("[^\30]+") do
+        local col, hdr = rec:match("^(%d+)\31(.*)$")
+        if col then snap[tonumber(col)] = hdr end
+    end
+    return snap
+end
+
+function serializeHeaderSnapshot(mappings, headers)
+    local parts = {}
+    for _, m in ipairs(mappings) do
+        local h = headers and headers[m.col]
+        if h and trimWS(h) ~= "" then parts[#parts + 1] = tostring(m.col) .. "\31" .. trimWS(h) end
+    end
+    return table.concat(parts, "\30")
+end
+
+function saveHeaderSnapshot(mappings, headers)
+    reaper.SetExtState("DMN_GoogleSheetsToRegionsAndMarkers", HEADER_SNAPSHOT_KEY, serializeHeaderSnapshot(mappings, headers), true)
+end
+
+function setHeaderSnapshotRaw(raw)
+    reaper.SetExtState("DMN_GoogleSheetsToRegionsAndMarkers", HEADER_SNAPSHOT_KEY, raw or "", true)
+end
+
+-- Compare the current CSV header row with the remembered snapshot and move
+-- mappings whose header shifted to another column. Mutates m.col in place and
+-- returns (notes, warnings, changed) where `changed` maps GUI row -> new col.
+-- Without a snapshot for a column it only hints when the header at that column
+-- differs from the label while a column with exactly that label exists elsewhere.
+function reconcileMappingColumns(mappings, headers, snapshot)
+    local notes, warnings, changed = {}, {}, {}
+    if not headers or #headers == 0 then return notes, warnings, changed end
+    local function findHeader(text)
+        local want = normHeader(text)
+        if want == "" then return nil end
+        for ci, h in ipairs(headers) do
+            if normHeader(h) == want then return ci end
+        end
+        return nil
+    end
+    for _, m in ipairs(mappings) do
+        local have = headers[m.col] and trimWS(headers[m.col]) or nil
+        local want = snapshot and snapshot[m.col] or nil
+        if want and want ~= "" then
+            if have and normHeader(have) ~= normHeader(want) then
+                local found = findHeader(want)
+                if found then
+                    notes[#notes + 1] = string.format("Column '%s': header '%s' moved from column %d to %d, following it.", m.name, want, m.col, found)
+                    m.col = found
+                    if m.row then changed[m.row] = found end
+                else
+                    warnings[#warnings + 1] = string.format("Column '%s' (column %d) used to be headed '%s', which is no longer in the CSV. Now reading '%s' - check the mapping.", m.name, m.col, want, have)
+                end
+            elseif not have then
+                warnings[#warnings + 1] = string.format("Column '%s' points at column %d, but the CSV header only has %d columns.", m.name, m.col, #headers)
+            end
+        else
+            if have and normHeader(have) ~= normHeader(m.name) then
+                local other = findHeader(m.name)
+                if other and other ~= m.col then
+                    warnings[#warnings + 1] = string.format("Column '%s' reads column %d ('%s'), but a column headed '%s' exists at %d. Check the column number if this is unintended.", m.name, m.col, have, m.name, other)
+                end
+            elseif not have then
+                warnings[#warnings + 1] = string.format("Column '%s' points at column %d, but the CSV header only has %d columns.", m.name, m.col, #headers)
+            end
+        end
+    end
+    return notes, warnings, changed
 end
 
 function normalizeSmartChars(str)
@@ -511,13 +683,15 @@ end
 function safeRegionName(text)
     if not text or text == "" then return nil end
     text = text:match('^"(.*)"$') or text
+    text = collapseLineBreaks(text)
     text = text:match("^%s*(.-)%s*$")
     text = normalizeSmartChars(text)
     return text ~= "" and text or nil
 end
 
-function cleanFieldValue(value)
+function cleanFieldValue(value, keep_line_breaks)
     if not value or value == "" then return nil end
+    if not keep_line_breaks then value = collapseLineBreaks(value) end
     value = value:gsub(";$", "")
     value = value:match("^%s*(.-)%s*$")
     value = normalizeSmartChars(value)
@@ -1804,20 +1978,23 @@ try {
     return res_path, nil
 end
 
--- Poll response file from background fetch. Returns: map, nil when done; nil, "pending" when still running; nil, err on error.
+-- Poll response file from background fetch. Returns: map, nil when done; nil, "pending", entries_so_far when still running; nil, err on error.
 function notionFetchAllEntriesToIdMapPoll(response_path)
     local f = io.open(response_path, "r")
-    if not f then return nil, "pending" end
+    if not f then return nil, "pending", 0 end
     local content = f:read("*all")
     f:close()
-    if not content or content == "" then return nil, "pending" end
+    if not content or content == "" then return nil, "pending", 0 end
     if content:match("ERR|") then
         for line in content:gmatch("[^\r\n]+") do
             if line:sub(1, 4) == "ERR|" then return nil, line:sub(5) end
         end
         return nil, "Unknown error"
     end
-    if not content:match("DONE") then return nil, "pending" end
+    if not content:match("DONE") then
+        local _, entries_so_far = content:gsub("ENTRY\t", "")
+        return nil, "pending", entries_so_far
+    end
     local map = {}
     for line in content:gmatch("[^\r\n]+") do
         line = trimWS(line)
@@ -2438,19 +2615,22 @@ Add-Content $ResPath ("DONE|"+$updated+"|"+$already+"|"+$failed); if ($firstErr)
     return res_path, nil
 end
 
--- Poll Clean Up batch response. Returns: updated, already_set, failed, first_err when DONE; or nil, "pending"
+-- Poll Clean Up batch response. Returns: updated, already_set, failed, first_err when DONE; or nil, "pending", rows_done while running
 function notionCleanUpBatchPoll(response_path)
     local f = io.open(response_path, "r")
-    if not f then return nil, "pending" end
+    if not f then return nil, "pending", 0 end
     local content = f:read("*all")
     f:close()
-    if not content or content == "" then return nil, "pending" end
+    if not content or content == "" then return nil, "pending", 0 end
     if content:match("ERR|") and not content:match("ROW|") then
         for line in content:gmatch("[^\r\n]+") do
             if line:sub(1, 4) == "ERR|" then return nil, nil, nil, line:sub(5) end
         end
     end
-    if not content:match("DONE|") then return nil, "pending" end
+    if not content:match("DONE|") then
+        local _, rows_done = content:gsub("ROW|", "")
+        return nil, "pending", rows_done
+    end
     local updated, already_set, failed, first_err = 0, 0, 0, nil
     for line in content:gmatch("[^\r\n]+") do
         if line:sub(1, 5) == "DONE|" then
@@ -3374,13 +3554,13 @@ function fixIndexMarkersFromCSV()
         return
     end
 
-    local header_line = csv_content:match("([^\r\n]+)")
-    if not header_line then
+    local records = parseCSVRecords(csv_content)
+    if #records == 0 then
         reaper.ShowMessageBox("CSV appears empty.", "Fix Index Markers", 0)
         return
     end
 
-    local headers = parseCSV(header_line)
+    local headers = records[1]
     local id_col = nil
     local index_col = nil
     for i, h in ipairs(headers) do
@@ -3398,17 +3578,13 @@ function fixIndexMarkersFromCSV()
 
     local id_to_index = {}
     local entry_count = 0
-    local line_num = 0
-    for line in csv_content:gmatch("[^\r\n]+") do
-        line_num = line_num + 1
-        if line_num > 1 then
-            local fields = parseCSV(line)
-            local csv_id = fields[id_col] and trimWS(fields[id_col]) or ""
-            local csv_index = fields[index_col] and trimWS(fields[index_col]) or ""
-            if csv_id ~= "" and tonumber(csv_id) and csv_index ~= "" then
-                id_to_index[csv_id] = csv_index
-                entry_count = entry_count + 1
-            end
+    for ri = 2, #records do
+        local fields = records[ri]
+        local csv_id = fields[id_col] and trimWS(fields[id_col]) or ""
+        local csv_index = fields[index_col] and trimWS(fields[index_col]) or ""
+        if csv_id ~= "" and tonumber(csv_id) and csv_index ~= "" then
+            id_to_index[csv_id] = csv_index
+            entry_count = entry_count + 1
         end
     end
 
@@ -3536,14 +3712,13 @@ function autoSuggestFromCSV()
         end
     end
     
-    -- Get the first line (headers)
-    local first_line = csv_content:match("([^\r\n]+)")
-    if not first_line then
+    -- First record is the header row
+    local records = parseCSVRecords(csv_content)
+    local headers = records[1]
+    if not headers then
         reaper.ShowMessageBox("Could not read CSV headers.", "Error", 0)
         return
     end
-    
-    local headers = parseCSV(first_line)
     if #headers == 0 then
         reaper.ShowMessageBox("No columns found in CSV.", "Error", 0)
         return
@@ -3605,9 +3780,15 @@ function autoSuggestFromCSV()
     if entry_row == 0 and count > 0 then
         entry_row = 1
     end
-    
+
     active_rows = count
     updateRowVisibility()
+
+    -- Every mapping now points at a known header: remember them so a later
+    -- import can follow columns that move.
+    local snap_mappings = {}
+    for i = 1, count do snap_mappings[#snap_mappings + 1] = { col = i } end
+    saveHeaderSnapshot(snap_mappings, headers)
 end
 
 -- Get list of saved presets
@@ -3655,17 +3836,28 @@ function getThemeCategoryColors()
     return out
 end
 
-function doImport(csv_content, mappings, start_row, insert_at_cursor, auto_index_enabled, auto_id_enabled, timing_opts, color_opts, entry_idx, category_idx, speaker_idx)
-    -- Split CSV content into lines
-    local lines = {}
-    for line in csv_content:gmatch("[^\r\n]+") do
-        table.insert(lines, line)
-    end
-    
-    if #lines == 0 then
+-- `csv_content` is either the raw CSV text or a record list from
+-- parseCSVRecords (so the caller can inspect the header first). `extra` carries
+-- optional settings: empty_entry_placeholder (bool), notes/warnings (string
+-- lists from column reconciliation, echoed into the import summary), and
+-- header_snapshot (table from loadHeaderSnapshot, used for header-row detection).
+function doImport(csv_content, mappings, start_row, insert_at_cursor, auto_index_enabled, auto_id_enabled, timing_opts, color_opts, entry_idx, category_idx, speaker_idx, extra)
+    extra = extra or {}
+    local records = type(csv_content) == "table" and csv_content or parseCSVRecords(csv_content)
+
+    if #records == 0 then
         reaper.ShowMessageBox("No data found in CSV.", "Error", 0)
         return false
     end
+
+    local use_placeholder = extra.empty_entry_placeholder == true
+    local header_snapshot = extra.header_snapshot
+    local report = {
+        notes = {}, warnings = {}, skipped = {},
+        header_skipped = false, placeholder_count = 0, entry_count = 0, category_count = 0,
+    }
+    for _, s in ipairs(extra.notes or {}) do report.notes[#report.notes + 1] = s end
+    for _, s in ipairs(extra.warnings or {}) do report.warnings[#report.warnings + 1] = s end
 
     -- Timing options (use provided or defaults)
     timing_opts = timing_opts or {}
@@ -3712,22 +3904,44 @@ function doImport(csv_content, mappings, start_row, insert_at_cursor, auto_index
         end
     end
 
+    -- Records to import: everything from start_row on, minus a header row that
+    -- slipped in because Start row was 1. Header detection only runs on the
+    -- first record of the file so a data row can never be mistaken for it.
+    local data_records = {}
+    for ri, rec in ipairs(records) do
+        if rec.row >= start_row then
+            if ri == 1 and isCSVHeaderRecord(rec, mappings, header_snapshot) then
+                report.header_skipped = true
+            else
+                data_records[#data_records + 1] = rec
+            end
+        end
+    end
+
+    -- A row with no entry text but other mapped values (e.g. an AudioOnly shout
+    -- that still needs a recording slot) can get the category name as its
+    -- region name instead of being dropped.
+    local function rowHasOtherValues(fields)
+        for _, m in ipairs(mappings) do
+            if not (entry_mapping and m.name == entry_mapping.name) then
+                if cleanFieldValue(fields[m.col]) then return true end
+            end
+        end
+        return false
+    end
+
     -- Pre-pass: count entries per category for auto-index numbering
     local category_entry_counts = {}
     if auto_index_enabled then
         local pre_group = ""
-        local pre_start = math.min(start_row, #lines)
-        for i = pre_start, #lines do
-            local ln = lines[i]
-            if ln and ln:match("%S") then
-                local flds = parseCSV(ln)
-                local entry_val = entry_mapping and (flds[entry_mapping.col] and cleanFieldValue(flds[entry_mapping.col])) or nil
-                local cat_val = category_mapping and (flds[category_mapping.col] and cleanFieldValue(flds[category_mapping.col])) or nil
-                if cat_val then pre_group = cat_val end
-                local grp_key = (cat_val or pre_group ~= "" and pre_group) or "Default"
-                if entry_val then
-                    category_entry_counts[grp_key] = (category_entry_counts[grp_key] or 0) + 1
-                end
+        for _, flds in ipairs(data_records) do
+            local entry_val = entry_mapping and (flds[entry_mapping.col] and cleanFieldValue(flds[entry_mapping.col])) or nil
+            local cat_val = category_mapping and (flds[category_mapping.col] and cleanFieldValue(flds[category_mapping.col])) or nil
+            if cat_val then pre_group = cat_val end
+            local grp_key = (cat_val or pre_group ~= "" and pre_group) or "Default"
+            if not entry_val and use_placeholder and rowHasOtherValues(flds) then entry_val = grp_key end
+            if entry_val then
+                category_entry_counts[grp_key] = (category_entry_counts[grp_key] or 0) + 1
             end
         end
     end
@@ -3745,12 +3959,13 @@ function doImport(csv_content, mappings, start_row, insert_at_cursor, auto_index
 
     reaper.Undo_BeginBlock()
 
-    local start_index = math.min(start_row, #lines)
     local last_group = ""
     local current_group = ""
     local line_counter = 0
     local group_item_count = 0
-    local group_regions = {}
+    -- Each contiguous run of the same category name becomes one span; use a list
+    -- so repeat shout names later in the CSV do not overwrite earlier regions.
+    local group_region_spans = {}
     local current_group_start = nil
     local category_index_counter = {}  -- per-category running index for auto-index
 
@@ -3762,153 +3977,164 @@ function doImport(csv_content, mappings, start_row, insert_at_cursor, auto_index
 
     -- (Column-count mismatch is handled gracefully: out-of-range columns become nil.)
 
-    for i = start_index, #lines do
-        local line = lines[i]
-        if line and line:match("%S") then
-            local fields = parseCSV(line)
+    for _, fields in ipairs(data_records) do
+        -- Get values for each mapping (nil for out-of-range columns)
+        local values = {}
+        for _, m in ipairs(mappings) do
+            if m.col <= #fields then
+                values[m.name] = cleanFieldValue(fields[m.col])
+            end
+            -- else: values[m.name] stays nil (column doesn't exist in this CSV)
+        end
+
+        -- Get the entry value from the designated entry column
+        local entry_value = entry_mapping and values[entry_mapping.name] or nil
+        -- Get the category value (if category column is set)
+        local category_val = category_mapping and values[category_mapping.name] or nil
+
+        -- Handle category tracking (category column provides grouping)
+        if category_mapping then
+            if category_val then
+                current_group = category_val
+            end
+        else
+            current_group = "Default"
+        end
+
+        if not entry_value then
+            if use_placeholder and rowHasOtherValues(fields) then
+                entry_value = (current_group ~= "" and current_group ~= "Default") and current_group or ("Row " .. tostring(fields.row))
+                report.placeholder_count = report.placeholder_count + 1
+            else
+                report.skipped[#report.skipped + 1] = {
+                    row = fields.row,
+                    category = category_val or current_group,
+                    reason = rowHasOtherValues(fields) and "empty entry text" or "no mapped values",
+                }
+            end
+        end
+
+        if entry_value then
+            line_counter = line_counter + 1
             
-            do
-                -- Get values for each mapping (nil for out-of-range columns)
-                local values = {}
-                for _, m in ipairs(mappings) do
-                    if m.col <= #fields then
-                        values[m.name] = cleanFieldValue(fields[m.col])
-                    end
-                    -- else: values[m.name] stays nil (column doesn't exist in this CSV)
+            -- Handle category changes
+            if category_mapping and current_group ~= last_group then
+                if last_group ~= "" and current_group_start then
+                    table.insert(group_region_spans, {
+                        group = last_group,
+                        start = current_group_start,
+                        end_pos = current_pos - region_gap
+                    })
                 end
                 
-                -- Get the entry value from the designated entry column
-                local entry_value = entry_mapping and values[entry_mapping.name] or nil
-                -- Get the category value (if category column is set)
-                local category_val = category_mapping and values[category_mapping.name] or nil
-                
-                -- Handle category tracking (category column provides grouping)
-                if category_mapping then
-                    if category_val then
-                        current_group = category_val
-                    end
-                else
-                    current_group = "Default"
+                if last_group ~= "" then
+                    current_pos = current_pos + category_section_gap
                 end
                 
-                if entry_value then
-                    line_counter = line_counter + 1
-                    
-                    -- Handle category changes
-                    if category_mapping and current_group ~= last_group then
-                        if last_group ~= "" and current_group_start then
-                            group_regions[last_group] = {
-                                start = current_group_start,
-                                end_pos = current_pos - region_gap
-                            }
-                        end
-                        
-                        if last_group ~= "" then
-                            current_pos = current_pos + category_section_gap
-                        end
-                        
-                        current_group_start = current_pos - group_marker_offset
-                        
-                        -- [C] role always creates category markers; Tag M controls prefix
-                        local marker_name = category_mapping.prefix_marker and ("Category=" .. current_group) or current_group
-                        reaper.AddProjectMarker2(0, false, current_pos - group_marker_offset, 0, marker_name, -1, 0)
-                        
-                        last_group = current_group
-                        group_item_count = 0
-                        
-                        -- Assign color to this group if colors enabled
-                        if use_group_colors and not group_color_map[current_group] then
-                            group_color_map[current_group] = CATEGORY_PALETTE[color_index].color
-                            color_index = (color_index % #CATEGORY_PALETTE) + 1
-                        end
-                    end
-                    
-                    group_item_count = group_item_count + 1
-                    
-                    -- Create markers/regions for each mapping.
-                    -- Marker OR Tag M → create marker (Tag M adds prefix).
-                    -- Region OR Tag R → create region (Tag R adds prefix).
-                    -- Skip category (handled above), entry (handled below), and
-                    -- speaker (handled by the dedicated Speaker= block below).
-                    for idx, m in ipairs(mappings) do
-                        local val = values[m.name]
-                        if val then
-                            local is_category = (category_mapping and m.name == category_mapping.name)
-                            local is_entry    = (entry_mapping    and m.name == entry_mapping.name)
-                            local is_speaker  = (speaker_mapping  and m.name == speaker_mapping.name)
-                            if not is_category and not is_entry and not is_speaker then
-                                if m.create_marker or m.prefix_marker then
-                                    local marker_name = m.prefix_marker and (m.name .. "=" .. val) or val
-                                    reaper.AddProjectMarker2(0, false, current_pos - 1, 0, marker_name, -1, 0)
-                                end
-                                if m.create_region or m.prefix_region then
-                                    local rgn_name = m.prefix_region and (m.name .. "=" .. val) or val
-                                    local rgn_color = use_group_colors and group_color_map[current_group] or 0
-                                    reaper.AddProjectMarker2(0, true, current_pos, current_pos + region_length, rgn_name, -1, rgn_color)
-                                end
-                            end
-                        end
-                    end
-                    
-                    -- Create Speaker= marker if speaker column is set
-                    if speaker_mapping then
-                        local spk_val = values[speaker_mapping.name]
-                        if spk_val and spk_val ~= "" then
-                            reaper.AddProjectMarker2(0, false, current_pos - 1, 0, "Speaker=" .. spk_val, -1, 0)
-                        end
-                    end
-
-                    -- Auto-place Index= marker 1 second before entry
-                    if auto_index_enabled then
-                        local grp_key = (current_group ~= "" and current_group) or "Default"
-                        category_index_counter[grp_key] = (category_index_counter[grp_key] or 0) + 1
-                        local total = category_entry_counts[grp_key] or 1
-                        local digits = #tostring(total) < 2 and 2 or #tostring(total)
-                        local idx_str = string.format("%0" .. digits .. "d", category_index_counter[grp_key])
-                        reaper.AddProjectMarker2(0, false, current_pos - 1, 0, "Index=" .. idx_str, -1, 0)
-                    end
-
-                    -- Auto-place unique ID= marker 1 second before entry
-                    if auto_id_enabled then
-                        reaper.AddProjectMarker2(0, false, current_pos - 1, 0, "ID=" .. generateID(), -1, 0)
-                    end
-                    
-                    -- Create items for each mapping that has create_item enabled
-                    for _, m in ipairs(mappings) do
-                        local val = values[m.name]
-                        if val and m.create_item and tracks[m.name] then
-                            addEmptyItemWithNote(tracks[m.name], current_pos - 1, region_length + 1, val)
-                        end
-                        -- Create/ensure track named after cell value
-                        if val and val ~= "" and m.create_track then
-                            getOrCreateTrack(val)
-                        end
-                    end
-                    
-                    -- [E] role always creates entry regions; Tag R controls prefix
-                    local region_name = safeRegionName(entry_value)
-                    if region_name then
-                        local final_name = entry_mapping.prefix_region and ("Entry=" .. region_name) or region_name
-                        local region_color = use_group_colors and group_color_map[current_group] or 0
-                        local region_id = reaper.AddProjectMarker2(0, true, current_pos, current_pos + region_length, final_name, -1, region_color)
-                    end
-                    
-                    current_pos = current_pos + region_length + region_gap
+                current_group_start = current_pos - group_marker_offset
+                
+                -- [C] role always creates category markers; Tag M controls prefix
+                local marker_name = category_mapping.prefix_marker and ("Category=" .. current_group) or current_group
+                reaper.AddProjectMarker2(0, false, current_pos - group_marker_offset, 0, marker_name, -1, 0)
+                
+                last_group = current_group
+                group_item_count = 0
+                
+                -- Assign color to this group if colors enabled
+                if use_group_colors and not group_color_map[current_group] then
+                    group_color_map[current_group] = CATEGORY_PALETTE[color_index].color
+                    color_index = (color_index % #CATEGORY_PALETTE) + 1
                 end
             end
+            
+            group_item_count = group_item_count + 1
+            
+            -- Create markers/regions for each mapping.
+            -- Marker OR Tag M → create marker (Tag M adds prefix).
+            -- Region OR Tag R → create region (Tag R adds prefix).
+            -- Skip category (handled above), entry (handled below), and
+            -- speaker (handled by the dedicated Speaker= block below).
+            for idx, m in ipairs(mappings) do
+                local val = values[m.name]
+                if val then
+                    local is_category = (category_mapping and m.name == category_mapping.name)
+                    local is_entry    = (entry_mapping    and m.name == entry_mapping.name)
+                    local is_speaker  = (speaker_mapping  and m.name == speaker_mapping.name)
+                    if not is_category and not is_entry and not is_speaker then
+                        if m.create_marker or m.prefix_marker then
+                            local marker_name = m.prefix_marker and (m.name .. "=" .. val) or val
+                            reaper.AddProjectMarker2(0, false, current_pos - 1, 0, marker_name, -1, 0)
+                        end
+                        if m.create_region or m.prefix_region then
+                            local rgn_name = m.prefix_region and (m.name .. "=" .. val) or val
+                            local rgn_color = use_group_colors and group_color_map[current_group] or 0
+                            reaper.AddProjectMarker2(0, true, current_pos, current_pos + region_length, rgn_name, -1, rgn_color)
+                        end
+                    end
+                end
+            end
+            
+            -- Create Speaker= marker if speaker column is set
+            if speaker_mapping then
+                local spk_val = values[speaker_mapping.name]
+                if spk_val and spk_val ~= "" then
+                    reaper.AddProjectMarker2(0, false, current_pos - 1, 0, "Speaker=" .. spk_val, -1, 0)
+                end
+            end
+
+            -- Auto-place Index= marker 1 second before entry
+            if auto_index_enabled then
+                local grp_key = (current_group ~= "" and current_group) or "Default"
+                category_index_counter[grp_key] = (category_index_counter[grp_key] or 0) + 1
+                local total = category_entry_counts[grp_key] or 1
+                local digits = #tostring(total) < 2 and 2 or #tostring(total)
+                local idx_str = string.format("%0" .. digits .. "d", category_index_counter[grp_key])
+                reaper.AddProjectMarker2(0, false, current_pos - 1, 0, "Index=" .. idx_str, -1, 0)
+            end
+
+            -- Auto-place unique ID= marker 1 second before entry
+            if auto_id_enabled then
+                reaper.AddProjectMarker2(0, false, current_pos - 1, 0, "ID=" .. generateID(), -1, 0)
+            end
+            
+            -- Create items for each mapping that has create_item enabled
+            for _, m in ipairs(mappings) do
+                local val = values[m.name]
+                if val and m.create_item and tracks[m.name] then
+                    -- Item notes can be multi-line, so re-read the raw cell.
+                    local note = cleanFieldValue(fields[m.col], true) or val
+                    addEmptyItemWithNote(tracks[m.name], current_pos - 1, region_length + 1, note)
+                end
+                -- Create/ensure track named after cell value
+                if val and val ~= "" and m.create_track then
+                    getOrCreateTrack(val)
+                end
+            end
+            
+            -- [E] role always creates entry regions; Tag R controls prefix
+            local region_name = safeRegionName(entry_value)
+            if region_name then
+                local final_name = entry_mapping.prefix_region and ("Entry=" .. region_name) or region_name
+                local region_color = use_group_colors and group_color_map[current_group] or 0
+                local region_id = reaper.AddProjectMarker2(0, true, current_pos, current_pos + region_length, final_name, -1, region_color)
+            end
+            
+            current_pos = current_pos + region_length + region_gap
         end
     end
 
     -- [C] role always creates category regions; Tag R controls prefix
     if category_mapping then
         if current_group ~= "" and current_group_start then
-            group_regions[current_group] = {
+            table.insert(group_region_spans, {
+                group = current_group,
                 start = current_group_start,
                 end_pos = current_pos - region_gap
-            }
+            })
         end
 
-        for group_name, region_data in pairs(group_regions) do
+        for _, region_data in ipairs(group_region_spans) do
+            local group_name = region_data.group
             local region_name = category_mapping.prefix_region and ("Category=" .. group_name) or group_name
             local grp_color = use_group_colors and group_color_map[group_name] or reaper.ColorToNative(0, 255, 0)|0x1000000
             local region_id = reaper.AddProjectMarker2(0, true, region_data.start, region_data.end_pos, region_name, -1, grp_color)
@@ -3917,7 +4143,44 @@ function doImport(csv_content, mappings, start_row, insert_at_cursor, auto_index
 
     reaper.Undo_EndBlock("Import CSV as Regions", -1)
     reaper.UpdateArrange()
-    return true
+
+    report.entry_count = line_counter
+    report.category_count = #group_region_spans
+    reportImportSummary(report, start_row)
+    return true, report
+end
+
+-- Print the import summary to the REAPER console and pop a message box when
+-- something needs attention (skipped rows, header row skipped, column changes).
+function reportImportSummary(report, start_row)
+    local lines = {}
+    lines[#lines + 1] = string.format("Imported %d entries in %d categories.", report.entry_count, report.category_count)
+    if report.header_skipped then
+        lines[#lines + 1] = string.format("Row 1 looked like the header row and was skipped (Start row is %s).", tostring(start_row))
+    end
+    if report.placeholder_count > 0 then
+        lines[#lines + 1] = string.format("%d rows had no entry text; the category name was used as the region name.", report.placeholder_count)
+    end
+    for _, s in ipairs(report.notes) do lines[#lines + 1] = "Note: " .. s end
+    for _, s in ipairs(report.warnings) do lines[#lines + 1] = "Warning: " .. s end
+    if #report.skipped > 0 then
+        lines[#lines + 1] = string.format("%d rows skipped (no region created):", #report.skipped)
+        for _, sk in ipairs(report.skipped) do
+            lines[#lines + 1] = string.format("  row %d  %s  - %s", sk.row, tostring(sk.category or ""), sk.reason)
+        end
+    end
+    local text = table.concat(lines, "\n")
+    reaper.ShowConsoleMsg("[DMN Import] " .. os.date("%Y-%m-%d %H:%M:%S") .. "\n" .. text .. "\n\n")
+
+    local needs_attention = report.header_skipped or #report.skipped > 0 or #report.notes > 0 or #report.warnings > 0
+    if needs_attention then
+        -- Keep the dialog short; the console has the full list.
+        local shown = {}
+        local max_lines = 25
+        for i = 1, math.min(#lines, max_lines) do shown[#shown + 1] = lines[i] end
+        if #lines > max_lines then shown[#shown + 1] = string.format("... %d more lines in the REAPER console (View > Show Console).", #lines - max_lines) end
+        reaper.ShowMessageBox(table.concat(shown, "\n"), "Import summary", 0)
+    end
 end
 
 -- ============================================================================
@@ -4029,11 +4292,13 @@ function loadSettings()
     s.url = reaper.GetExtState("DMN_GoogleSheetsToRegionsAndMarkers", "last_url")
     s.start_row = reaper.GetExtState("DMN_GoogleSheetsToRegionsAndMarkers", "start_row")
     s.insert_at_cursor = reaper.GetExtState("DMN_GoogleSheetsToRegionsAndMarkers", "insert_at_cursor")
-    
+    s.empty_entry_placeholder = reaper.GetExtState("DMN_GoogleSheetsToRegionsAndMarkers", "empty_entry_placeholder")
+
     if s.url == "" then s.url = "" end
     if s.start_row == "" then s.start_row = "2" end
     if s.insert_at_cursor == "" then s.insert_at_cursor = "0" end
-    
+    if s.empty_entry_placeholder == "" then s.empty_entry_placeholder = "0" end
+
     return s
 end
 
@@ -4043,7 +4308,9 @@ function saveSettings()
     
     local cursor_val = chkBool(GUI.Val("chk_cursor")) and "1" or "0"
     reaper.SetExtState("DMN_GoogleSheetsToRegionsAndMarkers", "insert_at_cursor", cursor_val, true)
-    
+    local placeholder_val = chkBool(GUI.Val("chk_empty_entry_placeholder")) and "1" or "0"
+    reaper.SetExtState("DMN_GoogleSheetsToRegionsAndMarkers", "empty_entry_placeholder", placeholder_val, true)
+
     saveColumnMappings()
 end
 
@@ -4614,7 +4881,11 @@ function loadPresetByName(preset_name)
         reaper.ShowMessageBox("Preset '" .. preset_name .. "' not found.", "Error", 0)
         return
     end
-    
+
+    -- Restore the preset's header snapshot (empty for presets saved before
+    -- snapshots existed) so the previous CSV's headers cannot move columns.
+    setHeaderSnapshotRaw(reaper.GetExtState("DMN_CSVImport_Presets", preset_name .. "__headers") or "")
+
     -- Clear all rows first and reset roles
     entry_row = 0
     category_row = 0
@@ -4725,44 +4996,13 @@ GUI.New("btn_save_preset", "Button", {
     col_txt = "txt", col_fill = "elm_frame",
     func = function()
         local retval, preset_name = reaper.GetUserInputs("Save Preset", 1, "Preset Name:,extrawidth=100", "")
-        if not retval or preset_name == "" then return end
-        
-        -- Build preset data from current GUI state (new format with role flags)
-        local parts = {}
-        for i = 1, active_rows do
-            local name = GUI.Val("txt_name_" .. i) or ""
-            local col = GUI.Val("txt_col_" .. i) or "1"
-            local marker = chkBool(GUI.Val("chk_marker_"     .. i)) and "1" or "0"
-            local region = chkBool(GUI.Val("chk_region_"     .. i)) and "1" or "0"
-            local item   = chkBool(GUI.Val("chk_item_"       .. i)) and "1" or "0"
-            local pfx_m  = chkBool(GUI.Val("chk_pfx_marker_" .. i)) and "1" or "0"
-            local pfx_r  = chkBool(GUI.Val("chk_pfx_region_" .. i)) and "1" or "0"
-            local trk    = chkBool(GUI.Val("chk_track_"      .. i)) and "1" or "0"
-
-            local is_name    = (i == entry_row)    and "1" or "0"
-            local is_group   = (i == category_row) and "1" or "0"
-            local is_speaker = (i == speaker_row)  and "1" or "0"
-
-            if name ~= "" then
-                table.insert(parts, name .. ":" .. col .. ":" .. marker .. ":" .. region .. ":" .. item .. ":" .. pfx_m .. ":" .. pfx_r .. ":" .. is_name .. ":" .. is_group .. ":" .. is_speaker .. ":" .. trk)
-            end
+        if not retval or trimWS(preset_name or "") == "" then return end
+        local ok, err = saveImportPresetNamed(preset_name)
+        if ok then
+            reaper.ShowMessageBox("Preset '" .. preset_name .. "' saved!", "Save Preset", 0)
+        elseif err then
+            reaper.ShowMessageBox(tostring(err), "Save Preset", 0)
         end
-        
-        local preset_data = table.concat(parts, "|")
-        reaper.SetExtState("DMN_CSVImport_Presets", preset_name, preset_data, true)
-        
-        -- Update preset list
-        local preset_list = reaper.GetExtState("DMN_CSVImport_Presets", "_preset_list") or ""
-        if not preset_list:find(preset_name, 1, true) then
-            if preset_list ~= "" then
-                preset_list = preset_list .. "|" .. preset_name
-            else
-                preset_list = preset_name
-            end
-            reaper.SetExtState("DMN_CSVImport_Presets", "_preset_list", preset_list, true)
-        end
-        
-        reaper.ShowMessageBox("Preset '" .. preset_name .. "' saved!", "Save Preset", 0)
     end
 })
 registerTabElement("Import", "btn_save_preset")
@@ -4789,23 +5029,66 @@ GUI.New("btn_delete_preset", "Button", {
             local confirm = reaper.ShowMessageBox("Delete preset '" .. preset_name .. "'?", "Confirm Delete", 4)
             
             if confirm == 6 then -- Yes
-                -- Delete the preset
-                reaper.DeleteExtState("DMN_CSVImport_Presets", preset_name, true)
-                
-                -- Update preset list
-                local preset_list = reaper.GetExtState("DMN_CSVImport_Presets", "_preset_list") or ""
-                local new_list = {}
-                for name in preset_list:gmatch("([^|]+)") do
-                    if name ~= preset_name then
-                        table.insert(new_list, name)
-                    end
-                end
-                reaper.SetExtState("DMN_CSVImport_Presets", "_preset_list", table.concat(new_list, "|"), true)
+                deleteImportPresetNamed(preset_name)
             end
         end
     end
 })
 registerTabElement("Import", "btn_delete_preset")
+
+-- Build column-mapping preset payload (same pipe format as historical Import presets).
+function buildImportPresetDataString()
+    local parts = {}
+    for i = 1, active_rows do
+        local name = GUI.Val("txt_name_" .. i) or ""
+        local col = GUI.Val("txt_col_" .. i) or "1"
+        local marker = chkBool(GUI.Val("chk_marker_"     .. i)) and "1" or "0"
+        local region = chkBool(GUI.Val("chk_region_"     .. i)) and "1" or "0"
+        local item   = chkBool(GUI.Val("chk_item_"       .. i)) and "1" or "0"
+        local pfx_m  = chkBool(GUI.Val("chk_pfx_marker_" .. i)) and "1" or "0"
+        local pfx_r  = chkBool(GUI.Val("chk_pfx_region_" .. i)) and "1" or "0"
+        local trk    = chkBool(GUI.Val("chk_track_"      .. i)) and "1" or "0"
+        local is_name    = (i == entry_row)    and "1" or "0"
+        local is_group   = (i == category_row) and "1" or "0"
+        local is_speaker = (i == speaker_row)  and "1" or "0"
+        if name ~= "" then
+            table.insert(parts, name .. ":" .. col .. ":" .. marker .. ":" .. region .. ":" .. item .. ":" .. pfx_m .. ":" .. pfx_r .. ":" .. is_name .. ":" .. is_group .. ":" .. is_speaker .. ":" .. trk)
+        end
+    end
+    return table.concat(parts, "|")
+end
+
+function saveImportPresetNamed(preset_name)
+    preset_name = trimWS(tostring(preset_name or ""))
+    if preset_name == "" then return false, "empty name" end
+    local preset_data = buildImportPresetDataString()
+    reaper.SetExtState("DMN_CSVImport_Presets", preset_name, preset_data, true)
+    -- The header snapshot belongs to the CSV this layout was built for, so it
+    -- travels with the preset; loading another preset must not inherit it.
+    reaper.SetExtState("DMN_CSVImport_Presets", preset_name .. "__headers",
+        reaper.GetExtState("DMN_GoogleSheetsToRegionsAndMarkers", HEADER_SNAPSHOT_KEY) or "", true)
+    local preset_list = reaper.GetExtState("DMN_CSVImport_Presets", "_preset_list") or ""
+    if not preset_list:find(preset_name, 1, true) then
+        if preset_list ~= "" then preset_list = preset_list .. "|" .. preset_name
+        else preset_list = preset_name end
+        reaper.SetExtState("DMN_CSVImport_Presets", "_preset_list", preset_list, true)
+    end
+    return true
+end
+
+function deleteImportPresetNamed(preset_name)
+    preset_name = tostring(preset_name or "")
+    if preset_name == "" then return false end
+    reaper.DeleteExtState("DMN_CSVImport_Presets", preset_name, true)
+    reaper.DeleteExtState("DMN_CSVImport_Presets", preset_name .. "__headers", true)
+    local preset_list = reaper.GetExtState("DMN_CSVImport_Presets", "_preset_list") or ""
+    local new_list = {}
+    for name in preset_list:gmatch("([^|]+)") do
+        if name ~= preset_name then new_list[#new_list + 1] = name end
+    end
+    reaper.SetExtState("DMN_CSVImport_Presets", "_preset_list", table.concat(new_list, "|"), true)
+    return true
+end
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- HELP SECTION (Import Tab)
@@ -4895,6 +5178,7 @@ function getCSVAndMappings()
             table.insert(mappings, {
                 name = name,
                 col = col,
+                row = i,   -- GUI row, so column reconciliation can write back
                 create_marker  = chkBool(GUI.Val("chk_marker_"     .. i)),
                 create_region  = chkBool(GUI.Val("chk_region_"     .. i)),
                 create_item    = chkBool(GUI.Val("chk_item_"       .. i)),
@@ -4928,7 +5212,31 @@ runImport = function()
         category_gap  = tonumber(GUI.Val("txt_cat_gap"))    or 30,
     }
     local color_opts = { use_colors = THEME.color_regions ~= false }
-    doImport(csv_content, mappings, start_row, insert_cursor, auto_index_enabled, auto_id_enabled, timing_opts, color_opts, entry_row, category_row, speaker_row)
+
+    local records = parseCSVRecords(csv_content)
+    if #records == 0 then
+        reaper.ShowMessageBox("No data found in CSV.", "Error", 0)
+        return
+    end
+
+    -- Follow columns that moved since the last import and write the new column
+    -- numbers back into the mapping table so the user sees what was used.
+    local headers = records[1]
+    local snapshot = loadHeaderSnapshot()
+    local notes, warnings, changed = reconcileMappingColumns(mappings, headers, snapshot)
+    for gui_row, new_col in pairs(changed) do
+        GUI.Val("txt_col_" .. gui_row, tostring(new_col))
+    end
+    if next(changed) then saveColumnMappings() end
+
+    local extra = {
+        empty_entry_placeholder = chkBool(GUI.Val("chk_empty_entry_placeholder")),
+        notes = notes,
+        warnings = warnings,
+        header_snapshot = snapshot,
+    }
+    local ok = doImport(records, mappings, start_row, insert_cursor, auto_index_enabled, auto_id_enabled, timing_opts, color_opts, entry_row, category_row, speaker_row, extra)
+    if ok then saveHeaderSnapshot(mappings, headers) end
 end
 
 -- Import preview / dry-run state
@@ -4950,9 +5258,33 @@ function previewImport()
         return
     end
 
-    local lines = {}
-    for line in csv_content:gmatch("[^\r\n]+") do lines[#lines + 1] = line end
-    local start_index = math.min(start_row, #lines)
+    local records = parseCSVRecords(csv_content)
+    local headers = records[1]
+    local snapshot = loadHeaderSnapshot()
+    -- Preview reconciles on a throwaway copy so nothing is written back.
+    local preview_notes, preview_warnings = reconcileMappingColumns(mappings, headers, snapshot)
+    local use_placeholder = chkBool(GUI.Val("chk_empty_entry_placeholder"))
+    local header_skipped = false
+    local skipped_rows = 0
+
+    local data_records = {}
+    for ri, rec in ipairs(records) do
+        if rec.row >= start_row then
+            if ri == 1 and isCSVHeaderRecord(rec, mappings, snapshot) then
+                header_skipped = true
+            else
+                data_records[#data_records + 1] = rec
+            end
+        end
+    end
+    local function rowHasOtherValues(fields)
+        for _, m in ipairs(mappings) do
+            if not (entry_mapping and m.name == entry_mapping.name) then
+                if cleanFieldValue(fields[m.col]) then return true end
+            end
+        end
+        return false
+    end
 
     local total_entries = 0
     local category_set = {}
@@ -4965,57 +5297,61 @@ function previewImport()
     local current_group = ""
     local sample_entries = {}
 
-    for i = start_index, #lines do
-        local line = lines[i]
-        if line and line:match("%S") then
-            local fields = parseCSV(line)
-            local values = {}
-            for _, m in ipairs(mappings) do
-                if m.col <= #fields then values[m.name] = cleanFieldValue(fields[m.col]) end
-            end
+    for _, fields in ipairs(data_records) do
+        local values = {}
+        for _, m in ipairs(mappings) do
+            if m.col <= #fields then values[m.name] = cleanFieldValue(fields[m.col]) end
+        end
 
-            local entry_value = entry_mapping and values[entry_mapping.name] or nil
-            local category_val = category_mapping and values[category_mapping.name] or nil
+        local entry_value = entry_mapping and values[entry_mapping.name] or nil
+        local category_val = category_mapping and values[category_mapping.name] or nil
 
-            if category_mapping then
-                if category_val then current_group = category_val end
+        if category_mapping then
+            if category_val then current_group = category_val end
+        else
+            current_group = "Default"
+        end
+
+        if not entry_value then
+            if use_placeholder and rowHasOtherValues(fields) then
+                entry_value = (current_group ~= "" and current_group ~= "Default") and current_group or ("Row " .. tostring(fields.row))
             else
-                current_group = "Default"
+                skipped_rows = skipped_rows + 1
+            end
+        end
+
+        if entry_value then
+            total_entries = total_entries + 1
+            if not category_set[current_group] then
+                category_set[current_group] = true
+                categories_ordered[#categories_ordered + 1] = current_group
+            end
+            regions_count = regions_count + 1
+
+            if #sample_entries < 5 then
+                sample_entries[#sample_entries + 1] = { cat = current_group, entry = entry_value }
             end
 
-            if entry_value then
-                total_entries = total_entries + 1
-                if not category_set[current_group] then
-                    category_set[current_group] = true
-                    categories_ordered[#categories_ordered + 1] = current_group
+            if speaker_mapping then
+                local spk = values[speaker_mapping.name]
+                if spk and spk ~= "" then
+                    speaker_set[spk] = true
+                    markers_count = markers_count + 1
                 end
-                regions_count = regions_count + 1
+            end
 
-                if #sample_entries < 5 then
-                    sample_entries[#sample_entries + 1] = { cat = current_group, entry = entry_value }
-                end
-
-                if speaker_mapping then
-                    local spk = values[speaker_mapping.name]
-                    if spk and spk ~= "" then
-                        speaker_set[spk] = true
-                        markers_count = markers_count + 1
+            for _, m in ipairs(mappings) do
+                local val = values[m.name]
+                if val then
+                    local is_cat = (category_mapping and m.name == category_mapping.name)
+                    local is_ent = (entry_mapping and m.name == entry_mapping.name)
+                    local is_spk = (speaker_mapping and m.name == speaker_mapping.name)
+                    if not is_cat and not is_ent and not is_spk then
+                        if m.create_marker or m.prefix_marker then markers_count = markers_count + 1 end
+                        if m.create_region or m.prefix_region then regions_count = regions_count + 1 end
                     end
-                end
-
-                for _, m in ipairs(mappings) do
-                    local val = values[m.name]
-                    if val then
-                        local is_cat = (category_mapping and m.name == category_mapping.name)
-                        local is_ent = (entry_mapping and m.name == entry_mapping.name)
-                        local is_spk = (speaker_mapping and m.name == speaker_mapping.name)
-                        if not is_cat and not is_ent and not is_spk then
-                            if m.create_marker or m.prefix_marker then markers_count = markers_count + 1 end
-                            if m.create_region or m.prefix_region then regions_count = regions_count + 1 end
-                        end
-                        if val ~= "" and m.create_item then items_count = items_count + 1 end
-                        if val ~= "" and m.create_track then tracks_set[val] = true end
-                    end
+                    if val ~= "" and m.create_item then items_count = items_count + 1 end
+                    if val ~= "" and m.create_track then tracks_set[val] = true end
                 end
             end
         end
@@ -5048,6 +5384,10 @@ function previewImport()
         auto_index = auto_index,
         auto_id = auto_id,
         sample = sample_entries,
+        header_skipped = header_skipped,
+        skipped_rows = skipped_rows,
+        notes = preview_notes,
+        warnings = preview_warnings,
     }
 end
 
@@ -5450,6 +5790,12 @@ local function dmnRunNotionCreateIdMarkersJob(p)
         first_error = nil, original_caption = original_caption, entry_to_id = nil,
         fetch_response_path = nil, log_lines = {},
         dlg_title = dlg_title, undo_name = undo_name, log_title = log_title, btn = btn,
+        -- Progress published for the ImGui progress bar (see dmn_job_progress_bar).
+        -- progress_total = nil → total unknown (fetch phase), bar pulses with a live count.
+        ui_slot = p.ui_slot or "create_id",
+        progress_label = "Fetching from Notion",
+        progress_done = 0,
+        progress_total = nil,
     }
     local function finishJob()
         local job = _G.DMN_CREATE_ID_JOB
@@ -5483,12 +5829,19 @@ local function dmnRunNotionCreateIdMarkersJob(p)
                 reaper.defer(step)
                 return
             end
-            local map, poll_err = notionFetchAllEntriesToIdMapPoll(job.fetch_response_path)
-            if poll_err == "pending" then reaper.defer(step); return end
+            local map, poll_err, entries_so_far = notionFetchAllEntriesToIdMapPoll(job.fetch_response_path)
+            if poll_err == "pending" then
+                job.progress_done = tonumber(entries_so_far) or 0
+                reaper.defer(step)
+                return
+            end
             if not map then job.first_error = tostring(poll_err or "Fetch failed"); finishJob(); return end
             job.entry_to_id = map
         end
         if b then b.caption = "Creating..."; b:redraw() end
+        job.progress_label = "Creating ID markers"
+        job.progress_total = #job.regions
+        job.progress_done = 0
         for _, rgn in ipairs(job.regions) do
             local id_num = job.entry_to_id[rgn.entry_name]
             if not id_num then
@@ -5578,6 +5931,7 @@ function notionFixMissingIdMarkers()
         regions = missing,
         existing_ids = existing_ids,
         btn = nil,
+        ui_slot = "fix_missing",
         dlg_title = "Fix missing ID markers",
         undo_name = "Fix missing ID markers from Notion",
         log_title = "Fix missing ID markers",
@@ -5825,6 +6179,13 @@ GUI.New("btn_edit_notion_sync_index", "Button", {
     caption = "Create/Sync Index= markers from Notion via ID=", font = 3,
     col_txt = "txt", col_fill = "elm_fill",
     func = function()
+        -- Deferred job: one region per tick so the progress bar can update between
+        -- the (blocking) per-region Notion lookups instead of freezing REAPER.
+        if _G.DMN_SYNC_INDEX_JOB and _G.DMN_SYNC_INDEX_JOB.running then
+            reaper.ShowMessageBox("Index sync is already running.", "Notion sync", 0)
+            return
+        end
+
         local tok = GUI.Val("txt_edit_notion_token") or reaper.GetExtState("DMN_GoogleSheetsToRegionsAndMarkers", "notion_token") or ""
         tok = trimWS(tok)
         if tok == "" then
@@ -5842,34 +6203,121 @@ GUI.New("btn_edit_notion_sync_index", "Button", {
 
         local index_markers = collectIndexMarkers()
         local id_markers = collectIDMarkers()
-        local regions = collectEntryRegionsInRange(ts_only)
+        local regions = collectEntryRegionsInRange(ts_only) or {}
         -- ID markers are commonly placed slightly BEFORE region start (e.g. 1.5s).
         -- When "Only within time selection" is enabled, we still want to process those regions.
         local id_tol_before_start = 2.5
 
-        local changed, created, skipped_no_id_marker, skipped_no_row, skipped_no_suffix = 0, 0, 0, 0, 0
-        local first_error = nil
-        local skipped_regions = {}
-        local log_lines = {}
-
         reaper.PreventUIRefresh(1)
         reaper.Undo_BeginBlock()
 
-        for _, region in ipairs(regions or {}) do
-            local idm = findIDMarkerForRegion(id_markers, region, id_tol_before_start)
+        _G.DMN_SYNC_INDEX_JOB = {
+            running = true,
+            i = 1,
+            regions = regions,
+            index_markers = index_markers,
+            id_markers = id_markers,
+            tok = tok,
+            tol = tol,
+            id_tol_before_start = id_tol_before_start,
+            changed = 0, created = 0,
+            skipped_no_id_marker = 0, skipped_no_row = 0, skipped_no_suffix = 0,
+            first_error = nil,
+            skipped_regions = {},
+            log_lines = {},
+            -- Progress published for the ImGui progress bar (see dmn_job_progress_bar).
+            progress_label = "Syncing Index markers",
+            progress_done = 0,
+            progress_total = #regions,
+        }
+
+        local function finishJob()
+            local job = _G.DMN_SYNC_INDEX_JOB
+            if not job then return end
+            job.running = false
+            _G.DMN_SYNC_INDEX_JOB = nil
+
+            reaper.Undo_EndBlock("Create/Sync Index markers from Notion (ID markers)", -1)
+            reaper.PreventUIRefresh(-1)
+            reaper.UpdateArrange()
+
+            -- Select items overlapping skipped regions so the user can inspect them
+            if #job.skipped_regions > 0 then
+                reaper.Main_OnCommand(40289, 0) -- Unselect all items
+                local num_tracks = reaper.CountTracks(0)
+                for _, r in ipairs(job.skipped_regions) do
+                    for t = 0, num_tracks - 1 do
+                        local track = reaper.GetTrack(0, t)
+                        local num_items = reaper.CountTrackMediaItems(track)
+                        for it = 0, num_items - 1 do
+                            local item = reaper.GetTrackMediaItem(track, it)
+                            local ipos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
+                            local ilen = reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
+                            local iend = ipos + ilen
+                            if ipos < r["end"] and iend > r.start then
+                                reaper.SetMediaItemSelected(item, true)
+                            end
+                        end
+                    end
+                end
+                reaper.UpdateArrange()
+            end
+
+            local msg = "Deleted old Index markers: " .. tostring(job.changed) .. "\n" ..
+                "Created new Index markers: " .. tostring(job.created) .. "\n\n" ..
+                "Skipped (no ID= marker found for region): " .. tostring(job.skipped_no_id_marker) .. "\n" ..
+                "Skipped (Notion row missing/empty): " .. tostring(job.skipped_no_row) .. "\n" ..
+                "Skipped (no suffix in FileName): " .. tostring(job.skipped_no_suffix)
+            if #job.skipped_regions > 0 then
+                msg = msg .. "\n\n→ " .. tostring(#job.skipped_regions) .. " skipped region(s) selected in arrange."
+            end
+            if job.first_error then
+                msg = msg .. "\n\nFirst error: " .. job.first_error
+            end
+            msg = msg .. "\n\nClick Yes for Extended Log (console), No to close."
+            local answer = reaper.ShowMessageBox(msg, "Notion → Index Sync", 4)
+            if answer == 6 then
+                reaper.ShowConsoleMsg("\n══════════════════════════════════════════\n")
+                reaper.ShowConsoleMsg("Notion → Index Sync  —  Extended Log\n")
+                reaper.ShowConsoleMsg("══════════════════════════════════════════\n")
+                reaper.ShowConsoleMsg("Regions processed: " .. tostring(#job.regions) .. "\n")
+                reaper.ShowConsoleMsg("Deleted old Index markers: " .. tostring(job.changed) .. "\n")
+                reaper.ShowConsoleMsg("Created new Index markers: " .. tostring(job.created) .. "\n")
+                reaper.ShowConsoleMsg("Skipped total: " .. tostring(#job.skipped_regions) .. "\n\n")
+                for _, line in ipairs(job.log_lines) do
+                    reaper.ShowConsoleMsg(line .. "\n")
+                end
+                reaper.ShowConsoleMsg("══════════════════════════════════════════\n\n")
+                reaper.Main_OnCommand(40615, 0) -- View: Show console
+            end
+        end
+
+        local function step()
+            local job = _G.DMN_SYNC_INDEX_JOB
+            if not job or not job.running then return end
+
+            local region = job.regions[job.i]
+            if not region then
+                finishJob()
+                return
+            end
+            job.progress_done = job.i - 1
+            job.i = job.i + 1
+
+            local idm = findIDMarkerForRegion(job.id_markers, region, job.id_tol_before_start)
             if not idm or not idm.id_num then
-                skipped_no_id_marker = skipped_no_id_marker + 1
-                skipped_regions[#skipped_regions + 1] = region
-                log_lines[#log_lines + 1] = string.format("  SKIP [no ID= marker] region '%s' (%.2fs – %.2fs)", region.name or "?", region.start, region["end"])
+                job.skipped_no_id_marker = job.skipped_no_id_marker + 1
+                job.skipped_regions[#job.skipped_regions + 1] = region
+                job.log_lines[#job.log_lines + 1] = string.format("  SKIP [no ID= marker] region '%s' (%.2fs – %.2fs)", region.name or "?", region.start, region["end"])
             else
                 local id_num = tonumber(idm.id_num)
-                local filename = notionGetFileNameFormulaByID(tok, id_num)
+                local filename = notionGetFileNameFormulaByID(job.tok, id_num)
                 if not filename then
-                    skipped_no_row = skipped_no_row + 1
-                    skipped_regions[#skipped_regions + 1] = region
-                    log_lines[#log_lines + 1] = string.format("  SKIP [Notion row missing/empty] region '%s' ID=%s (%.2fs – %.2fs)", region.name or "?", tostring(id_num), region.start, region["end"])
-                    if not first_error and skipped_no_row == 1 then
-                        first_error = "ID=" .. tostring(id_num) .. " - Check REAPER console (View > Show Console) for detailed error"
+                    job.skipped_no_row = job.skipped_no_row + 1
+                    job.skipped_regions[#job.skipped_regions + 1] = region
+                    job.log_lines[#job.log_lines + 1] = string.format("  SKIP [Notion row missing/empty] region '%s' ID=%s (%.2fs – %.2fs)", region.name or "?", tostring(id_num), region.start, region["end"])
+                    if not job.first_error and job.skipped_no_row == 1 then
+                        job.first_error = "ID=" .. tostring(id_num) .. " - Check REAPER console (View > Show Console) for detailed error"
                     end
                 else
                     local digits = nil
@@ -5880,88 +6328,38 @@ GUI.New("btn_edit_notion_sync_index", "Button", {
                     end
                     if not digits then digits = deriveIndexSuffix(filename) end
                     if not digits or digits == "" then
-                        skipped_no_suffix = skipped_no_suffix + 1
-                        skipped_regions[#skipped_regions + 1] = region
-                        log_lines[#log_lines + 1] = string.format("  SKIP [no suffix in FileName '%s'] region '%s' ID=%s (%.2fs – %.2fs)", tostring(filename), region.name or "?", tostring(idm.id_num), region.start, region["end"])
+                        job.skipped_no_suffix = job.skipped_no_suffix + 1
+                        job.skipped_regions[#job.skipped_regions + 1] = region
+                        job.log_lines[#job.log_lines + 1] = string.format("  SKIP [no suffix in FileName '%s'] region '%s' ID=%s (%.2fs – %.2fs)", tostring(filename), region.name or "?", tostring(idm.id_num), region.start, region["end"])
                     else
                         local new_name = "Index=" .. digits
-                        log_lines[#log_lines + 1] = string.format("  OK   region '%s' ID=%s → %s (FileName='%s')", region.name or "?", tostring(id_num), new_name, tostring(filename))
-                        
-                        local search_start = region.start - tol - 2
-                        local search_end = region["end"] + tol
-                        for i = #index_markers, 1, -1 do
-                            local m = index_markers[i]
+                        job.log_lines[#job.log_lines + 1] = string.format("  OK   region '%s' ID=%s → %s (FileName='%s')", region.name or "?", tostring(id_num), new_name, tostring(filename))
+
+                        local search_start = region.start - job.tol - 2
+                        local search_end = region["end"] + job.tol
+                        for mi = #job.index_markers, 1, -1 do
+                            local m = job.index_markers[mi]
                             if m.pos >= search_start and m.pos <= search_end then
                                 reaper.DeleteProjectMarker(0, m.id, false)
-                                table.remove(index_markers, i)
-                                changed = changed + 1
+                                table.remove(job.index_markers, mi)
+                                job.changed = job.changed + 1
                             end
                         end
-                        
+
                         local create_pos = math.max(0, region.start - 1.0)
                         local new_id = reaper.AddProjectMarker2(0, false, create_pos, 0, new_name, -1, 0)
-                        created = created + 1
+                        job.created = job.created + 1
                         if new_id then
-                            index_markers[#index_markers + 1] = { pos = create_pos, id = new_id, name = new_name }
+                            job.index_markers[#job.index_markers + 1] = { pos = create_pos, id = new_id, name = new_name }
                         end
                     end
                 end
             end
+
+            reaper.defer(step)
         end
 
-        reaper.Undo_EndBlock("Create/Sync Index markers from Notion (ID markers)", -1)
-        reaper.PreventUIRefresh(-1)
-        reaper.UpdateArrange()
-
-        -- Select items overlapping skipped regions so the user can inspect them
-        if #skipped_regions > 0 then
-            reaper.Main_OnCommand(40289, 0) -- Unselect all items
-            local num_tracks = reaper.CountTracks(0)
-            for _, r in ipairs(skipped_regions) do
-                for t = 0, num_tracks - 1 do
-                    local track = reaper.GetTrack(0, t)
-                    local num_items = reaper.CountTrackMediaItems(track)
-                    for it = 0, num_items - 1 do
-                        local item = reaper.GetTrackMediaItem(track, it)
-                        local ipos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
-                        local ilen = reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
-                        local iend = ipos + ilen
-                        if ipos < r["end"] and iend > r.start then
-                            reaper.SetMediaItemSelected(item, true)
-                        end
-                    end
-                end
-            end
-            reaper.UpdateArrange()
-        end
-
-        local msg = "Deleted old Index markers: " .. tostring(changed) .. "\n" ..
-            "Created new Index markers: " .. tostring(created) .. "\n\n" ..
-            "Skipped (no ID= marker found for region): " .. tostring(skipped_no_id_marker) .. "\n" ..
-            "Skipped (Notion row missing/empty): " .. tostring(skipped_no_row) .. "\n" ..
-            "Skipped (no suffix in FileName): " .. tostring(skipped_no_suffix)
-        if #skipped_regions > 0 then
-            msg = msg .. "\n\n→ " .. tostring(#skipped_regions) .. " skipped region(s) selected in arrange."
-        end
-        if first_error then
-            msg = msg .. "\n\nFirst error: " .. first_error
-        end
-        msg = msg .. "\n\nClick Yes for Extended Log (console), No to close."
-        local answer = reaper.ShowMessageBox(msg, "Notion → Index Sync", 4)
-        if answer == 6 then
-            reaper.ShowConsoleMsg("\n══════════════════════════════════════════\n")
-            reaper.ShowConsoleMsg("Notion → Index Sync  —  Extended Log\n")
-            reaper.ShowConsoleMsg("══════════════════════════════════════════\n")
-            reaper.ShowConsoleMsg("Regions processed: " .. tostring(#(regions or {})) .. "\n")
-            reaper.ShowConsoleMsg("Deleted old Index markers: " .. tostring(changed) .. "\n")
-            reaper.ShowConsoleMsg("Created new Index markers: " .. tostring(created) .. "\n")
-            reaper.ShowConsoleMsg("Skipped total: " .. tostring(#skipped_regions) .. "\n\n")
-            for _, line in ipairs(log_lines) do
-                reaper.ShowConsoleMsg(line .. "\n")
-            end
-            reaper.ShowConsoleMsg("══════════════════════════════════════════\n\n")
-            reaper.Main_OnCommand(40615, 0) -- View: Show console
-        end
+        reaper.defer(step)
     end
 })
 registerTabElement("Edit", "btn_edit_notion_sync_index")
@@ -6295,6 +6693,119 @@ do -- load render settings from ExtState
     render_debug_before_render = reaper.GetExtState(EXT, "render_debug_before_render") == "1"
 end
 
+-- ── Named render presets (stored separately from DMN_DialogueWorkflow live keys). ─────────
+local RENDER_PRESET_EXT = "DMN_Render_Presets"
+
+local function explode_rs(blob)
+    local parts, pos = {}, 1
+    if not blob or blob == "" then return parts end
+    while pos <= #blob do
+        local j = blob:find("\x1e", pos, true)
+        if j then
+            parts[#parts + 1] = blob:sub(pos, j - 1)
+            pos = j + 1
+        else
+            parts[#parts + 1] = blob:sub(pos)
+            break
+        end
+    end
+    return parts
+end
+
+local function getRenderPresetList()
+    local preset_list = reaper.GetExtState(RENDER_PRESET_EXT, "_preset_list") or ""
+    local presets = {}
+    for name in preset_list:gmatch("([^|]+)") do
+        if name ~= "" and name ~= "_preset_list" then presets[#presets + 1] = name end
+    end
+    return presets
+end
+
+local function serializeRenderPresetBlob()
+    local RS, GS = "\x1e", "\x1f"
+    local sanit = function(s) return (tostring(s or ""):gsub(RS, ""):gsub(GS, "")) end
+    local function join_toks(arr)
+        local b = {}
+        for _, tok in ipairs(arr or {}) do b[#b + 1] = sanit(tok) end
+        return table.concat(b, GS)
+    end
+    local path = sanit(render_output_path)
+    local parts = {
+        "1",
+        path,
+        tostring(render_sample_rate),
+        tostring(render_channels),
+        render_normalize and "1" or "0",
+        tostring(render_normalize_mode),
+        sanit(render_normalize_target),
+        tostring(render_source_idx),
+        tostring(render_bounds_idx),
+        join_toks(render_folder_tokens),
+        join_toks(render_file_tokens),
+        render_write_metadata and "1" or "0",
+        tostring(render_metadata_mode_idx),
+        render_fadeout and "1" or "0",
+        sanit(render_fadeout_ms),
+        render_debug_before_render and "1" or "0",
+    }
+    return table.concat(parts, RS)
+end
+
+local function applyRenderPresetBlob(blob)
+    if not blob or blob == "" then return false end
+    local parts = explode_rs(blob)
+    if (parts[1] or "") ~= "1" or #parts < 16 then return false end
+    render_output_path = parts[2] or ""
+    local sr = tonumber(parts[3]); if sr then render_sample_rate = sr end
+    local ch = tonumber(parts[4]); if ch then render_channels = ch end
+    render_normalize = parts[5] == "1"
+    local nm = tonumber(parts[6]); if nm then render_normalize_mode = nm end
+    render_normalize_target = parts[7] ~= "" and parts[7] or "-24"
+    local rsi = tonumber(parts[8]); if rsi and rsi >= 1 and rsi <= #RENDER_SOURCES then render_source_idx = rsi end
+    local bdi = tonumber(parts[9]); if bdi and bdi >= 1 and bdi <= #RENDER_BOUNDS then render_bounds_idx = bdi end
+    render_folder_tokens = {}
+    local fs = parts[10] or ""
+    if fs ~= "" then for seg in fs:gmatch("[^\31]+") do render_folder_tokens[#render_folder_tokens + 1] = seg end end
+    render_file_tokens = {}
+    local fts = parts[11] or ""
+    if fts ~= "" then for seg in fts:gmatch("[^\31]+") do render_file_tokens[#render_file_tokens + 1] = seg end end
+    render_write_metadata = parts[12] == "1"
+    local mmi = tonumber(parts[13]); if mmi and mmi >= 1 and mmi <= #BWF_EMBED_MODES then render_metadata_mode_idx = mmi end
+    render_fadeout = parts[14] == "1"
+    render_fadeout_ms = parts[15] ~= "" and parts[15] or "300"
+    render_debug_before_render = parts[16] == "1"
+    saveRenderSettings()
+    return true
+end
+
+local function saveRenderPresetNamed(preset_name)
+    preset_name = trimWS(tostring(preset_name or ""))
+    if preset_name == "" then return false end
+    reaper.SetExtState(RENDER_PRESET_EXT, preset_name, serializeRenderPresetBlob(), true)
+    local preset_list = reaper.GetExtState(RENDER_PRESET_EXT, "_preset_list") or ""
+    if not preset_list:find(preset_name, 1, true) then
+        preset_list = (preset_list ~= "" and preset_list .. "|" or "") .. preset_name
+        reaper.SetExtState(RENDER_PRESET_EXT, "_preset_list", preset_list, true)
+    end
+    return true
+end
+
+local function deleteRenderPresetNamed(preset_name)
+    preset_name = tostring(preset_name or "")
+    if preset_name == "" then return false end
+    reaper.DeleteExtState(RENDER_PRESET_EXT, preset_name, true)
+    local preset_list = reaper.GetExtState(RENDER_PRESET_EXT, "_preset_list") or ""
+    local new_list = {}
+    for name in preset_list:gmatch("([^|]+)") do
+        if name ~= preset_name then new_list[#new_list + 1] = name end
+    end
+    reaper.SetExtState(RENDER_PRESET_EXT, "_preset_list", table.concat(new_list, "|"), true)
+    return true
+end
+
+local _render_preset_show_save_popup = false
+local _render_preset_name_buf = ""
+
 -- Database row: shows the active preset (set in Notion section above)
 GUI.New("lbl_edit_cleanup_db", "Label", {
     z = 11, x = 36, y = cleanup_sec_y + 46,
@@ -6590,7 +7101,11 @@ GUI.New("btn_edit_cleanup_run", "Button", {
             skipped_no_id_marker = 0,
             skipped_notion_fail = 0,
             first_err = nil,
-            original_caption = original_caption
+            original_caption = original_caption,
+            -- Progress published for the ImGui progress bar (see dmn_job_progress_bar).
+            progress_label = "Scanning regions",
+            progress_done = 0,
+            progress_total = #regions
         }
 
         reaper.PreventUIRefresh(1)
@@ -6630,9 +7145,11 @@ GUI.New("btn_edit_cleanup_run", "Button", {
             if not job or not job.running then return end
 
             if job.phase == "poll" then
-                -- Background Notion batch: poll until DONE (returns nil, "pending" when still running)
+                -- Background Notion batch: poll until DONE (returns nil, "pending" when still running;
+                -- while pending the 3rd value is rows-processed-so-far)
                 local updated, already_set, failed, first_err = notionCleanUpBatchPoll(job.cleanup_response_path)
                 if updated == nil and already_set == "pending" then
+                    job.progress_done = tonumber(failed) or 0
                     if btn then
                         btn.caption = "Updating Notion in background..."
                         btn:redraw()
@@ -6677,6 +7194,9 @@ GUI.New("btn_edit_cleanup_run", "Button", {
                 end
                 job.phase = "poll"
                 job.cleanup_response_path = res_path
+                job.progress_label = "Updating Notion"
+                job.progress_done = 0
+                job.progress_total = #job.id_list
                 if btn then
                     btn.caption = "Updating Notion in background..."
                     btn:redraw()
@@ -6685,6 +7205,7 @@ GUI.New("btn_edit_cleanup_run", "Button", {
                 return
             end
 
+            job.progress_done = job.i - 1
             if btn then
                 btn.caption = string.format("Scanning regions... %d/%d", job.i, total)
                 btn:redraw()
@@ -6739,6 +7260,7 @@ GUI.Init()
 GUI.Val("txt_url", settings.url)
 GUI.Val("txt_startrow", settings.start_row)
 GUI.Val("chk_cursor", {settings.insert_at_cursor == "1"})
+GUI.Val("chk_empty_entry_placeholder", {settings.empty_entry_placeholder == "1"})
 
 -- Set default timing values
 GUI.Val("txt_region_len", "10")
@@ -6826,8 +7348,42 @@ local nav_show_speaker = reaper.GetExtState(EXTSTATE_SECTION, "nav_show_speaker"
 local nav_auto_arm     = reaper.GetExtState(EXTSTATE_SECTION, "nav_auto_arm") == "1"
 local _nav_last_speaker = ""  -- track last speaker to avoid redundant arming
 
+-- Navigator right-click / rename state
+local _nav_rename_pending = false
+local _nav_rename_entry   = nil   -- { name, start, rend, markrgnidx }
+local _nav_rename_buf     = ""
+
+-- Navigator collapsible categories
+local _nav_collapsed_cats = {}   -- set of category names that are collapsed
+
+-- Flag: when set, the next draw_navigator_inner switches to the Navigator sub-tab
+local _nav_switch_to_navigator = false
+
+-- Navigator Find & Replace state
+local _nav_fr_open        = false
+local _nav_fr_find_buf    = ""
+local _nav_fr_replace_buf = ""
+local _nav_fr_case        = false
+local _nav_fr_markers     = true
+local _nav_fr_regions     = true
+local _nav_fr_preview     = {}   -- { isrgn, pos, rend, name, new_name, markrgnidx }
+local _nav_fr_selected    = {}
+local _nav_fr_status      = ""
+
 -- Cache for keyboard-shortcut navigation helpers
 local _nav_categories_cache = nil
+
+-- Register "Find in Navigator" callback for Cross-Project Search
+if ProjectSearch and ProjectSearch.set_navigator_callback then
+    ProjectSearch.set_navigator_callback(function(name, position)
+        local search = name:gsub("^Entry=", "")
+        nav_search_buf   = search
+        nav_search_query = search:lower()
+        nav_filter       = "all"
+        _nav_switch_to_navigator = true
+        _nav_scroll_to_active = true
+    end)
+end
 
 -- ── Navigator keyboard shortcut definitions & customisation ──────────────────
 
@@ -7066,6 +7622,9 @@ function run_btn(id)
     if fn then pcall(fn) end
 end
 
+local _import_preset_show_save_popup = false
+local _import_preset_name_buf = ""
+
 function draw_import_tab(ctx)
     if reaper.ImGui_SetNextItemOpen and reaper.ImGui_Cond_Once then
         reaper.ImGui_SetNextItemOpen(ctx, true, reaper.ImGui_Cond_Once())
@@ -7144,22 +7703,56 @@ function draw_import_tab(ctx)
         if not hasEntryColumn() then
             reaper.ImGui_TextColored(ctx, rgba(1, 0.5, 0.2, 1), "Set an Entry column ([E]) for region names.")
         end
-        -- Presets (merged into Column Mappings)
         reaper.ImGui_Spacing(ctx)
-        reaper.ImGui_Separator(ctx)
-        reaper.ImGui_Text(ctx, "Presets")
-        reaper.ImGui_Spacing(ctx)
-        dmn_btn(ctx, "btn_load_preset", "Load...")
-        reaper.ImGui_SameLine(ctx)
-        dmn_btn(ctx, "btn_save_preset", "Save As...")
-        reaper.ImGui_SameLine(ctx)
-        dmn_btn(ctx, "btn_delete_preset", "Delete...")
+        if reaper.ImGui_CollapsingHeader(ctx, "Presets##imp_presets", reaper.ImGui_TreeNodeFlags_DefaultOpen()) then
+            if reaper.ImGui_Button(ctx, "Save As...##imp_save_preset") then
+                _import_preset_show_save_popup = true
+                _import_preset_name_buf = ""
+            end
+            reaper.ImGui_SameLine(ctx)
+            reaper.ImGui_TextColored(ctx, tcol("hint_text"), "Save current column layout as a reusable preset")
+            if _import_preset_show_save_popup then
+                reaper.ImGui_OpenPopup(ctx, "Import Save Preset##imp_popup")
+                _import_preset_show_save_popup = false
+            end
+            if reaper.ImGui_BeginPopup(ctx, "Import Save Preset##imp_popup") then
+                reaper.ImGui_Text(ctx, "Preset name:")
+                local _, nbuf = reaper.ImGui_InputText(ctx, "##imp_preset_name", _import_preset_name_buf, 0)
+                _import_preset_name_buf = nbuf
+                if reaper.ImGui_Button(ctx, "Save##imp_confirm", 120) and trimWS(_import_preset_name_buf) ~= "" then
+                    saveImportPresetNamed(_import_preset_name_buf)
+                    reaper.ImGui_CloseCurrentPopup(ctx)
+                end
+                reaper.ImGui_SameLine(ctx)
+                if reaper.ImGui_Button(ctx, "Cancel##imp_cancel", 120) then reaper.ImGui_CloseCurrentPopup(ctx) end
+                reaper.ImGui_EndPopup(ctx)
+            end
+            reaper.ImGui_Spacing(ctx)
+            local presets = getPresetList()
+            if #presets == 0 then
+                reaper.ImGui_TextColored(ctx, tcol("hint_text"), "No presets saved yet.")
+            else
+                for i, pname in ipairs(presets) do
+                    if reaper.ImGui_Button(ctx, "Load##imp_pl_" .. tostring(i), 50, 0) then loadPresetByName(pname) end
+                    reaper.ImGui_SameLine(ctx)
+                    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(), rgba(0.6, 0.2, 0.2, 1))
+                    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), rgba(0.8, 0.25, 0.25, 1))
+                    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(), rgba(0.5, 0.15, 0.15, 1))
+                    if reaper.ImGui_SmallButton(ctx, "Del##imp_pd_" .. tostring(i)) then deleteImportPresetNamed(pname) end
+                    reaper.ImGui_PopStyleColor(ctx, 3)
+                    reaper.ImGui_SameLine(ctx)
+                    reaper.ImGui_Text(ctx, pname)
+                end
+            end
+        end
     end
     if reaper.ImGui_CollapsingHeader(ctx, "Options") then
         uim_text(ctx, "txt_startrow", "Start row", 60)
         uim_checkbox(ctx, "chk_cursor", "Insert at edit cursor")
         uim_checkbox(ctx, "chk_auto_index", "Automatically place Index markers from Entries")
         uim_checkbox(ctx, "chk_auto_id", "Create unique ID= markers for each entry")
+        uim_checkbox(ctx, "chk_empty_entry_placeholder", "Empty entry text: use the category name as region name")
+        reaper.ImGui_TextColored(ctx, tcol("hint_text"), "Off: rows without entry text are skipped and listed in the import summary. On: they still get a region (e.g. AudioOnly shouts that need a recording slot).")
         reaper.ImGui_Separator(ctx)
         uim_text(ctx, "txt_region_len", "Region length (sec)", 80)
         uim_text(ctx, "txt_region_gap", "Gap (sec)", 80)
@@ -7240,6 +7833,21 @@ function draw_import_tab(ctx)
             reaper.ImGui_Text(ctx, string.format("Tracks:      %d  (%s)",
                 #p.tracks, table.concat(p.tracks, ", ")))
         end
+        if p.header_skipped then
+            reaper.ImGui_TextColored(ctx, rgba(1.0, 0.75, 0.3, 1.0), "Row 1 looks like the header row and will be skipped.")
+        end
+        if (p.skipped_rows or 0) > 0 then
+            reaper.ImGui_TextColored(ctx, rgba(1.0, 0.75, 0.3, 1.0),
+                string.format("Skipped:     %d rows without entry text (listed in the console after import)", p.skipped_rows))
+        end
+        for _, s in ipairs(p.notes or {}) do
+            reaper.ImGui_TextWrapped(ctx, "Note: " .. s)
+        end
+        for _, s in ipairs(p.warnings or {}) do
+            reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), rgba(1.0, 0.75, 0.3, 1.0))
+            reaper.ImGui_TextWrapped(ctx, "Warning: " .. s)
+            reaper.ImGui_PopStyleColor(ctx, 1)
+        end
 
         if #p.sample > 0 then
             reaper.ImGui_Spacing(ctx)
@@ -7277,6 +7885,26 @@ function dmn_btn_w(ctx, id, label, w)
     local fn = button_handlers[id]
     if not fn then return end
     if reaper.ImGui_Button(ctx, label .. "##" .. id, w) then pcall(fn) end
+end
+
+-- Progress bar for a running deferred job (Clean Up / ID markers / Index sync).
+-- Jobs publish progress via job.progress_done / progress_total / progress_label.
+-- progress_total == nil means the total is unknown (e.g. paginated Notion fetch):
+-- the bar pulses to show activity and the overlay shows a live count instead.
+local function dmn_job_progress_bar(ctx, job, w)
+    if not job or not job.running then return end
+    local done  = tonumber(job.progress_done) or 0
+    local total = tonumber(job.progress_total) or 0
+    local label = job.progress_label or "Working"
+    local frac, overlay
+    if total > 0 then
+        frac = math.max(0, math.min(done / total, 1))
+        overlay = string.format("%s  %d / %d", label, done, total)
+    else
+        frac = (reaper.time_precise() % 1.5) / 1.5
+        overlay = (done > 0) and string.format("%s  (%d so far)", label, done) or (label .. "...")
+    end
+    reaper.ImGui_ProgressBar(ctx, frac, w or reaper.ImGui_GetContentRegionAvail(ctx), 0, overlay)
 end
 
 -- State for ImGui Edit → Utilities section
@@ -7331,6 +7959,10 @@ function draw_edit_tab(ctx)
         reaper.ImGui_Spacing(ctx)
         if reaper.ImGui_Button(ctx, "Fix missing ID= from Notion##util_fix_id", fw_miss, 0) then
             run_btn("btn_edit_notion_fix_missing_id")
+        end
+        local fixjob = _G.DMN_CREATE_ID_JOB
+        if fixjob and fixjob.running and fixjob.ui_slot == "fix_missing" then
+            dmn_job_progress_bar(ctx, fixjob)
         end
         reaper.ImGui_TextColored(ctx, tcol("hint_text"),
             "Adds ID= markers only where an entry region has no nearby ID= (Notion token + database; same fetch as Add ID markers).")
@@ -7422,9 +8054,15 @@ function draw_edit_tab(ctx)
         -- Actions row
         reaper.ImGui_Spacing(ctx)
         local hw2 = (reaper.ImGui_GetContentRegionAvail(ctx) - 8) * 0.5
-        dmn_btn_w(ctx, "btn_edit_notion_create_id",   "Add ID markers",     hw2)
+        local idjob = _G.DMN_CREATE_ID_JOB
+        local id_running = idjob and idjob.running and idjob.ui_slot ~= "fix_missing"
+        local syncjob = _G.DMN_SYNC_INDEX_JOB
+        local sync_running = syncjob and syncjob.running
+        dmn_btn_w(ctx, "btn_edit_notion_create_id",   id_running and "Running..." or "Add ID markers",       hw2)
         reaper.ImGui_SameLine(ctx)
-        dmn_btn_w(ctx, "btn_edit_notion_sync_index",  "Sync Index markers", hw2)
+        dmn_btn_w(ctx, "btn_edit_notion_sync_index",  sync_running and "Running..." or "Sync Index markers", hw2)
+        if id_running then dmn_job_progress_bar(ctx, idjob) end
+        if sync_running then dmn_job_progress_bar(ctx, syncjob) end
         reaper.ImGui_TextColored(ctx, tcol("hint_text"), "Add ID markers: creates ID= markers on regions by matching Notion entries.\nSync Index: fills Index= markers from Notion IDs.")
 
         -- ── Clean Up (sub-section inside Notion) ──────────────────────────────
@@ -7456,7 +8094,10 @@ function draw_edit_tab(ctx)
 
         reaper.ImGui_Spacing(ctx)
         local fw = reaper.ImGui_GetContentRegionAvail(ctx)
-        dmn_btn_w(ctx, "btn_edit_cleanup_run", "Run Clean Up", fw)
+        local cleanupjob = _G.DMN_CLEANUP_JOB
+        local cleanup_running = cleanupjob and cleanupjob.running
+        dmn_btn_w(ctx, "btn_edit_cleanup_run", cleanup_running and "Running..." or "Run Clean Up", fw)
+        if cleanup_running then dmn_job_progress_bar(ctx, cleanupjob, fw) end
     end
 end
 
@@ -7835,10 +8476,41 @@ local QUICK_TOKENS = {
 -- RENDER TAB
 -- ============================================================================
 
+-- REAPER writes output under Directory (RENDER_FILE) + Filename pattern (RENDER_PATTERN).
+-- Patterns may include subdirectory segments (e.g. subdir/$marker(File).wav).
+-- Dialogue Path maps to Directory only. Folder + File tokens form RENDER_PATTERN
+-- (subfolders in the pattern show in REAPER's "File name:" field; that's normal).
+-- Literal Folder that matches the basename of Path is skipped so we don't nest
+-- .../render/render/ when Path already ends with .../render.
+
+local function render_folder_has_wildcards(s)
+    return s ~= nil and s ~= "" and s:find("%$", 1, true) ~= nil
+end
+
+local function basename_path_segment(p)
+    p = (p or ""):gsub("[/\\]+$", ""):match("^%s*(.-)%s*$") or ""
+    if p == "" then return "" end
+    local seg = p:match("[\\/]([^\\/]+)$")
+    return seg or p
+end
+
 function applyRenderSettingsAndOpenDialog()
     local folder_str = table.concat(render_folder_tokens, "")
-    local file_str   = table.concat(render_file_tokens,   "")
-    local pattern = folder_str .. "/" .. file_str
+    local file_str   = table.concat(render_file_tokens, "")
+
+    -- If Folder is literal-only and repeats the Path's basename, skip that segment so we
+    -- don't nest path/render/render/file (usually Path ends with …/render and Folder is "render").
+    local fp = folder_str
+    fp = fp:gsub("^[/\\]+", ""):gsub("[/\\]+$", ""):match("^%s*(.-)%s*$") or ""
+    local base_last = basename_path_segment(render_output_path or ""):lower()
+    if fp ~= "" and render_folder_has_wildcards(folder_str) == false and fp:lower() == base_last then
+        fp = ""
+    end
+
+    local pattern = file_str
+    if fp ~= "" then
+        pattern = fp .. "/" .. file_str
+    end
 
     if render_output_path ~= "" then
         reaper.GetSetProjectInfo_String(0, "RENDER_FILE", render_output_path, true)
@@ -7937,6 +8609,53 @@ end
 
 function draw_render_tab(ctx)
     local tokens_changed = false
+
+    if reaper.ImGui_CollapsingHeader(ctx, "Presets##r_presets", reaper.ImGui_TreeNodeFlags_DefaultOpen()) then
+        if reaper.ImGui_Button(ctx, "Save As...##r_save_preset") then
+            _render_preset_show_save_popup = true
+            _render_preset_name_buf = ""
+        end
+        reaper.ImGui_SameLine(ctx)
+        reaper.ImGui_TextColored(ctx, tcol("hint_text"), "Save current render settings as a reusable preset")
+        if _render_preset_show_save_popup then
+            reaper.ImGui_OpenPopup(ctx, "Render Save Preset##r_popup")
+            _render_preset_show_save_popup = false
+        end
+        if reaper.ImGui_BeginPopup(ctx, "Render Save Preset##r_popup") then
+            reaper.ImGui_Text(ctx, "Preset name:")
+            local _, nb = reaper.ImGui_InputText(ctx, "##r_preset_name", _render_preset_name_buf, 0)
+            _render_preset_name_buf = nb
+            if reaper.ImGui_Button(ctx, "Save##r_preset_confirm", 120) and trimWS(_render_preset_name_buf) ~= "" then
+                saveRenderPresetNamed(_render_preset_name_buf)
+                reaper.ImGui_CloseCurrentPopup(ctx)
+            end
+            reaper.ImGui_SameLine(ctx)
+            if reaper.ImGui_Button(ctx, "Cancel##r_preset_cancel", 120) then reaper.ImGui_CloseCurrentPopup(ctx) end
+            reaper.ImGui_EndPopup(ctx)
+        end
+        reaper.ImGui_Spacing(ctx)
+        local rp = getRenderPresetList()
+        if #rp == 0 then
+            reaper.ImGui_TextColored(ctx, tcol("hint_text"), "No presets saved yet.")
+        else
+            for i, pname in ipairs(rp) do
+                if reaper.ImGui_Button(ctx, "Load##r_pl_" .. tostring(i), 50, 0) then
+                    local blob = reaper.GetExtState(RENDER_PRESET_EXT, pname) or ""
+                    if blob == "" or not applyRenderPresetBlob(blob) then
+                        reaper.ShowMessageBox("Could not load preset '" .. tostring(pname) .. "'.", "Render presets", 0)
+                    end
+                end
+                reaper.ImGui_SameLine(ctx)
+                reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(), rgba(0.6, 0.2, 0.2, 1))
+                reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), rgba(0.8, 0.25, 0.25, 1))
+                reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(), rgba(0.5, 0.15, 0.15, 1))
+                if reaper.ImGui_SmallButton(ctx, "Del##r_pd_" .. tostring(i)) then deleteRenderPresetNamed(pname) end
+                reaper.ImGui_PopStyleColor(ctx, 3)
+                reaper.ImGui_SameLine(ctx)
+                reaper.ImGui_Text(ctx, pname)
+            end
+        end
+    end
 
     -- ── Output ────────────────────────────────────────────────────────────────
     if reaper.ImGui_SetNextItemOpen then
@@ -8234,15 +8953,39 @@ local _last_cleanup_assign_reaper = nil
 -- NAVIGATOR AND TELEPROMPTER
 -- ============================================================================
 
+-- Teleprompter data cache: avoids rebuilding every frame
+local _tp_cache            = nil
+local _tp_cache_marker_hash = -1
+
+local function _tp_compute_marker_hash()
+    local _, nm, nr = reaper.CountProjectMarkers(0)
+    local total = (nm or 0) + (nr or 0)
+    if total == 0 then return 0 end
+    local h = total * 100003
+    local sample_step = math.max(1, math.floor(total / 40))
+    for i = 0, total - 1, sample_step do
+        local ok, isrgn, pos, rend, name = reaper.EnumProjectMarkers3(0, i)
+        if ok then
+            h = h + pos * 1000 + rend * 7 + #(name or "")
+            if isrgn then h = h + 31 end
+        end
+    end
+    return h
+end
+
 -- Parse all project markers/regions into a structured list of categories + entries.
 -- Categories come from regions named "Category=<name>".
 -- Entries come from all other non-Category, non-Context regions (optional "Entry=" prefix).
 -- Character/delivery are resolved from the nearest preceding "Character="/"Speaker="
 -- and "Delivery=" plain markers before each entry region.
+-- Result is cached; returns stale data if markers haven't changed since last call.
 function build_teleprompter_data()
+    local hash = _tp_compute_marker_hash()
+    if _tp_cache and hash == _tp_cache_marker_hash then return _tp_cache end
+
     local _, num_m, num_r = reaper.CountProjectMarkers(0)
     local total = (num_m or 0) + (num_r or 0)
-    if total == 0 then return {} end
+    if total == 0 then _tp_cache = {}; _tp_cache_marker_hash = hash; return _tp_cache end
 
     -- Collect all items sorted by timeline position
     local all_items = {}
@@ -8257,38 +9000,84 @@ function build_teleprompter_data()
     end
     table.sort(all_items, function(a, b) return a.pos < b.pos end)
 
-    -- Separate plain markers (used for character/delivery attribute lookups)
-    local plain_markers = {}
+    -- Separate plain markers that carry key=value tags (sorted by position)
+    local tag_markers = {}
     for _, item in ipairs(all_items) do
-        if not item.isrgn then plain_markers[#plain_markers + 1] = item end
+        if not item.isrgn then
+            local key, val = item.name:match("^([^=]+)=(.+)")
+            if key then
+                tag_markers[#tag_markers + 1] = { pos = item.pos, key = key:lower(), val = val }
+            end
+        end
+    end
+
+    -- Group tag_markers by key for efficient per-key binary search
+    local markers_by_key = {}
+    for _, mk in ipairs(tag_markers) do
+        if not markers_by_key[mk.key] then markers_by_key[mk.key] = {} end
+        local t = markers_by_key[mk.key]
+        t[#t + 1] = mk
+    end
+
+    -- Binary search: find the nearest marker with pos <= target_pos
+    local function find_nearest_val(key, target_pos)
+        local list = markers_by_key[key]
+        if not list then return nil end
+        local lo, hi, best = 1, #list, nil
+        while lo <= hi do
+            local mid = math.floor((lo + hi) / 2)
+            if list[mid].pos <= target_pos then
+                best = list[mid].val
+                lo = mid + 1
+            else
+                hi = mid - 1
+            end
+        end
+        return best
     end
 
     -- Collect category regions
     local categories = {}
     for _, item in ipairs(all_items) do
         if item.isrgn and item.name:match("^Category=") then
+            local cname = item.name:match("^Category=(.+)") or ""
             categories[#categories + 1] = {
-                name    = item.name:match("^Category=(.+)") or "",
-                start   = item.pos,
-                rend    = item.rend,
-                entries = {},
+                name     = cname,
+                _name_lc = cname:lower(),
+                start    = item.pos,
+                rend     = item.rend,
+                entries  = {},
             }
         end
     end
+    table.sort(categories, function(a, b) return a.start < b.start end)
 
     -- Bucket for entries that fall outside any category region
     local orphan_bucket = { name = "", start = -1e300, rend = 1e300, entries = {} }
 
+    -- Binary search to find category bucket for a position
     local function get_bucket(pos)
-        for _, cat in ipairs(categories) do
+        local lo, hi = 1, #categories
+        while lo <= hi do
+            local mid = math.floor((lo + hi) / 2)
+            local cat = categories[mid]
             if pos >= cat.start and pos <= cat.rend then return cat end
+            if pos < cat.start then hi = mid - 1 else lo = mid + 1 end
         end
         return orphan_bucket
     end
 
-    -- Collect entry regions and resolve metadata from nearest preceding markers.
-    -- Gathers Character/Speaker, Delivery, Index, ID, and any arbitrary Name=Value
-    -- tag markers so the navigator can display all relevant info per entry.
+    -- Collect all unique tag keys so we can resolve extras
+    local all_keys = {}
+    for k in pairs(markers_by_key) do all_keys[#all_keys + 1] = k end
+
+    local skip_keys = {
+        character = true, speaker = true, delivery = true,
+        index = true, id = true,
+        category = true, scene = true, context = true, entry = true,
+    }
+
+    -- Collect entry regions and resolve metadata via binary search on marker lists.
     for _, item in ipairs(all_items) do
         if item.isrgn
             and not item.name:match("^Category=")
@@ -8296,51 +9085,36 @@ function build_teleprompter_data()
 
             local display = item.name:gsub("^Entry=", "")
             if display ~= "" then
+                local character = find_nearest_val("character", item.pos)
+                    or find_nearest_val("speaker", item.pos) or ""
+
                 local entry = {
                     name      = display,
                     start     = item.pos,
                     rend      = item.rend,
-                    character = "",
-                    delivery  = "",
-                    index_val = "",
-                    id_val    = "",
-                    tags      = {},   -- other Name=Value tags not covered above
+                    character = character,
+                    delivery  = find_nearest_val("delivery", item.pos) or "",
+                    index_val = find_nearest_val("index", item.pos) or "",
+                    id_val    = find_nearest_val("id", item.pos) or "",
+                    tags      = {},
+                    -- Pre-compute lowercase strings for search filtering
+                    _name_lc      = display:lower(),
+                    _character_lc = character:lower(),
                 }
 
-                -- For each tag key, track the best (nearest preceding) position
-                local best_pos = {}  -- key(lower) -> pos
-                local best_val = {}  -- key(lower) -> value
-
-                for _, mk in ipairs(plain_markers) do
-                    if mk.pos <= item.pos then
-                        local key, val = mk.name:match("^([^=]+)=(.+)")
-                        if key then
-                            local kl = key:lower()
-                            if not best_pos[kl] or mk.pos > best_pos[kl] then
-                                best_pos[kl] = mk.pos
-                                best_val[kl] = val
-                            end
-                        end
+                for _, k in ipairs(all_keys) do
+                    if not skip_keys[k] then
+                        local v = find_nearest_val(k, item.pos)
+                        if v then entry.tags[#entry.tags + 1] = { key = k, val = v } end
                     end
                 end
-
-                entry.character = best_val["character"] or best_val["speaker"] or ""
-                entry.delivery  = best_val["delivery"]  or ""
-                entry.index_val = best_val["index"]     or ""
-                entry.id_val    = best_val["id"]        or ""
-
-                -- Collect remaining tags (skip the ones we already extracted)
-                local skip_keys = {
-                    character = true, speaker = true, delivery = true,
-                    index = true, id = true,
-                    category = true, scene = true, context = true, entry = true,
-                }
-                for kl, val in pairs(best_val) do
-                    if not skip_keys[kl] then
-                        entry.tags[#entry.tags + 1] = { key = kl, val = val }
-                    end
+                if #entry.tags > 1 then
+                    table.sort(entry.tags, function(a, b) return a.key < b.key end)
                 end
-                table.sort(entry.tags, function(a, b) return a.key < b.key end)
+
+                entry._delivery_lc  = entry.delivery:lower()
+                entry._index_lc     = entry.index_val:lower()
+                entry._id_lc        = entry.id_val:lower()
 
                 local bucket = get_bucket(item.pos)
                 bucket.entries[#bucket.entries + 1] = entry
@@ -8349,13 +9123,18 @@ function build_teleprompter_data()
     end
 
     -- Build final display list
+    local result
     if #categories == 0 then
-        return { orphan_bucket }   -- flat list, no category headers
+        result = { orphan_bucket }
+    else
+        if #orphan_bucket.entries > 0 then
+            categories[#categories + 1] = orphan_bucket
+        end
+        result = categories
     end
-    if #orphan_bucket.entries > 0 then
-        categories[#categories + 1] = orphan_bucket
-    end
-    return categories
+    _tp_cache = result
+    _tp_cache_marker_hash = hash
+    return result
 end
 
 -- Scan project items and determine which entry regions contain recorded audio.
@@ -8374,7 +9153,7 @@ function scan_recording_progress(categories)
         return _rec_scan_cache
     end
 
-    -- Build a flat list of all audio items (position + end) for overlap checking
+    -- Build a sorted list of audio item intervals for binary-search overlap checks
     local audio_items = {}
     for i = 0, n_items - 1 do
         local item = reaper.GetMediaItem(0, i)
@@ -8382,7 +9161,6 @@ function scan_recording_progress(categories)
         if take and not reaper.TakeIsMIDI(take) then
             local ipos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
             local ilen = reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
-            -- Skip empty items (items with notes but no audio source)
             local src = reaper.GetMediaItemTake_Source(take)
             if src then
                 local src_type = reaper.GetMediaSourceType(src, "")
@@ -8392,11 +9170,43 @@ function scan_recording_progress(categories)
             end
         end
     end
+    table.sort(audio_items, function(a, b) return a.pos < b.pos end)
+    local n_audio = #audio_items
+
+    -- Binary search: find first audio_item with pos >= threshold
+    local function lower_bound(threshold)
+        local lo, hi = 1, n_audio
+        while lo <= hi do
+            local mid = math.floor((lo + hi) / 2)
+            if audio_items[mid].pos < threshold then lo = mid + 1 else hi = mid - 1 end
+        end
+        return lo
+    end
+
+    -- Check if any audio item overlaps [entry_start, entry_end)
+    local function has_overlap(entry_start, entry_end)
+        -- Find first item that could overlap: items whose pos < entry_end
+        -- Start searching from items near entry_start (back up to catch items starting before)
+        local start_idx = lower_bound(entry_start)
+        -- Check items starting before entry_start that might extend into it
+        local i = start_idx - 1
+        while i >= 1 do
+            if audio_items[i].rend > entry_start then return true end
+            if audio_items[i].pos < entry_start - 3600 then break end
+            i = i - 1
+        end
+        -- Check items starting at or after entry_start
+        for j = start_idx, n_audio do
+            if audio_items[j].pos >= entry_end then break end
+            return true
+        end
+        return false
+    end
 
     local total_recorded = 0
     local total_entries  = 0
     local per_cat = {}
-    local per_entry = {}  -- per_entry[ci][ei] = true/false
+    local per_entry = {}
 
     for ci, cat in ipairs(categories) do
         local cat_rec = 0
@@ -8404,12 +9214,7 @@ function scan_recording_progress(categories)
         per_entry[ci] = {}
         for ei, entry in ipairs(cat.entries) do
             total_entries = total_entries + 1
-            local has_audio = false
-            for _, ai in ipairs(audio_items) do
-                if ai.pos < entry.rend and ai.rend > entry.start then
-                    has_audio = true; break
-                end
-            end
+            local has_audio = has_overlap(entry.start, entry.rend)
             per_entry[ci][ei] = has_audio
             if has_audio then
                 cat_rec = cat_rec + 1
@@ -8419,7 +9224,6 @@ function scan_recording_progress(categories)
         per_cat[ci] = { recorded = cat_rec, total = cat_total }
     end
 
-    -- Write totals to ProjExtState so the web teleprompter can read them
     reaper.SetProjExtState(0, "DMN_DialogueWorkflow", "rec_total", tostring(total_entries))
     reaper.SetProjExtState(0, "DMN_DialogueWorkflow", "rec_recorded", tostring(total_recorded))
 
@@ -8586,6 +9390,63 @@ function nav_arm_speaker_track(categories, pos)
     end
 end
 
+-- ── Navigator helpers ─────────────────────────────────────────────────────────
+
+local function nav_set_marker_name(markrgnidx, isrgn, pos, rend, new_name)
+    reaper.SetProjectMarker4(0, markrgnidx, isrgn, pos, rend, new_name, 0, 0)
+    reaper.UpdateArrange()
+end
+
+-- Build Find & Replace preview for current project
+local function nav_fr_build_preview()
+    _nav_fr_preview = {}
+    _nav_fr_selected = {}
+    if _nav_fr_find_buf == "" then _nav_fr_status = ""; return end
+    local _, num_m, num_r = reaper.CountProjectMarkers(0)
+    local total = (num_m or 0) + (num_r or 0)
+    local find_lc = _nav_fr_find_buf:lower()
+    local esc = _nav_fr_find_buf:gsub("([%(%)%.%%%+%-%*%?%[%^%$])", "%%%1")
+    local esc_ci = esc:gsub("%a", function(c) return "[" .. c:upper() .. c:lower() .. "]" end)
+    for i = 0, total - 1 do
+        local ok, isrgn, pos, rend, name, midx = reaper.EnumProjectMarkers3(0, i)
+        if ok then
+            local type_ok = (isrgn and _nav_fr_regions) or (not isrgn and _nav_fr_markers)
+            if type_ok and name and name ~= "" then
+                local found
+                if _nav_fr_case then found = name:find(_nav_fr_find_buf, 1, true)
+                else found = name:lower():find(find_lc, 1, true) end
+                if found then
+                    local new_name
+                    local rep = _nav_fr_replace_buf:gsub("%%", "%%%%")
+                    if _nav_fr_case then new_name = name:gsub(esc, rep)
+                    else new_name = name:gsub(esc_ci, rep) end
+                    _nav_fr_preview[#_nav_fr_preview + 1] = {
+                        isrgn = isrgn, pos = pos, rend = rend,
+                        old_name = name, new_name = new_name, markrgnidx = midx,
+                    }
+                    _nav_fr_selected[#_nav_fr_preview] = true
+                end
+            end
+        end
+    end
+    _nav_fr_status = #_nav_fr_preview .. " match(es)"
+end
+
+local function nav_fr_execute(selected_only)
+    if #_nav_fr_preview == 0 then return end
+    reaper.Undo_BeginBlock()
+    for i, item in ipairs(_nav_fr_preview) do
+        if not selected_only or _nav_fr_selected[i] then
+            nav_set_marker_name(item.markrgnidx, item.isrgn, item.pos, item.rend, item.new_name)
+        end
+    end
+    reaper.Undo_EndBlock("Navigator: Find & Replace", -1)
+    local count = 0
+    for i = 1, #_nav_fr_preview do if not selected_only or _nav_fr_selected[i] then count = count + 1 end end
+    _nav_fr_status = string.format("Replaced %d item(s)", count)
+    _nav_fr_preview = {}; _nav_fr_selected = {}
+end
+
 -- ── Navigator: full scrollable list of all entries ────────────────────────────
 -- child_height: pixel height of the scrollable region (0 = fill remaining space).
 draw_navigator_content = function(ctx, child_height)
@@ -8624,6 +9485,117 @@ draw_navigator_content = function(ctx, child_height)
         ctx, "##nav_search", "Search entries & categories...", nav_search_buf, 0)
     reaper.ImGui_PopItemWidth(ctx)
     if search_changed then nav_search_query = nav_search_buf:lower() end
+
+    -- ── Find & Replace panel ──────────────────────────────────────────────────
+    reaper.ImGui_Spacing(ctx)
+    if reaper.ImGui_CollapsingHeader(ctx, "Find & Replace##nav_fr_hdr") then
+        reaper.ImGui_Spacing(ctx)
+        reaper.ImGui_Text(ctx, "Find:")
+        reaper.ImGui_PushItemWidth(ctx, -1)
+        local chf, nf = reaper.ImGui_InputTextWithHint(ctx, "##nav_fr_find", "Text to find...", _nav_fr_find_buf, 0)
+        reaper.ImGui_PopItemWidth(ctx)
+        if chf then _nav_fr_find_buf = nf; _nav_fr_preview = {}; _nav_fr_selected = {}; _nav_fr_status = "" end
+
+        reaper.ImGui_Text(ctx, "Replace with:")
+        reaper.ImGui_PushItemWidth(ctx, -1)
+        local chr, nr = reaper.ImGui_InputTextWithHint(ctx, "##nav_fr_repl", "Replacement text...", _nav_fr_replace_buf, 0)
+        reaper.ImGui_PopItemWidth(ctx)
+        if chr then _nav_fr_replace_buf = nr; _nav_fr_preview = {}; _nav_fr_selected = {}; _nav_fr_status = "" end
+
+        reaper.ImGui_Spacing(ctx)
+        local chcs, vcs = reaper.ImGui_Checkbox(ctx, "Case sensitive##nav_fr_cs", _nav_fr_case)
+        if chcs then _nav_fr_case = vcs end
+        reaper.ImGui_SameLine(ctx)
+        reaper.ImGui_TextColored(ctx, tcol("hint_text"), "  Apply to:")
+        reaper.ImGui_SameLine(ctx)
+        local c1, v1 = reaper.ImGui_Checkbox(ctx, "Markers##nav_frm", _nav_fr_markers)
+        if c1 then _nav_fr_markers = v1 end
+        reaper.ImGui_SameLine(ctx)
+        local c2, v2 = reaper.ImGui_Checkbox(ctx, "Regions##nav_frr", _nav_fr_regions)
+        if c2 then _nav_fr_regions = v2 end
+
+        reaper.ImGui_Spacing(ctx)
+        if reaper.ImGui_Button(ctx, "Preview##nav_frp", 90) then nav_fr_build_preview() end
+
+        local has_prev = #_nav_fr_preview > 0
+        local sel_count = 0
+        for i = 1, #_nav_fr_preview do if _nav_fr_selected[i] then sel_count = sel_count + 1 end end
+
+        reaper.ImGui_SameLine(ctx)
+        if not has_prev then
+            reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(),        tcol("frame_bg"))
+            reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), tcol("frame_bg"))
+            reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(),  tcol("frame_bg"))
+        else
+            reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(),        rgba(0.70, 0.20, 0.20, 1))
+            reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), rgba(0.85, 0.25, 0.25, 1))
+            reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(),  rgba(0.55, 0.15, 0.15, 1))
+        end
+        if reaper.ImGui_Button(ctx, "Replace All (" .. #_nav_fr_preview .. ")##nav_fra", 140) and has_prev then
+            nav_fr_execute(false)
+        end
+        reaper.ImGui_PopStyleColor(ctx, 3)
+
+        reaper.ImGui_SameLine(ctx)
+        local can_sel = has_prev and sel_count > 0
+        if not can_sel then
+            reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(),        tcol("frame_bg"))
+            reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), tcol("frame_bg"))
+            reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(),  tcol("frame_bg"))
+        else
+            reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(),        rgba(0.60, 0.35, 0.10, 1))
+            reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), rgba(0.75, 0.45, 0.15, 1))
+            reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(),  rgba(0.50, 0.28, 0.08, 1))
+        end
+        if reaper.ImGui_Button(ctx, "Replace Selected (" .. sel_count .. ")##nav_frs", 165) and can_sel then
+            nav_fr_execute(true)
+        end
+        reaper.ImGui_PopStyleColor(ctx, 3)
+
+        if _nav_fr_status ~= "" then
+            reaper.ImGui_SameLine(ctx)
+            reaper.ImGui_TextColored(ctx, tcol("hint_text"), "  " .. _nav_fr_status)
+        end
+
+        if has_prev then
+            reaper.ImGui_Spacing(ctx)
+            if reaper.ImGui_SmallButton(ctx, "All##nav_frsa")  then for i=1,#_nav_fr_preview do _nav_fr_selected[i]=true  end end
+            reaper.ImGui_SameLine(ctx)
+            if reaper.ImGui_SmallButton(ctx, "None##nav_frsn") then for i=1,#_nav_fr_preview do _nav_fr_selected[i]=false end end
+            reaper.ImGui_SameLine(ctx)
+            if reaper.ImGui_SmallButton(ctx, "Invert##nav_frsi") then for i=1,#_nav_fr_preview do _nav_fr_selected[i]=not _nav_fr_selected[i] end end
+            reaper.ImGui_SameLine(ctx)
+            reaper.ImGui_TextColored(ctx, tcol("hint_text"), "  " .. sel_count .. " / " .. #_nav_fr_preview .. " selected")
+            reaper.ImGui_Spacing(ctx)
+            local tfl = reaper.ImGui_TableFlags_Borders() + reaper.ImGui_TableFlags_RowBg()
+                      + reaper.ImGui_TableFlags_Resizable() + reaper.ImGui_TableFlags_SizingStretchProp()
+            if reaper.ImGui_BeginTable(ctx, "nav_fr_tbl", 3, tfl) then
+                reaper.ImGui_TableSetupColumn(ctx, " ",       reaper.ImGui_TableColumnFlags_WidthFixed(),  20)
+                reaper.ImGui_TableSetupColumn(ctx, "Before",  reaper.ImGui_TableColumnFlags_WidthStretch(), 0)
+                reaper.ImGui_TableSetupColumn(ctx, "After",   reaper.ImGui_TableColumnFlags_WidthStretch(), 0)
+                reaper.ImGui_TableHeadersRow(ctx)
+                for i, item in ipairs(_nav_fr_preview) do
+                    local sel = _nav_fr_selected[i]
+                    local alpha = sel and 1.0 or 0.35
+                    reaper.ImGui_TableNextRow(ctx)
+                    reaper.ImGui_TableNextColumn(ctx)
+                    local cs, vs = reaper.ImGui_Checkbox(ctx, "##nav_frsel_"..i, sel or false)
+                    if cs then _nav_fr_selected[i] = vs end
+                    reaper.ImGui_TableNextColumn(ctx)
+                    local type_col = item.isrgn and tcol("type_region") or tcol("type_marker")
+                    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), (type_col ~= 0 and type_col or rgba(0.7,0.7,0.7,alpha)))
+                    reaper.ImGui_Text(ctx, item.old_name)
+                    reaper.ImGui_PopStyleColor(ctx, 1)
+                    reaper.ImGui_TableNextColumn(ctx)
+                    if sel then reaper.ImGui_TextColored(ctx, tcol("accent"), item.new_name)
+                    else reaper.ImGui_TextColored(ctx, tcol("hint_text"), item.new_name) end
+                end
+                reaper.ImGui_EndTable(ctx)
+            end
+        end
+        reaper.ImGui_Spacing(ctx)
+        reaper.ImGui_Separator(ctx)
+    end
 
     reaper.ImGui_Spacing(ctx)
 
@@ -8696,6 +9668,10 @@ draw_navigator_content = function(ctx, child_height)
     if global_active_idx ~= _nav_last_active then
         _nav_last_active      = global_active_idx
         _nav_scroll_to_active = true
+        -- Auto-expand collapsed category when playhead enters it
+        if active_cat and categories[active_cat] and categories[active_cat].name ~= "" then
+            _nav_collapsed_cats[categories[active_cat].name] = nil
+        end
         -- Auto-arm speaker track when entry changes
         if nav_auto_arm and active_cat and active_entry then
             local speaker = categories[active_cat].entries[active_entry].character or ""
@@ -8809,16 +9785,17 @@ draw_navigator_content = function(ctx, child_height)
 
     local has_any_visible = false
     for ci, cat in ipairs(categories) do
-        local cat_matches_query = (q == "" or cat.name:lower():find(q, 1, true))
+        local cat_name_lc = cat._name_lc or cat.name:lower()
+        local cat_matches_query = (q == "" or cat_name_lc:find(q, 1, true))
 
         local has_matching_entries = false
         if show_entries and not cat_matches_query and q ~= "" then
             for _, entry in ipairs(cat.entries) do
-                if entry.name:lower():find(q, 1, true)
-                    or entry.character:lower():find(q, 1, true)
-                    or entry.delivery:lower():find(q, 1, true)
-                    or entry.index_val:lower():find(q, 1, true)
-                    or entry.id_val:lower():find(q, 1, true) then
+                if (entry._name_lc or entry.name:lower()):find(q, 1, true)
+                    or (entry._character_lc or entry.character:lower()):find(q, 1, true)
+                    or (entry._delivery_lc or entry.delivery:lower()):find(q, 1, true)
+                    or (entry._index_lc or entry.index_val:lower()):find(q, 1, true)
+                    or (entry._id_lc or entry.id_val:lower()):find(q, 1, true) then
                     has_matching_entries = true; break
                 end
                 for _, tag in ipairs(entry.tags) do
@@ -8834,34 +9811,73 @@ draw_navigator_content = function(ctx, child_height)
                                 and (cat_matches_query or has_matching_entries)
 
         if nav_filter == "categories" then
-            if cat.name ~= "" and (q == "" or cat.name:lower():find(q, 1, true)) then
+            if cat.name ~= "" and (q == "" or cat_name_lc:find(q, 1, true)) then
                 has_any_visible = true
                 reaper.ImGui_Spacing(ctx)
-                if reaper.ImGui_Selectable(ctx, "\xe2\x96\xb8  " .. cat.name .. "##nav_cat_" .. ci, false) then
-                    if #cat.entries > 0 then
-                        reaper.SetEditCurPos(cat.entries[1].start, true, false)
+                local cat_is_collapsed = _nav_collapsed_cats[cat.name]
+                local cat_arrow = cat_is_collapsed and "\xe2\x96\xb6  " or "\xe2\x96\xbc  "
+                if reaper.ImGui_Selectable(ctx, cat_arrow .. cat.name .. "##nav_cat_" .. ci, false) then
+                    _nav_collapsed_cats[cat.name] = not cat_is_collapsed
+                end
+                -- Category right-click menu
+                if reaper.ImGui_BeginPopupContextItem(ctx, "##nav_catctx_" .. ci) then
+                    if reaper.ImGui_MenuItem(ctx, "Copy category name") then
+                        if reaper.CF_SetClipboard then reaper.CF_SetClipboard(cat.name) end
                     end
+                    if reaper.ImGui_MenuItem(ctx, "Jump to first entry") then
+                        if #cat.entries > 0 then reaper.SetEditCurPos(cat.entries[1].start, true, false) end
+                    end
+                    reaper.ImGui_Separator(ctx)
+                    if reaper.ImGui_MenuItem(ctx, "Collapse all categories") then
+                        for _, c in ipairs(categories) do if c.name ~= "" then _nav_collapsed_cats[c.name] = true end end
+                    end
+                    if reaper.ImGui_MenuItem(ctx, "Expand all categories") then
+                        _nav_collapsed_cats = {}
+                    end
+                    reaper.ImGui_EndPopup(ctx)
                 end
                 reaper.ImGui_Spacing(ctx)
             end
         else
             if show_cat_header then
                 reaper.ImGui_Spacing(ctx)
-                reaper.ImGui_TextColored(ctx, tcol("accent"), "\xe2\x96\xb8  " .. cat.name)
+                local cat_is_collapsed = _nav_collapsed_cats[cat.name]
+                local cat_arrow = cat_is_collapsed and "\xe2\x96\xb6  " or "\xe2\x96\xbc  "
+                if reaper.ImGui_Selectable(ctx, cat_arrow .. cat.name .. "##nav_cathdr_" .. ci, false) then
+                    _nav_collapsed_cats[cat.name] = not cat_is_collapsed
+                end
+                -- Category right-click menu
+                if reaper.ImGui_BeginPopupContextItem(ctx, "##nav_cathdrctx_" .. ci) then
+                    if reaper.ImGui_MenuItem(ctx, "Copy category name") then
+                        if reaper.CF_SetClipboard then reaper.CF_SetClipboard(cat.name) end
+                    end
+                    if reaper.ImGui_MenuItem(ctx, "Jump to first entry") then
+                        if #cat.entries > 0 then reaper.SetEditCurPos(cat.entries[1].start, true, false) end
+                    end
+                    reaper.ImGui_Separator(ctx)
+                    if reaper.ImGui_MenuItem(ctx, "Collapse all categories") then
+                        for _, c in ipairs(categories) do if c.name ~= "" then _nav_collapsed_cats[c.name] = true end end
+                    end
+                    if reaper.ImGui_MenuItem(ctx, "Expand all categories") then
+                        _nav_collapsed_cats = {}
+                    end
+                    reaper.ImGui_EndPopup(ctx)
+                end
                 reaper.ImGui_Separator(ctx)
                 reaper.ImGui_Spacing(ctx)
             end
 
-            if show_entries then
+            local cat_is_collapsed_entries = cat.name ~= "" and _nav_collapsed_cats[cat.name]
+            if show_entries and not cat_is_collapsed_entries then
                 for ei, entry in ipairs(cat.entries) do
                     local entry_visible = q == ""
                     if not entry_visible then
-                        entry_visible = entry.name:lower():find(q, 1, true)
-                            or entry.character:lower():find(q, 1, true)
-                            or entry.delivery:lower():find(q, 1, true)
-                            or entry.index_val:lower():find(q, 1, true)
-                            or entry.id_val:lower():find(q, 1, true)
-                            or (cat.name ~= "" and cat.name:lower():find(q, 1, true))
+                        entry_visible = (entry._name_lc or entry.name:lower()):find(q, 1, true)
+                            or (entry._character_lc or entry.character:lower()):find(q, 1, true)
+                            or (entry._delivery_lc or entry.delivery:lower()):find(q, 1, true)
+                            or (entry._index_lc or entry.index_val:lower()):find(q, 1, true)
+                            or (entry._id_lc or entry.id_val:lower()):find(q, 1, true)
+                            or (cat.name ~= "" and cat_name_lc:find(q, 1, true))
                         if not entry_visible then
                             for _, tag in ipairs(entry.tags) do
                                 if tag.val:lower():find(q, 1, true)
@@ -8922,6 +9938,43 @@ draw_navigator_content = function(ctx, child_height)
                         if reaper.ImGui_Selectable(ctx, entry.name .. "##nav_" .. ci .. "_" .. ei, is_active) then
                             reaper.SetEditCurPos(entry.start, true, false)
                         end
+                        -- Right-click context menu
+                        if reaper.ImGui_BeginPopupContextItem(ctx, "##nav_ctx_" .. ci .. "_" .. ei) then
+                            local breadcrumb = (cat.name ~= "" and (cat.name .. " \xe2\x80\xba ") or "") .. entry.name
+                            if reaper.ImGui_MenuItem(ctx, "Copy name") then
+                                if reaper.CF_SetClipboard then reaper.CF_SetClipboard(entry.name) end
+                            end
+                            if reaper.ImGui_MenuItem(ctx, "Copy breadcrumb  \xe2\x80\x94  " .. breadcrumb) then
+                                if reaper.CF_SetClipboard then reaper.CF_SetClipboard(breadcrumb) end
+                            end
+                            if entry.index_val ~= "" then
+                                if reaper.ImGui_MenuItem(ctx, "Copy Index  (" .. entry.index_val .. ")") then
+                                    if reaper.CF_SetClipboard then reaper.CF_SetClipboard(entry.index_val) end
+                                end
+                            end
+                            if entry.id_val ~= "" then
+                                if reaper.ImGui_MenuItem(ctx, "Copy ID  (" .. entry.id_val .. ")") then
+                                    if reaper.CF_SetClipboard then reaper.CF_SetClipboard(entry.id_val) end
+                                end
+                            end
+                            reaper.ImGui_Separator(ctx)
+                            if reaper.ImGui_MenuItem(ctx, "Rename region\xe2\x80\xa6") then
+                                -- find the markrgnidx by scanning current project markers
+                                local _, nm, nr = reaper.CountProjectMarkers(0)
+                                local total_mr = (nm or 0) + (nr or 0)
+                                local found_idx = -1
+                                for mi = 0, total_mr - 1 do
+                                    local ok2, isr, mpos, mrend, mname, midx = reaper.EnumProjectMarkers3(0, mi)
+                                    if ok2 and isr and math.abs(mpos - entry.start) < 0.001 then
+                                        found_idx = midx; break
+                                    end
+                                end
+                                _nav_rename_entry = { name = entry.name, start = entry.start, rend = entry.rend, markrgnidx = found_idx }
+                                _nav_rename_buf   = entry.name
+                                _nav_rename_pending = true
+                            end
+                            reaper.ImGui_EndPopup(ctx)
+                        end
                         if is_active then
                             reaper.ImGui_PopStyleColor(ctx, 3)
                             if _nav_scroll_to_active then
@@ -8965,6 +10018,47 @@ draw_navigator_content = function(ctx, child_height)
     end
 
     reaper.ImGui_EndChild(ctx)
+
+    -- ── Rename modal (opened via right-click menu) ────────────────────────────
+    if _nav_rename_pending then
+        reaper.ImGui_OpenPopup(ctx, "Rename Entry##nav_rename_modal")
+        _nav_rename_pending = false
+    end
+    local wf = reaper.ImGui_WindowFlags_AlwaysAutoResize()
+    if reaper.ImGui_BeginPopupModal(ctx, "Rename Entry##nav_rename_modal", nil, wf) then
+        if _nav_rename_entry then
+            reaper.ImGui_Text(ctx, "Rename: " .. (_nav_rename_entry.name or ""))
+            reaper.ImGui_Spacing(ctx)
+            reaper.ImGui_PushItemWidth(ctx, 360)
+            local chg, nv = reaper.ImGui_InputText(ctx, "##nav_rename_input", _nav_rename_buf,
+                reaper.ImGui_InputTextFlags_AutoSelectAll())
+            reaper.ImGui_PopItemWidth(ctx)
+            if chg then _nav_rename_buf = nv end
+            -- Confirm on Enter
+            if reaper.ImGui_IsItemFocused(ctx) and reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_Enter()) then
+                if _nav_rename_entry.markrgnidx >= 0 and _nav_rename_buf ~= "" then
+                    reaper.Undo_BeginBlock()
+                    nav_set_marker_name(_nav_rename_entry.markrgnidx, true, _nav_rename_entry.start, _nav_rename_entry.rend, _nav_rename_buf)
+                    reaper.Undo_EndBlock("Navigator: Rename region", -1)
+                end
+                reaper.ImGui_CloseCurrentPopup(ctx)
+            end
+            reaper.ImGui_Spacing(ctx)
+            if reaper.ImGui_Button(ctx, "OK##nav_rename_ok", 90) then
+                if _nav_rename_entry.markrgnidx >= 0 and _nav_rename_buf ~= "" then
+                    reaper.Undo_BeginBlock()
+                    nav_set_marker_name(_nav_rename_entry.markrgnidx, true, _nav_rename_entry.start, _nav_rename_entry.rend, _nav_rename_buf)
+                    reaper.Undo_EndBlock("Navigator: Rename region", -1)
+                end
+                reaper.ImGui_CloseCurrentPopup(ctx)
+            end
+            reaper.ImGui_SameLine(ctx)
+            if reaper.ImGui_Button(ctx, "Cancel##nav_rename_cancel", 90) then
+                reaper.ImGui_CloseCurrentPopup(ctx)
+            end
+        end
+        reaper.ImGui_EndPopupModal(ctx)
+    end
 
     -- ── Keyboard shortcuts (active only in Navigator tab, not when search is focused) ──
     local want_kb = reaper.ImGui_IsWindowFocused(ctx, reaper.ImGui_FocusedFlags_RootAndChildWindows())
@@ -9097,7 +10191,12 @@ end
 
 function draw_navigator_inner(ctx)
     if reaper.ImGui_BeginTabBar(ctx, "nav_subtabs", 0) then
-        if reaper.ImGui_BeginTabItem(ctx, "Navigator##nav_sub") then
+        local nav_tab_flags = 0
+        if _nav_switch_to_navigator then
+            nav_tab_flags = reaper.ImGui_TabItemFlags_SetSelected()
+            _nav_switch_to_navigator = false
+        end
+        if reaper.ImGui_BeginTabItem(ctx, "Navigator##nav_sub", nil, nav_tab_flags) then
             nav_subtab = 0
             draw_navigator_content(ctx, 0)
             reaper.ImGui_EndTabItem(ctx)

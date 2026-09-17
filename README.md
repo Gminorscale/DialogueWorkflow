@@ -119,10 +119,15 @@ Defines how each CSV column maps to timeline objects. Columns are user-draggable
 
 #### Options
 
-- **Start row** — skip header rows (default: 2)
+- **Start row** — skip header rows (default: 2). If row 1 still looks like the header (a mapped cell equals its column name), it is skipped anyway and reported.
+- **Empty entry text: use the category name as region name** — off by default. Off: rows without entry text are skipped and listed in the import summary. On: they still get a region named after their category (e.g. AudioOnly shouts that need a recording slot).
 - **Insert at edit cursor** — place regions at cursor instead of project start
 - **Derive index from name suffix** — extract `Index=NN` markers from a chosen column's value
 - **Region length / Gap / Category gap** — timing for generated regions
+
+After each import a summary is printed to the REAPER console (entries, categories, skipped rows with their row number and reason, column changes). A dialog appears only when something needs attention.
+
+Cells may contain commas, quotes and line breaks (standard CSV quoting); line breaks are flattened to spaces in marker and region names and kept in item notes. Column numbers are remembered together with their header text, so when a sheet gains or loses a column the import follows the header to its new position and says so.
 
 #### Help
 
@@ -260,6 +265,10 @@ Supported wildcards include `$marker(Speaker)`, `$marker(Category)`, `$marker(In
 
 - **Folder** and **File** token strips — drag `::` handles to reorder, `x` to remove, `+` to add from a popup of common wildcards
 - **Live preview** — resolves wildcards from the current project state and shows the full output path
+
+#### Presets
+
+- **Save As… / Load / Del** — stores the settings Dialogue controls on this Render tab (output path, filename tokens, Source, Bounds, sample rate/channels, normalize, BWF metadata, fade-out, debug-before-render) in ExtState presets.
 
 #### Render button
 

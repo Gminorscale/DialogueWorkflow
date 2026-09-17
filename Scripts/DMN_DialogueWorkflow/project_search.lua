@@ -13,6 +13,7 @@ local reaper = reaper
 -- ── Dependency slots (filled by init) ────────────────────────────────────────
 
 local rgba, tcol, THEME
+local on_show_in_navigator  -- callback: on_show_in_navigator(name, position) — host switches to Navigator tab
 
 local THEME_FALLBACK = {
     type_marker     = {0.40, 0.75, 1.00, 1.0},
@@ -62,6 +63,8 @@ local path_input_buf  = ""
 local preset_name_buf = ""
 local show_save_popup = false
 local selected_result = -1
+local group_by_project = false
+local collapsed_projects = {}   -- set of project names that are collapsed
 
 local debug_enabled = false
 local debug_log = {}
@@ -244,7 +247,7 @@ local function parse_rpp(filepath)
     local f = io.open(filepath, "r")
     if not f then return nil end
 
-    local results = { markers = {}, regions = {}, tracks = {}, items = {} }
+    local results = { markers = {}, regions = {}, tracks = {}, items = {}, category_regions = {} }
 
     local region_starts = {}
     local in_track = false
@@ -255,38 +258,62 @@ local function parse_rpp(filepath)
     local item_pos = 0
     local item_len = 0
     local item_name = ""
-    local item_notes = ""
+    local item_notes_parts = {}
     local in_notes = false
     local item_track = ""
     local depth = 0
 
+    local string_find = string.find
+    local string_sub  = string.sub
+    local string_byte = string.byte
+    local tonumber    = tonumber
+
+    -- Byte values for fast single-char comparisons
+    local BYTE_LT  = string_byte("<")
+    local BYTE_GT  = string_byte(">")
+    local BYTE_M   = string_byte("M")
+    local BYTE_N   = string_byte("N")
+    local BYTE_P   = string_byte("P")
+    local BYTE_L   = string_byte("L")
+    local BYTE_PIPE = string_byte("|")
+
     for line in f:lines() do
-        local trimmed = line:match("^%s*(.-)%s*$")
+        -- Fast trim: find first non-space char
+        local s, e = string_find(line, "%S")
+        if not s then goto continue end
+        local first_byte = string_byte(line, s)
+        local trimmed
 
         if in_notes then
-            if trimmed == ">" then
+            trimmed = trimmed or string_sub(line, s)
+            if first_byte == BYTE_GT and (e == #line or not string_find(line, "%S", e + 1)) then
                 in_notes = false
             else
-                local note_text = trimmed:match("^|(.*)$") or trimmed
-                if item_notes ~= "" then item_notes = item_notes .. " " end
-                item_notes = item_notes .. note_text
+                local note_text = (first_byte == BYTE_PIPE) and string_sub(line, s + 1) or string_sub(line, s)
+                item_notes_parts[#item_notes_parts + 1] = note_text
             end
-        elseif trimmed:sub(1, 1) == "<" then
+        elseif first_byte == BYTE_LT then
             depth = depth + 1
-            local chunk_name = trimmed:sub(2):match("^(%S+)")
+            trimmed = string_sub(line, s)
+            local chunk_start = s + 1
+            local sp = string_find(line, "%s", chunk_start)
+            local chunk_name = sp and string_sub(line, chunk_start, sp - 1) or string_sub(line, chunk_start)
             if chunk_name == "TRACK" then
                 in_track = true; track_depth = depth; track_name = ""
             elseif chunk_name == "ITEM" and in_track then
                 in_item = true; item_depth = depth
-                item_pos = 0; item_len = 0; item_name = ""; item_notes = ""
+                item_pos = 0; item_len = 0; item_name = ""
+                item_notes_parts = {}
                 item_track = track_name
             elseif chunk_name == "NOTES" and in_item then
                 in_notes = true
             end
-        elseif trimmed == ">" then
+        elseif first_byte == BYTE_GT then
             if in_item and depth == item_depth then
                 local display = item_name
-                if display == "" and item_notes ~= "" then display = item_notes end
+                if display == "" and #item_notes_parts > 0 then
+                    display = table.concat(item_notes_parts, " ")
+                end
                 if display ~= "" then
                     results.items[#results.items + 1] = {
                         name = display, position = item_pos,
@@ -301,7 +328,8 @@ local function parse_rpp(filepath)
                 in_track = false
             end
             depth = depth - 1
-        elseif trimmed:sub(1, 7) == "MARKER " then
+        elseif first_byte == BYTE_M and string_find(line, "MARKER ", s, true) == s then
+            trimmed = string_sub(line, s)
             local tokens = tokenize_line(trimmed)
             local idx   = tonumber(tokens[2])
             local pos   = tonumber(tokens[3])
@@ -314,10 +342,10 @@ local function parse_rpp(filepath)
                     if existing then
                         local rname = existing.name
                         if rname == "" and name ~= "" then rname = name end
+                        local rpos = math.min(existing.start, pos)
+                        local rlen = math.abs(pos - existing.start)
                         results.regions[#results.regions + 1] = {
-                            name = rname,
-                            position = math.min(existing.start, pos),
-                            length = math.abs(pos - existing.start),
+                            name = rname, position = rpos, length = rlen,
                         }
                         region_starts[idx] = nil
                     else
@@ -329,17 +357,18 @@ local function parse_rpp(filepath)
                     end
                 end
             end
-        elseif in_track and not in_item and trimmed:sub(1, 5) == "NAME " then
-            track_name = unquote(trimmed:sub(6))
+        elseif first_byte == BYTE_N and in_track and not in_item and string_find(line, "NAME ", s, true) == s then
+            track_name = unquote(string_sub(line, s + 5))
         elseif in_item and not in_notes then
-            if trimmed:sub(1, 9) == "POSITION " then
-                item_pos = tonumber(trimmed:sub(10)) or 0
-            elseif trimmed:sub(1, 7) == "LENGTH " then
-                item_len = tonumber(trimmed:sub(8)) or 0
-            elseif trimmed:sub(1, 5) == "NAME " then
-                item_name = unquote(trimmed:sub(6))
+            if first_byte == BYTE_P and string_find(line, "POSITION ", s, true) == s then
+                item_pos = tonumber(string_sub(line, s + 9)) or 0
+            elseif first_byte == BYTE_L and string_find(line, "LENGTH ", s, true) == s then
+                item_len = tonumber(string_sub(line, s + 7)) or 0
+            elseif first_byte == BYTE_N and string_find(line, "NAME ", s, true) == s then
+                item_name = unquote(string_sub(line, s + 5))
             end
         end
+        ::continue::
     end
 
     for _, rs in pairs(region_starts) do
@@ -350,8 +379,78 @@ local function parse_rpp(filepath)
         end
     end
 
+    -- Build category_regions list from regions prefixed with "Category=", sorted for binary search
+    for _, r in ipairs(results.regions) do
+        if r.name:match("^Category=") then
+            results.category_regions[#results.category_regions + 1] = {
+                name  = r.name:match("^Category=(.+)") or r.name,
+                start = r.position,
+                rend  = r.position + r.length,
+            }
+        end
+    end
+    table.sort(results.category_regions, function(a, b) return a.start < b.start end)
+
     f:close()
     return results
+end
+
+-- Look up which category (if any) a given position falls inside.
+-- Uses binary search when the list is sorted by start position.
+local function find_category_for_pos(category_regions, pos)
+    local n = #category_regions
+    if n == 0 then return "" end
+    local lo, hi = 1, n
+    while lo <= hi do
+        local mid = math.floor((lo + hi) / 2)
+        local cat = category_regions[mid]
+        if pos >= cat.start and pos <= cat.rend then return cat.name end
+        if pos < cat.start then hi = mid - 1 else lo = mid + 1 end
+    end
+    return ""
+end
+
+-- ── CSV export ───────────────────────────────────────────────────────────────
+
+local export_status = ""
+
+local function csv_escape(s)
+    if not s then return "" end
+    if s:find('[,"\r\n]') then return '"' .. s:gsub('"', '""') .. '"' end
+    return s
+end
+
+local function export_results_csv()
+    if #filtered_results == 0 then
+        export_status = "Nothing to export \xe2\x80\x94 no filtered results."
+        return
+    end
+    local retval, path
+    if reaper.JS_Dialog_BrowseForSaveFile then
+        retval, path = reaper.JS_Dialog_BrowseForSaveFile(
+            "Export results as CSV", "", "search_results.csv", "CSV files\0*.csv\0")
+    end
+    if not retval or retval == 0 or not path or path == "" then
+        local res_dir = reaper.GetResourcePath and reaper.GetResourcePath() or ""
+        if res_dir == "" then export_status = "Export cancelled."; return end
+        path = res_dir .. sep .. "search_results_export.csv"
+    end
+    if not path:lower():match("%.csv$") then path = path .. ".csv" end
+    local f = io.open(path, "w")
+    if not f then export_status = "Error: could not write to " .. path; return end
+    f:write("Type,Name,Category,Position,Track,Project,ProjectPath\n")
+    for _, r in ipairs(filtered_results) do
+        f:write(csv_escape(r.type) .. ","
+             .. csv_escape(r.name) .. ","
+             .. csv_escape(r.category or "") .. ","
+             .. csv_escape(format_time(r.position)) .. ","
+             .. csv_escape(r.track) .. ","
+             .. csv_escape(r.project) .. ","
+             .. csv_escape(r.projpath or "") .. "\n")
+    end
+    f:close()
+    export_status = string.format("Exported %d results to %s", #filtered_results, path)
+    dbg(export_status)
 end
 
 -- ── Forward declarations ─────────────────────────────────────────────────────
@@ -394,11 +493,12 @@ local function begin_scan()
     scan_start_time = reaper.time_precise()
     all_results     = {}
     scan_cache      = {}
+    _type_counts_stale = true
     status_msg      = "Scanning " .. scan_total .. " project(s)..."
     dbg("Total files to scan: " .. scan_total)
 end
 
-local SCAN_BATCH_SIZE = 3
+local SCAN_BATCH_SIZE = 8
 
 local function scan_step()
     if not is_scanning then return end
@@ -413,28 +513,46 @@ local function scan_step()
             dbg(string.format("  -> markers=%d  regions=%d  tracks=%d  items=%d",
                 #parsed.markers, #parsed.regions, #parsed.tracks, #parsed.items))
             scan_cache[filepath] = parsed
+            local cat_rgns = parsed.category_regions or {}
+            local fname_lc = fname:lower()
             for _, m in ipairs(parsed.markers) do
+                local cat = find_category_for_pos(cat_rgns, m.position)
                 all_results[#all_results + 1] = {
                     type = "Marker", name = m.name, position = m.position,
                     length = 0, track = "", project = fname, projpath = filepath,
+                    category = cat,
+                    _name_lc = m.name:lower(), _track_lc = "", _proj_lc = fname_lc,
+                    _cat_lc = cat ~= "" and cat:lower() or "",
                 }
             end
             for _, r in ipairs(parsed.regions) do
+                local cat = find_category_for_pos(cat_rgns, r.position)
                 all_results[#all_results + 1] = {
                     type = "Region", name = r.name, position = r.position,
                     length = r.length, track = "", project = fname, projpath = filepath,
+                    category = cat,
+                    _name_lc = r.name:lower(), _track_lc = "", _proj_lc = fname_lc,
+                    _cat_lc = cat ~= "" and cat:lower() or "",
                 }
             end
             for _, t in ipairs(parsed.tracks) do
+                local tn_lc = t.name:lower()
                 all_results[#all_results + 1] = {
                     type = "Track", name = t.name, position = 0,
                     length = 0, track = t.name, project = fname, projpath = filepath,
+                    category = "",
+                    _name_lc = tn_lc, _track_lc = tn_lc, _proj_lc = fname_lc,
+                    _cat_lc = "",
                 }
             end
             for _, it in ipairs(parsed.items) do
+                local cat = find_category_for_pos(cat_rgns, it.position)
                 all_results[#all_results + 1] = {
                     type = "Item", name = it.name, position = it.position,
                     length = it.length, track = it.track, project = fname, projpath = filepath,
+                    category = cat,
+                    _name_lc = it.name:lower(), _track_lc = it.track:lower(), _proj_lc = fname_lc,
+                    _cat_lc = cat ~= "" and cat:lower() or "",
                 }
             end
         end
@@ -443,6 +561,7 @@ local function scan_step()
     scan_progress = batch_end
     if scan_file_idx >= scan_total then
         is_scanning = false
+        _type_counts_stale = true
         local elapsed = reaper.time_precise() - scan_start_time
         status_msg = string.format("Scanned %d project(s) — %d results in %.2fs",
             scan_total, #all_results, elapsed)
@@ -458,16 +577,28 @@ end
 apply_filter = function()
     filtered_results = {}
     local q = search_query:lower()
+    local f_m, f_r, f_t, f_i = filter_markers, filter_regions, filter_tracks, filter_items
+    local string_find = string.find
     for _, r in ipairs(all_results) do
-        local type_ok = (r.type == "Marker" and filter_markers)
-                     or (r.type == "Region" and filter_regions)
-                     or (r.type == "Track"  and filter_tracks)
-                     or (r.type == "Item"   and filter_items)
+        local tp = r.type
+        local type_ok = (tp == "Marker" and f_m)
+                     or (tp == "Region" and f_r)
+                     or (tp == "Track"  and f_t)
+                     or (tp == "Item"   and f_i)
         if type_ok then
-            if q == "" or r.name:lower():find(q, 1, true)
-                       or r.track:lower():find(q, 1, true)
-                       or r.project:lower():find(q, 1, true) then
+            if q == "" then
                 filtered_results[#filtered_results + 1] = r
+            else
+                local nl = r._name_lc or r.name:lower()
+                local tl = r._track_lc or r.track:lower()
+                local pl = r._proj_lc or r.project:lower()
+                local cl = r._cat_lc or (r.category and r.category:lower() or "")
+                if string_find(nl, q, 1, true)
+                    or string_find(tl, q, 1, true)
+                    or string_find(pl, q, 1, true)
+                    or (cl ~= "" and string_find(cl, q, 1, true)) then
+                    filtered_results[#filtered_results + 1] = r
+                end
             end
         end
     end
@@ -517,12 +648,21 @@ end
 
 -- ── UI Helpers ───────────────────────────────────────────────────────────────
 
-local function count_type(typename)
-    local c = 0
+-- Cached type counts — updated when results change, not every frame
+local _type_counts = { Marker = 0, Region = 0, Track = 0, Item = 0 }
+local _type_counts_stale = true
+
+local function recount_types()
+    _type_counts = { Marker = 0, Region = 0, Track = 0, Item = 0 }
     for _, r in ipairs(all_results) do
-        if r.type == typename then c = c + 1 end
+        _type_counts[r.type] = (_type_counts[r.type] or 0) + 1
     end
-    return c
+    _type_counts_stale = false
+end
+
+local function count_type(typename)
+    if _type_counts_stale then recount_types() end
+    return _type_counts[typename] or 0
 end
 
 local function colored_toggle(ctx, label, value, color_key)
@@ -744,20 +884,13 @@ local function draw_setup(ctx)
 
     if not is_scanning and #all_results > 0 then
         reaper.ImGui_Spacing(ctx)
-        local mc, rc, tc2, ic = 0, 0, 0, 0
-        for _, r in ipairs(all_results) do
-            if     r.type == "Marker" then mc = mc + 1
-            elseif r.type == "Region" then rc = rc + 1
-            elseif r.type == "Track"  then tc2 = tc2 + 1
-            elseif r.type == "Item"   then ic = ic + 1 end
-        end
-        reaper.ImGui_TextColored(ctx, tcol("type_marker"), string.format("Markers: %d", mc))
+        reaper.ImGui_TextColored(ctx, tcol("type_marker"), string.format("Markers: %d", count_type("Marker")))
         reaper.ImGui_SameLine(ctx)
-        reaper.ImGui_TextColored(ctx, tcol("type_region"), string.format("  Regions: %d", rc))
+        reaper.ImGui_TextColored(ctx, tcol("type_region"), string.format("  Regions: %d", count_type("Region")))
         reaper.ImGui_SameLine(ctx)
-        reaper.ImGui_TextColored(ctx, tcol("type_track"),  string.format("  Tracks: %d", tc2))
+        reaper.ImGui_TextColored(ctx, tcol("type_track"),  string.format("  Tracks: %d", count_type("Track")))
         reaper.ImGui_SameLine(ctx)
-        reaper.ImGui_TextColored(ctx, tcol("type_item"),   string.format("  Items: %d", ic))
+        reaper.ImGui_TextColored(ctx, tcol("type_item"),   string.format("  Items: %d", count_type("Item")))
     end
 end
 
@@ -802,7 +935,44 @@ local function draw_search(ctx)
     local ch_i, val_i = colored_toggle(ctx, "Items (" .. count_type("Item") .. ")##ps_fi", filter_items, "type_item")
     if ch_i then filter_items = val_i; apply_filter() end
 
+    -- Right-aligned toggles: Export CSV | Group by Project
+    reaper.ImGui_SameLine(ctx)
+    local avail = reaper.ImGui_GetContentRegionAvail(ctx)
+    local export_lbl_w = reaper.ImGui_CalcTextSize(ctx, "Export CSV") + 26
+    local grp_w = reaper.ImGui_CalcTextSize(ctx, "Group by Project") + 26
+    local total_right_w = export_lbl_w + grp_w + 12
+    if avail > total_right_w + 4 then
+        reaper.ImGui_SetCursorPosX(ctx, reaper.ImGui_GetCursorPosX(ctx) + avail - total_right_w)
+    end
+
+    local has_results = #filtered_results > 0
+    if not has_results then
+        reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(),        tcol("frame_bg"))
+        reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), tcol("frame_bg"))
+        reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(),  tcol("frame_bg"))
+    end
+    if reaper.ImGui_SmallButton(ctx, "Export CSV##ps_export") and has_results then
+        export_results_csv()
+    end
+    if not has_results then reaper.ImGui_PopStyleColor(ctx, 3) end
+
+    reaper.ImGui_SameLine(ctx)
+    if group_by_project then
+        reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(),        tcol("accent"))
+        reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), tcol("button_hover"))
+        reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(),  tcol("button_active"))
+    end
+    if reaper.ImGui_SmallButton(ctx, "Group by Project##ps_grp") then
+        group_by_project = not group_by_project
+        collapsed_projects = {}
+    end
+    if group_by_project then reaper.ImGui_PopStyleColor(ctx, 3) end
+
     reaper.ImGui_Spacing(ctx)
+    if export_status ~= "" then
+        reaper.ImGui_TextColored(ctx, tcol("hint_text"), export_status)
+        reaper.ImGui_Spacing(ctx)
+    end
     reaper.ImGui_Separator(ctx)
 
     if is_scanning then
@@ -815,16 +985,88 @@ local function draw_search(ctx)
         reaper.ImGui_Spacing(ctx)
     end
 
+    -- ── Result table ──────────────────────────────────────────────────────────
+    local function draw_result_row(r, row_id)
+        reaper.ImGui_TableNextRow(ctx)
+        reaper.ImGui_TableNextColumn(ctx)
+        reaper.ImGui_TextColored(ctx, type_color(r.type), r.type)
+        reaper.ImGui_TableNextColumn(ctx)
+        local sf = reaper.ImGui_SelectableFlags_SpanAllColumns()
+                 + reaper.ImGui_SelectableFlags_AllowDoubleClick()
+        if reaper.ImGui_Selectable(ctx, r.name .. "##ps_r" .. row_id, selected_result == row_id, sf) then
+            selected_result = row_id
+            if reaper.ImGui_IsMouseDoubleClicked(ctx, 0) then navigate_to_result(r) end
+        end
+        if reaper.ImGui_BeginPopupContextItem(ctx, "##ps_ctx_" .. row_id) then
+            if reaper.ImGui_MenuItem(ctx, "Open project") then navigate_to_result(r) end
+            if reaper.ImGui_MenuItem(ctx, "Open project in new tab") then
+                if r.projpath then
+                    reaper.Main_OnCommand(40859, 0)
+                    reaper.Main_openProject(r.projpath)
+                    if r.position and r.position > 0 then reaper.SetEditCurPos(r.position, true, false) end
+                end
+            end
+            if on_show_in_navigator then
+                if reaper.ImGui_MenuItem(ctx, "Find in Navigator") then
+                    navigate_to_result(r)
+                    on_show_in_navigator(r.name, r.position)
+                end
+            end
+            reaper.ImGui_Separator(ctx)
+            if reaper.ImGui_MenuItem(ctx, "Copy name") then
+                if reaper.CF_SetClipboard then reaper.CF_SetClipboard(r.name) end
+            end
+            if reaper.ImGui_MenuItem(ctx, "Copy project path") then
+                if reaper.CF_SetClipboard and r.projpath then reaper.CF_SetClipboard(r.projpath) end
+            end
+            reaper.ImGui_EndPopup(ctx)
+        end
+        if reaper.ImGui_IsItemHovered(ctx) then
+            reaper.ImGui_BeginTooltip(ctx)
+            reaper.ImGui_Text(ctx, r.type .. ": " .. r.name)
+            if r.category and r.category ~= "" then
+                reaper.ImGui_TextColored(ctx, tcol("accent"), "Category: " .. r.category)
+            end
+            reaper.ImGui_Text(ctx, "Position: " .. format_time(r.position))
+            if r.length > 0 then reaper.ImGui_Text(ctx, "Length: " .. format_time(r.length)) end
+            if r.track ~= "" then reaper.ImGui_Text(ctx, "Track: " .. r.track) end
+            reaper.ImGui_Text(ctx, "Project: " .. r.project)
+            reaper.ImGui_Separator(ctx)
+            reaper.ImGui_TextColored(ctx, tcol("hint_text"), "Double-click to open  |  Right-click for options")
+            reaper.ImGui_EndTooltip(ctx)
+        end
+        reaper.ImGui_TableNextColumn(ctx)
+        -- Category column
+        if r.category and r.category ~= "" then
+            reaper.ImGui_TextColored(ctx, tcol("accent"), r.category)
+        else
+            reaper.ImGui_TextColored(ctx, tcol("hint_text"), "—")
+        end
+        reaper.ImGui_TableNextColumn(ctx)
+        if r.type ~= "Track" then reaper.ImGui_Text(ctx, format_time(r.position))
+        else reaper.ImGui_TextColored(ctx, tcol("hint_text"), "--") end
+        reaper.ImGui_TableNextColumn(ctx); reaper.ImGui_Text(ctx, r.track)
+        if not group_by_project then
+            reaper.ImGui_TableNextColumn(ctx); reaper.ImGui_Text(ctx, r.project)
+        end
+    end
+
     local tflags = reaper.ImGui_TableFlags_Borders() + reaper.ImGui_TableFlags_RowBg()
                  + reaper.ImGui_TableFlags_Resizable() + reaper.ImGui_TableFlags_ScrollY()
                  + reaper.ImGui_TableFlags_SizingStretchProp() + reaper.ImGui_TableFlags_Sortable()
     local avail_h = reaper.ImGui_GetContentRegionAvail(ctx)
-    if reaper.ImGui_BeginTable(ctx, "ps_results", 5, tflags, 0, avail_h - 4) then
+
+    local num_cols = group_by_project and 5 or 6
+
+    if reaper.ImGui_BeginTable(ctx, "ps_results", num_cols, tflags, 0, avail_h - 4) then
         reaper.ImGui_TableSetupColumn(ctx, "Type",     reaper.ImGui_TableColumnFlags_WidthFixed(),   60)
         reaper.ImGui_TableSetupColumn(ctx, "Name",     reaper.ImGui_TableColumnFlags_WidthStretch(), 0)
-        reaper.ImGui_TableSetupColumn(ctx, "Position", reaper.ImGui_TableColumnFlags_WidthFixed(),  90)
-        reaper.ImGui_TableSetupColumn(ctx, "Track",    reaper.ImGui_TableColumnFlags_WidthFixed(), 120)
-        reaper.ImGui_TableSetupColumn(ctx, "Project",  reaper.ImGui_TableColumnFlags_WidthFixed(), 180)
+        reaper.ImGui_TableSetupColumn(ctx, "Category", reaper.ImGui_TableColumnFlags_WidthFixed(),  140)
+        reaper.ImGui_TableSetupColumn(ctx, "Position", reaper.ImGui_TableColumnFlags_WidthFixed(),   90)
+        reaper.ImGui_TableSetupColumn(ctx, "Track",    reaper.ImGui_TableColumnFlags_WidthFixed(),  120)
+        if not group_by_project then
+            reaper.ImGui_TableSetupColumn(ctx, "Project", reaper.ImGui_TableColumnFlags_WidthFixed(), 180)
+        end
         reaper.ImGui_TableSetupScrollFreeze(ctx, 0, 1)
         reaper.ImGui_TableHeadersRow(ctx)
         if reaper.ImGui_TableNeedSort and reaper.ImGui_TableGetColumnSortSpecs then
@@ -838,63 +1080,54 @@ local function draw_search(ctx)
                 end
             end
         end
-        local MAX_VIS = 5000
-        local disp = math.min(#filtered_results, MAX_VIS)
-        for i = 1, disp do
-            local r = filtered_results[i]
-            reaper.ImGui_TableNextRow(ctx)
-            reaper.ImGui_TableNextColumn(ctx)
-            reaper.ImGui_TextColored(ctx, type_color(r.type), r.type)
-            reaper.ImGui_TableNextColumn(ctx)
-            local sf = reaper.ImGui_SelectableFlags_SpanAllColumns()
-                     + reaper.ImGui_SelectableFlags_AllowDoubleClick()
-            if reaper.ImGui_Selectable(ctx, r.name .. "##ps_r" .. i, selected_result == i, sf) then
-                selected_result = i
-                if reaper.ImGui_IsMouseDoubleClicked(ctx, 0) then navigate_to_result(r) end
+
+        local MAX_VIS = 10000
+        if group_by_project then
+            -- Group results by project, show a spanning header per project
+            local order = {}
+            local groups = {}
+            for _, r in ipairs(filtered_results) do
+                local p = r.project
+                if not groups[p] then groups[p] = {}; order[#order + 1] = p end
+                groups[p][#groups[p] + 1] = r
             end
-            if reaper.ImGui_BeginPopupContextItem(ctx, "##ps_ctx_" .. i) then
-                if reaper.ImGui_MenuItem(ctx, "Open project") then
-                    navigate_to_result(r)
+            local row_id = 0
+            local shown  = 0
+            for _, proj in ipairs(order) do
+                if shown >= MAX_VIS then break end
+                local rows = groups[proj]
+                local is_collapsed = collapsed_projects[proj]
+                reaper.ImGui_TableNextRow(ctx, reaper.ImGui_TableRowFlags_Headers())
+                reaper.ImGui_TableNextColumn(ctx)
+                local arrow = is_collapsed and "\xe2\x96\xb6 " or "\xe2\x96\xbc "
+                if reaper.ImGui_Selectable(ctx, arrow .. proj .. "  (" .. #rows .. ")##ps_grp_" .. proj,
+                        false, reaper.ImGui_SelectableFlags_SpanAllColumns()) then
+                    collapsed_projects[proj] = not is_collapsed
                 end
-                if reaper.ImGui_MenuItem(ctx, "Open project in new tab") then
-                    if r.projpath then
-                        reaper.Main_OnCommand(40859, 0)  -- New project tab
-                        reaper.Main_openProject(r.projpath)
-                        if r.position and r.position > 0 then
-                            reaper.SetEditCurPos(r.position, true, false)
-                        end
+                for _ = 2, num_cols do reaper.ImGui_TableNextColumn(ctx) end
+                if not is_collapsed then
+                    for _, r in ipairs(rows) do
+                        if shown >= MAX_VIS then break end
+                        row_id = row_id + 1; shown = shown + 1
+                        draw_result_row(r, row_id)
                     end
                 end
-                reaper.ImGui_Separator(ctx)
-                if reaper.ImGui_MenuItem(ctx, "Copy name") then
-                    if reaper.CF_SetClipboard then reaper.CF_SetClipboard(r.name) end
-                end
-                if reaper.ImGui_MenuItem(ctx, "Copy project path") then
-                    if reaper.CF_SetClipboard and r.projpath then reaper.CF_SetClipboard(r.projpath) end
-                end
-                reaper.ImGui_EndPopup(ctx)
             end
-            if reaper.ImGui_IsItemHovered(ctx) then
-                reaper.ImGui_BeginTooltip(ctx)
-                reaper.ImGui_Text(ctx, r.type .. ": " .. r.name)
-                reaper.ImGui_Text(ctx, "Position: " .. format_time(r.position))
-                if r.length > 0 then reaper.ImGui_Text(ctx, "Length: " .. format_time(r.length)) end
-                if r.track ~= "" then reaper.ImGui_Text(ctx, "Track: " .. r.track) end
-                reaper.ImGui_Text(ctx, "Project: " .. r.project)
-                reaper.ImGui_Separator(ctx)
-                reaper.ImGui_TextColored(ctx, tcol("hint_text"), "Double-click to open  |  Right-click for options")
-                reaper.ImGui_EndTooltip(ctx)
+            if #filtered_results > MAX_VIS then
+                reaper.ImGui_TableNextRow(ctx); reaper.ImGui_TableNextColumn(ctx)
+                reaper.ImGui_TextColored(ctx, tcol("hint_text"),
+                    string.format("... and %d more (narrow your search)", #filtered_results - MAX_VIS))
             end
-            reaper.ImGui_TableNextColumn(ctx)
-            if r.type ~= "Track" then reaper.ImGui_Text(ctx, format_time(r.position))
-            else reaper.ImGui_TextColored(ctx, tcol("hint_text"), "--") end
-            reaper.ImGui_TableNextColumn(ctx); reaper.ImGui_Text(ctx, r.track)
-            reaper.ImGui_TableNextColumn(ctx); reaper.ImGui_Text(ctx, r.project)
-        end
-        if #filtered_results > MAX_VIS then
-            reaper.ImGui_TableNextRow(ctx); reaper.ImGui_TableNextColumn(ctx)
-            reaper.ImGui_TextColored(ctx, tcol("hint_text"),
-                string.format("... and %d more (narrow your search)", #filtered_results - MAX_VIS))
+        else
+            local n = math.min(#filtered_results, MAX_VIS)
+            for i = 1, n do
+                draw_result_row(filtered_results[i], i)
+            end
+            if #filtered_results > MAX_VIS then
+                reaper.ImGui_TableNextRow(ctx); reaper.ImGui_TableNextColumn(ctx)
+                reaper.ImGui_TextColored(ctx, tcol("hint_text"),
+                    string.format("... and %d more (narrow your search)", #filtered_results - MAX_VIS))
+            end
         end
         reaper.ImGui_EndTable(ctx)
     end
@@ -1166,7 +1399,7 @@ end
 local ps_first_frame = true
 
 local function draw_full(ctx)
-    if is_scanning then scan_step() end
+    -- scan_step is driven by tick(), not here — avoids double-stepping per frame
     if reaper.ImGui_BeginTabBar(ctx, "ps_tabs", 0) then
         local sf = 0
         if ps_first_frame then sf = reaper.ImGui_TabItemFlags_SetSelected(); ps_first_frame = false end
@@ -1191,6 +1424,7 @@ local function init(deps)
     if deps.rgba  then rgba  = deps.rgba end
     if deps.tcol  then tcol  = deps.tcol end
     if deps.THEME then THEME = deps.THEME end
+    if deps.on_show_in_navigator then on_show_in_navigator = deps.on_show_in_navigator end  -- also settable via set_navigator_callback()
     if not THEME then THEME = THEME_FALLBACK end
     for k, v in pairs(THEME_FALLBACK) do
         if not THEME[k] then THEME[k] = v end
@@ -1205,14 +1439,19 @@ local function init(deps)
     end
 end
 
+local function set_navigator_callback(fn)
+    on_show_in_navigator = fn
+end
+
 -- ── Module export ────────────────────────────────────────────────────────────
 
 return {
-    init             = init,
-    tick             = tick,
-    draw_setup       = draw_setup,
-    draw_search      = draw_search,
-    draw_find_replace = draw_find_replace,
-    draw_help        = draw_help,
-    draw_full        = draw_full,
+    init                   = init,
+    tick                   = tick,
+    draw_setup             = draw_setup,
+    draw_search            = draw_search,
+    draw_find_replace      = draw_find_replace,
+    draw_help              = draw_help,
+    draw_full              = draw_full,
+    set_navigator_callback = set_navigator_callback,
 }
