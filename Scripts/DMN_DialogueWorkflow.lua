@@ -355,7 +355,7 @@ end
 -- CONSTANTS
 -- ============================================================================
 
-local MAX_COLUMNS = 10
+local MAX_COLUMNS = 30
 local ROW_HEIGHT = 26
 local TAB_HEIGHT = 26
 local TAB_BAR_Y = 44
@@ -2095,6 +2095,187 @@ Write-Output 'DONE'
     if next(map) then return map, nil end
     if out:match("ERR|") then return nil, out end
     return nil, "No entries returned from Notion"
+end
+
+-- Export a Notion database (optionally filtered and sorted) to a CSV file in the same
+-- layout as Notion's own "Export → CSV": one column per property, title first, UTF-8 with BOM.
+-- filter_opts is a list; rows matching any of them are kept (Status or Select property).
+-- Runs PowerShell in the background. Returns response_path, or nil, err. Poll with notionExportCsvPoll.
+function notionExportCsvAsync(notion_token, db_id, filter_prop, filter_opts, sort_prop, out_path)
+    notion_token = trimWS(notion_token or "")
+    db_id = trimWS(db_id or "")
+    if notion_token == "" then return nil, "Paste your Notion token first (Edit tab → Notion)." end
+    if not isValidNotionId(db_id) then return nil, "No valid Notion database selected." end
+    if not (reaper.GetOS() or ""):match("Win") then return nil, "Requires Windows (PowerShell)." end
+
+    local tmp_dir = joinPath(reaper.GetResourcePath(), "Scripts", "DMN_Temp")
+    ensureDir(tmp_dir)
+    local req_path = joinPath(tmp_dir, "DMN_NotionExportRequest.txt")
+    local res_path = joinPath(tmp_dir, "DMN_NotionExportResponse.txt")
+    local script_path = joinPath(tmp_dir, "DMN_NotionExport.ps1")
+
+    -- Option names never contain "|" in practice; it is also the preset-list separator elsewhere.
+    local req = table.concat({
+        notion_token, db_id, NOTION_API_VERSION,
+        trimWS(filter_prop or ""), table.concat(filter_opts or {}, "|"),
+        trimWS(sort_prop or ""), out_path,
+    }, "\n")
+    if not writeAll(req_path, req) then return nil, "Could not write request file" end
+    pcall(os.remove, res_path)
+
+    local ps_script = [==[
+param($ReqPath, $ResPath)
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+$utf8 = New-Object System.Text.UTF8Encoding $false
+function Out-Status([string]$s) { [System.IO.File]::AppendAllText($ResPath, $s + "`n", $utf8) }
+function Csv-Cell([string]$s) {
+  if ($null -eq $s) { return '' }
+  if ($s -match '[",\r\n]') { return '"' + $s.Replace('"', '""') + '"' }
+  return $s
+}
+function Rich-Text($arr) {
+  if (-not $arr) { return '' }
+  return (@($arr | ForEach-Object { [string]$_.plain_text }) -join '')
+}
+function Date-Text($d) {
+  if (-not $d -or -not $d.start) { return '' }
+  if ($d.end) { return ([string]$d.start + ' -> ' + [string]$d.end) }
+  return [string]$d.start
+}
+function Num-Text($n) {
+  if ($null -eq $n) { return '' }
+  return ([double]$n).ToString([System.Globalization.CultureInfo]::InvariantCulture)
+}
+function Prop-Text($p) {
+  if (-not $p) { return '' }
+  switch ([string]$p.type) {
+    'title'            { return Rich-Text $p.title }
+    'rich_text'        { return Rich-Text $p.rich_text }
+    'number'           { return Num-Text $p.number }
+    'select'           { if ($p.select) { return [string]$p.select.name }; return '' }
+    'status'           { if ($p.status) { return [string]$p.status.name }; return '' }
+    'multi_select'     { return (@($p.multi_select | ForEach-Object { [string]$_.name }) -join ', ') }
+    'date'             { return Date-Text $p.date }
+    'checkbox'         { if ($p.checkbox) { return 'Yes' }; return 'No' }
+    'url'              { return [string]$p.url }
+    'email'            { return [string]$p.email }
+    'phone_number'     { return [string]$p.phone_number }
+    'created_time'     { return [string]$p.created_time }
+    'last_edited_time' { return [string]$p.last_edited_time }
+    'people'           { return (@($p.people | ForEach-Object { [string]$_.name }) -join ', ') }
+    'files'            { return (@($p.files | ForEach-Object { [string]$_.name }) -join ', ') }
+    'unique_id'        {
+      if (-not $p.unique_id -or $null -eq $p.unique_id.number) { return '' }
+      if ($p.unique_id.prefix) { return ([string]$p.unique_id.prefix + '-' + [string]$p.unique_id.number) }
+      return [string]$p.unique_id.number
+    }
+    'formula' {
+      $f = $p.formula; if (-not $f) { return '' }
+      switch ([string]$f.type) {
+        'string'  { return [string]$f.string }
+        'number'  { return Num-Text $f.number }
+        'boolean' { if ($f.boolean) { return 'Yes' }; return 'No' }
+        'date'    { return Date-Text $f.date }
+      }
+      return ''
+    }
+    'rollup' {
+      $r = $p.rollup; if (-not $r) { return '' }
+      switch ([string]$r.type) {
+        'number' { return Num-Text $r.number }
+        'date'   { return Date-Text $r.date }
+        'array'  { return (@($r.array | ForEach-Object { Prop-Text $_ }) -join ', ') }
+      }
+      return ''
+    }
+  }
+  # relation, button, verification etc. have no text value in the API
+  return ''
+}
+function Post-Json($uri, $headers, $obj) {
+  # Windows PowerShell sends string bodies as Latin-1; send UTF-8 bytes so non-ASCII option names survive.
+  $bytes = [System.Text.Encoding]::UTF8.GetBytes(($obj | ConvertTo-Json -Compress -Depth 10))
+  return Invoke-RestMethod -Method Post -Uri $uri -Headers $headers -Body $bytes -ContentType 'application/json; charset=utf-8'
+}
+try {
+  $lines = @(Get-Content -Path $ReqPath -Encoding UTF8 -ErrorAction Stop)
+  $token = $lines[0].Trim(); $dbId = $lines[1].Trim(); $ver = $lines[2].Trim()
+  $filterProp = $lines[3].Trim()
+  $filterOpts = @($lines[4].Split('|') | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne '' })
+  $sortProp = $lines[5].Trim()
+  $outPath = $lines[6].Trim()
+  $h = @{ Authorization = "Bearer $token"; 'Notion-Version' = $ver }
+
+  $db = Invoke-RestMethod -Method Get -Uri ("https://api.notion.com/v1/databases/" + $dbId) -Headers $h
+  $dsid = $db.data_sources[0].id
+  $ds = Invoke-RestMethod -Method Get -Uri ("https://api.notion.com/v1/data_sources/" + $dsid) -Headers $h
+
+  $cols = @(); $titleCol = $null; $types = @{}
+  foreach ($kv in $ds.properties.PSObject.Properties) {
+    $types[$kv.Name] = [string]$kv.Value.type
+    if ($kv.Value.type -eq 'title') { $titleCol = $kv.Name } else { $cols += $kv.Name }
+  }
+  if ($titleCol) { $cols = @($titleCol) + $cols }
+
+  $sorts = @()
+  if ($sortProp -ne '') {
+    if (-not $types.ContainsKey($sortProp)) { throw "Sort property '$sortProp' is not on this database." }
+    $sorts += @{ property = $sortProp; direction = 'ascending' }
+  }
+  $sorts += @{ timestamp = 'created_time'; direction = 'ascending' }
+  $body = @{ page_size = 100; sorts = $sorts }
+
+  if ($filterProp -ne '' -and $filterOpts.Count -gt 0) {
+    $ft = $types[$filterProp]
+    if (-not $ft) { throw "Filter property '$filterProp' is not on this database." }
+    if ($ft -ne 'status' -and $ft -ne 'select') { throw "Filter property '$filterProp' is a $ft property; only Status and Select can be filtered." }
+    $conds = @($filterOpts | ForEach-Object { @{ property = $filterProp; $ft = @{ equals = $_ } } })
+    if ($conds.Count -eq 1) { $body.filter = $conds[0] } else { $body.filter = @{ or = $conds } }
+  }
+
+  $sb = New-Object System.Text.StringBuilder
+  [void]$sb.Append((@($cols | ForEach-Object { Csv-Cell $_ }) -join ',') + "`r`n")
+  $uri = "https://api.notion.com/v1/data_sources/$dsid/query"
+  $rows = 0
+  do {
+    $resp = Post-Json $uri $h $body
+    foreach ($page in $resp.results) {
+      $props = $page.properties
+      $cells = foreach ($c in $cols) { Csv-Cell (Prop-Text $props.$c) }
+      [void]$sb.Append((@($cells) -join ',') + "`r`n")
+      $rows++
+    }
+    Out-Status ('ROWS|' + $rows)
+    $body.start_cursor = $resp.next_cursor
+  } while ($resp.has_more -and $resp.next_cursor)
+
+  [System.IO.File]::WriteAllText($outPath, $sb.ToString(), (New-Object System.Text.UTF8Encoding $true))
+  Out-Status ('DONE|' + $rows)
+} catch {
+  $msg = $_.Exception.Message
+  try { $r = $_.ErrorDetails.Message | ConvertFrom-Json; if ($r.message) { $msg = $r.message } } catch {}
+  Out-Status ('ERR|' + $msg)
+}
+]==]
+    if not writeAll(script_path, ps_script) then return nil, "Could not write script file" end
+    local cmd = 'start /B powershell -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "' .. script_path:gsub('"', '\\"') .. '" "' .. req_path:gsub('"', '\\"') .. '" "' .. res_path:gsub('"', '\\"') .. '"'
+    os.execute(cmd)
+    return res_path
+end
+
+-- Poll notionExportCsvAsync. Returns: rows, nil when done; nil, "pending", rows_so_far while running; nil, err on error.
+function notionExportCsvPoll(response_path)
+    local f = io.open(response_path, "r")
+    if not f then return nil, "pending", 0 end
+    local content = f:read("*all") or ""
+    f:close()
+    local err = content:match("ERR|([^\n]*)")
+    if err then return nil, trimWS(err) end
+    local done = content:match("DONE|(%d+)")
+    if done then return tonumber(done), nil end
+    local so_far = 0
+    for n in content:gmatch("ROWS|(%d+)") do so_far = tonumber(n) end
+    return nil, "pending", so_far
 end
 
 -- Simple function to write text to "ReaperSession" property
@@ -7640,6 +7821,11 @@ function draw_import_tab(ctx)
         if _bi_fn and reaper.ImGui_Button(ctx, "Open local CSV file...##browse_import", _bi_w, 0) then
             pcall(_bi_fn)
         end
+        reaper.ImGui_Spacing(ctx)
+        if reaper.ImGui_TreeNode(ctx, "From Notion##ni_tree") then
+            draw_notion_import_section(ctx)
+            reaper.ImGui_TreePop(ctx)
+        end
     end
     if reaper.ImGui_SetNextItemOpen and reaper.ImGui_Cond_Once then
         reaper.ImGui_SetNextItemOpen(ctx, true, reaper.ImGui_Cond_Once())
@@ -7905,6 +8091,222 @@ local function dmn_job_progress_bar(ctx, job, w)
         overlay = (done > 0) and string.format("%s  (%d so far)", label, done) or (label .. "...")
     end
     reaper.ImGui_ProgressBar(ctx, frac, w or reaper.ImGui_GetContentRegionAvail(ctx), 0, overlay)
+end
+
+-- ── Import tab → From Notion ──────────────────────────────────────────────────
+-- Replaces exporting a filtered view from Notion by hand: fetches the active database
+-- preset through the API, writes a dated snapshot CSV and points the CSV source at it.
+-- Filter, sort and file name are stored per database preset; the folder is shared.
+
+local _ni = { preset = nil, status = "" }
+
+function _ni.key(k)
+    return "notion_import__" .. getActiveNotionDbName() .. "__" .. k
+end
+
+function _ni.get(k)
+    return reaper.GetExtState(EXTSTATE_SECTION, _ni.key(k)) or ""
+end
+
+function _ni.set(k, v)
+    reaper.SetExtState(EXTSTATE_SECTION, _ni.key(k), v or "", true)
+end
+
+function _ni.loadForPreset()
+    _ni.preset = getActiveNotionDbName()
+    _ni.filter_prop = _ni.get("filter_prop")
+    _ni.filter_opts = {}
+    for o in _ni.get("filter_opts"):gmatch("[^|]+") do _ni.filter_opts[#_ni.filter_opts + 1] = o end
+    _ni.sort_prop = _ni.get("sort_prop")
+    _ni.file_name = _ni.get("file_name")
+    _ni.folder = reaper.GetExtState(EXTSTATE_SECTION, "notion_import_folder") or ""
+end
+
+function _ni.token()
+    local tok = UIM["txt_edit_notion_token"]
+    if not tok or tok == "" then tok = reaper.GetExtState(EXTSTATE_SECTION, "notion_token") or "" end
+    return trimWS(tok)
+end
+
+-- <folder>\<name>_DDMM-YYYY.csv; a second fetch on the same day gets _B, _C, ...
+function _ni.snapshotPath()
+    local base = joinPath(_ni.folder, trimWS(_ni.file_name) .. "_" .. os.date("%d%m-%Y"))
+    local path = base .. ".csv"
+    local suffix = 66 -- "B"
+    while reaper.file_exists(path) and suffix <= 90 do
+        path = base .. "_" .. string.char(suffix) .. ".csv"
+        suffix = suffix + 1
+    end
+    return path
+end
+
+function _ni.statusSchema()
+    local db_id = getActiveNotionDbId()
+    local schema = NOTION_STATUS_SCHEMA_BY_DB[db_id]
+    if schema and schema.prop_list and #schema.prop_list > 0 then return schema end
+    local tok = _ni.token()
+    if tok == "" then return nil, "Paste your Notion token first (Edit tab → Notion)." end
+    if not isValidNotionId(db_id) then return nil, "No valid Notion database selected." end
+    return notionFetchStatusSchema(tok, db_id)
+end
+
+function _ni.startFetch(auto_import)
+    if _G.DMN_NOTION_IMPORT_JOB and _G.DMN_NOTION_IMPORT_JOB.running then return end
+    if trimWS(_ni.folder) == "" or trimWS(_ni.file_name) == "" then
+        reaper.ShowMessageBox("Set a folder and a file name first.", "Fetch from Notion", 0)
+        return
+    end
+    ensureDir(_ni.folder)
+    local out_path = _ni.snapshotPath()
+    local opts = (_ni.filter_prop ~= "") and _ni.filter_opts or {}
+    local res_path, err = notionExportCsvAsync(_ni.token(), getActiveNotionDbId(), _ni.filter_prop, opts, _ni.sort_prop, out_path)
+    if not res_path then
+        _ni.status = "Error: " .. tostring(err)
+        return
+    end
+    local job = { running = true, progress_label = "Fetching from Notion", progress_done = 0 }
+    _G.DMN_NOTION_IMPORT_JOB = job
+    _ni.status = ""
+    local function step()
+        local rows, poll_err, so_far = notionExportCsvPoll(res_path)
+        if poll_err == "pending" then
+            job.progress_done = tonumber(so_far) or 0
+            reaper.defer(step)
+            return
+        end
+        job.running = false
+        _G.DMN_NOTION_IMPORT_JOB = nil
+        if not rows then
+            _ni.status = "Error: " .. tostring(poll_err)
+            return
+        end
+        UIM["txt_url"] = out_path
+        _ni.status = string.format("%d rows → %s", rows, out_path:match("[^\\/]+$") or out_path)
+        if auto_import then run_btn("btn_import") end
+    end
+    reaper.defer(step)
+end
+
+function _ni.inputText(ctx, id, field, extstate_key, width)
+    reaper.ImGui_SetNextItemWidth(ctx, width or -1)
+    local rv, nv = reaper.ImGui_InputText(ctx, id, _ni[field] or "", 0)
+    if rv then _ni[field] = nv end
+    if reaper.ImGui_IsItemDeactivatedAfterEdit(ctx) then
+        if extstate_key then
+            reaper.SetExtState(EXTSTATE_SECTION, extstate_key, _ni[field], true)
+        else
+            _ni.set(field, _ni[field])
+        end
+    end
+end
+
+function _ni.label(ctx, text)
+    reaper.ImGui_AlignTextToFramePadding(ctx)
+    reaper.ImGui_Text(ctx, text)
+    reaper.ImGui_SameLine(ctx, 80)
+end
+
+function draw_notion_import_section(ctx)
+    if _ni.preset ~= getActiveNotionDbName() then _ni.loadForPreset() end
+
+    _ni.label(ctx, "Database")
+    local preset = getActiveNotionDbName()
+    reaper.ImGui_Text(ctx, preset ~= "" and preset or "(none)")
+    reaper.ImGui_SameLine(ctx)
+    if reaper.ImGui_SmallButton(ctx, "Change##ni_db") then run_btn("btn_edit_notion_preset_pick") end
+
+    -- Filter: one Status/Select property, any of the ticked options
+    _ni.label(ctx, "Filter")
+    local fdesc = "(none: all rows)"
+    if _ni.filter_prop ~= "" then
+        fdesc = _ni.filter_prop .. " = " .. (#_ni.filter_opts > 0 and table.concat(_ni.filter_opts, " / ") or "(pick options)")
+    end
+    reaper.ImGui_TextColored(ctx, tcol("hint_text"), fdesc)
+    reaper.ImGui_SameLine(ctx)
+    if reaper.ImGui_SmallButton(ctx, "Property##ni_fprop") then
+        local schema, err = _ni.statusSchema()
+        if schema then reaper.ImGui_OpenPopup(ctx, "ni_fprop_popup")
+        else reaper.ShowMessageBox("Couldn't load properties:\n\n" .. tostring(err or ""), "Fetch from Notion", 0) end
+    end
+    if _ni.filter_prop ~= "" then
+        reaper.ImGui_SameLine(ctx)
+        if reaper.ImGui_SmallButton(ctx, "Options##ni_fopt") then
+            local schema, err = _ni.statusSchema()
+            if schema then reaper.ImGui_OpenPopup(ctx, "ni_fopt_popup")
+            else reaper.ShowMessageBox("Couldn't load options:\n\n" .. tostring(err or ""), "Fetch from Notion", 0) end
+        end
+    end
+    if reaper.ImGui_BeginPopup(ctx, "ni_fprop_popup") then
+        local schema = NOTION_STATUS_SCHEMA_BY_DB[getActiveNotionDbId()]
+        if reaper.ImGui_Selectable(ctx, "(no filter)", _ni.filter_prop == "") then
+            _ni.filter_prop = ""; _ni.filter_opts = {}
+            _ni.set("filter_prop", ""); _ni.set("filter_opts", "")
+        end
+        for _, name in ipairs((schema and schema.prop_list) or {}) do
+            if reaper.ImGui_Selectable(ctx, name, _ni.filter_prop == name) and _ni.filter_prop ~= name then
+                _ni.filter_prop = name; _ni.filter_opts = {}
+                _ni.set("filter_prop", name); _ni.set("filter_opts", "")
+            end
+        end
+        reaper.ImGui_EndPopup(ctx)
+    end
+    if reaper.ImGui_BeginPopup(ctx, "ni_fopt_popup") then
+        local schema = NOTION_STATUS_SCHEMA_BY_DB[getActiveNotionDbId()]
+        local prop = schema and schema.status_props[_ni.filter_prop]
+        local ticked = {}
+        for _, o in ipairs(_ni.filter_opts) do ticked[o] = true end
+        local changed = false
+        for _, opt in ipairs((prop and prop.options) or {}) do
+            local rv, nv = reaper.ImGui_Checkbox(ctx, opt .. "##ni_opt_" .. opt, ticked[opt] == true)
+            if rv then ticked[opt] = nv; changed = true end
+        end
+        if changed then
+            local list = {}
+            for _, opt in ipairs(prop.options) do if ticked[opt] then list[#list + 1] = opt end end
+            _ni.filter_opts = list
+            _ni.set("filter_opts", table.concat(list, "|"))
+        end
+        reaper.ImGui_EndPopup(ctx)
+    end
+
+    _ni.label(ctx, "Sort by")
+    _ni.inputText(ctx, "##ni_sort", "sort_prop", nil, 200)
+    reaper.ImGui_SameLine(ctx)
+    reaper.ImGui_TextColored(ctx, tcol("hint_text"), "property name, A→Z (empty = creation order)")
+
+    _ni.label(ctx, "File name")
+    _ni.inputText(ctx, "##ni_name", "file_name", nil, 200)
+    reaper.ImGui_SameLine(ctx)
+    reaper.ImGui_TextColored(ctx, tcol("hint_text"), "_" .. os.date("%d%m-%Y") .. ".csv")
+
+    _ni.label(ctx, "Folder")
+    local has_browse = reaper.JS_Dialog_BrowseForFolder ~= nil
+    _ni.inputText(ctx, "##ni_folder", "folder", "notion_import_folder", has_browse and -80 or -1)
+    if has_browse then
+        reaper.ImGui_SameLine(ctx)
+        if reaper.ImGui_Button(ctx, "Browse...##ni_folder_browse", -1) then
+            local rv, folder = reaper.JS_Dialog_BrowseForFolder("Folder for Notion CSV snapshots", _ni.folder)
+            if rv == 1 and folder and folder ~= "" then
+                _ni.folder = folder
+                reaper.SetExtState(EXTSTATE_SECTION, "notion_import_folder", folder, true)
+            end
+        end
+    end
+
+    reaper.ImGui_Spacing(ctx)
+    local job = _G.DMN_NOTION_IMPORT_JOB
+    if job and job.running then
+        dmn_job_progress_bar(ctx, job)
+    else
+        local w = (reaper.ImGui_GetContentRegionAvail(ctx) - 8) * 0.5
+        if reaper.ImGui_Button(ctx, "Fetch##ni_fetch", w, 0) then _ni.startFetch(false) end
+        reaper.ImGui_SameLine(ctx)
+        if reaper.ImGui_Button(ctx, "Fetch and Import##ni_fetch_import", w, 0) then _ni.startFetch(true) end
+    end
+    if _ni.status ~= "" then
+        local col = _ni.status:match("^Error") and rgba(1, 0.5, 0.2, 1) or tcol("hint_text")
+        reaper.ImGui_TextColored(ctx, col, _ni.status)
+    end
 end
 
 -- State for ImGui Edit → Utilities section
