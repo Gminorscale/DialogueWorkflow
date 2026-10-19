@@ -2097,187 +2097,6 @@ Write-Output 'DONE'
     return nil, "No entries returned from Notion"
 end
 
--- Export a Notion database (optionally filtered and sorted) to a CSV file in the same
--- layout as Notion's own "Export → CSV": one column per property, title first, UTF-8 with BOM.
--- filter_opts is a list; rows matching any of them are kept (Status or Select property).
--- Runs PowerShell in the background. Returns response_path, or nil, err. Poll with notionExportCsvPoll.
-function notionExportCsvAsync(notion_token, db_id, filter_prop, filter_opts, sort_prop, out_path)
-    notion_token = trimWS(notion_token or "")
-    db_id = trimWS(db_id or "")
-    if notion_token == "" then return nil, "Paste your Notion token first (Edit tab → Notion)." end
-    if not isValidNotionId(db_id) then return nil, "No valid Notion database selected." end
-    if not (reaper.GetOS() or ""):match("Win") then return nil, "Requires Windows (PowerShell)." end
-
-    local tmp_dir = joinPath(reaper.GetResourcePath(), "Scripts", "DMN_Temp")
-    ensureDir(tmp_dir)
-    local req_path = joinPath(tmp_dir, "DMN_NotionExportRequest.txt")
-    local res_path = joinPath(tmp_dir, "DMN_NotionExportResponse.txt")
-    local script_path = joinPath(tmp_dir, "DMN_NotionExport.ps1")
-
-    -- Option names never contain "|" in practice; it is also the preset-list separator elsewhere.
-    local req = table.concat({
-        notion_token, db_id, NOTION_API_VERSION,
-        trimWS(filter_prop or ""), table.concat(filter_opts or {}, "|"),
-        trimWS(sort_prop or ""), out_path,
-    }, "\n")
-    if not writeAll(req_path, req) then return nil, "Could not write request file" end
-    pcall(os.remove, res_path)
-
-    local ps_script = [==[
-param($ReqPath, $ResPath)
-[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-$utf8 = New-Object System.Text.UTF8Encoding $false
-function Out-Status([string]$s) { [System.IO.File]::AppendAllText($ResPath, $s + "`n", $utf8) }
-function Csv-Cell([string]$s) {
-  if ($null -eq $s) { return '' }
-  if ($s -match '[",\r\n]') { return '"' + $s.Replace('"', '""') + '"' }
-  return $s
-}
-function Rich-Text($arr) {
-  if (-not $arr) { return '' }
-  return (@($arr | ForEach-Object { [string]$_.plain_text }) -join '')
-}
-function Date-Text($d) {
-  if (-not $d -or -not $d.start) { return '' }
-  if ($d.end) { return ([string]$d.start + ' -> ' + [string]$d.end) }
-  return [string]$d.start
-}
-function Num-Text($n) {
-  if ($null -eq $n) { return '' }
-  return ([double]$n).ToString([System.Globalization.CultureInfo]::InvariantCulture)
-}
-function Prop-Text($p) {
-  if (-not $p) { return '' }
-  switch ([string]$p.type) {
-    'title'            { return Rich-Text $p.title }
-    'rich_text'        { return Rich-Text $p.rich_text }
-    'number'           { return Num-Text $p.number }
-    'select'           { if ($p.select) { return [string]$p.select.name }; return '' }
-    'status'           { if ($p.status) { return [string]$p.status.name }; return '' }
-    'multi_select'     { return (@($p.multi_select | ForEach-Object { [string]$_.name }) -join ', ') }
-    'date'             { return Date-Text $p.date }
-    'checkbox'         { if ($p.checkbox) { return 'Yes' }; return 'No' }
-    'url'              { return [string]$p.url }
-    'email'            { return [string]$p.email }
-    'phone_number'     { return [string]$p.phone_number }
-    'created_time'     { return [string]$p.created_time }
-    'last_edited_time' { return [string]$p.last_edited_time }
-    'people'           { return (@($p.people | ForEach-Object { [string]$_.name }) -join ', ') }
-    'files'            { return (@($p.files | ForEach-Object { [string]$_.name }) -join ', ') }
-    'unique_id'        {
-      if (-not $p.unique_id -or $null -eq $p.unique_id.number) { return '' }
-      if ($p.unique_id.prefix) { return ([string]$p.unique_id.prefix + '-' + [string]$p.unique_id.number) }
-      return [string]$p.unique_id.number
-    }
-    'formula' {
-      $f = $p.formula; if (-not $f) { return '' }
-      switch ([string]$f.type) {
-        'string'  { return [string]$f.string }
-        'number'  { return Num-Text $f.number }
-        'boolean' { if ($f.boolean) { return 'Yes' }; return 'No' }
-        'date'    { return Date-Text $f.date }
-      }
-      return ''
-    }
-    'rollup' {
-      $r = $p.rollup; if (-not $r) { return '' }
-      switch ([string]$r.type) {
-        'number' { return Num-Text $r.number }
-        'date'   { return Date-Text $r.date }
-        'array'  { return (@($r.array | ForEach-Object { Prop-Text $_ }) -join ', ') }
-      }
-      return ''
-    }
-  }
-  # relation, button, verification etc. have no text value in the API
-  return ''
-}
-function Post-Json($uri, $headers, $obj) {
-  # Windows PowerShell sends string bodies as Latin-1; send UTF-8 bytes so non-ASCII option names survive.
-  $bytes = [System.Text.Encoding]::UTF8.GetBytes(($obj | ConvertTo-Json -Compress -Depth 10))
-  return Invoke-RestMethod -Method Post -Uri $uri -Headers $headers -Body $bytes -ContentType 'application/json; charset=utf-8'
-}
-try {
-  $lines = @(Get-Content -Path $ReqPath -Encoding UTF8 -ErrorAction Stop)
-  $token = $lines[0].Trim(); $dbId = $lines[1].Trim(); $ver = $lines[2].Trim()
-  $filterProp = $lines[3].Trim()
-  $filterOpts = @($lines[4].Split('|') | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne '' })
-  $sortProp = $lines[5].Trim()
-  $outPath = $lines[6].Trim()
-  $h = @{ Authorization = "Bearer $token"; 'Notion-Version' = $ver }
-
-  $db = Invoke-RestMethod -Method Get -Uri ("https://api.notion.com/v1/databases/" + $dbId) -Headers $h
-  $dsid = $db.data_sources[0].id
-  $ds = Invoke-RestMethod -Method Get -Uri ("https://api.notion.com/v1/data_sources/" + $dsid) -Headers $h
-
-  $cols = @(); $titleCol = $null; $types = @{}
-  foreach ($kv in $ds.properties.PSObject.Properties) {
-    $types[$kv.Name] = [string]$kv.Value.type
-    if ($kv.Value.type -eq 'title') { $titleCol = $kv.Name } else { $cols += $kv.Name }
-  }
-  if ($titleCol) { $cols = @($titleCol) + $cols }
-
-  $sorts = @()
-  if ($sortProp -ne '') {
-    if (-not $types.ContainsKey($sortProp)) { throw "Sort property '$sortProp' is not on this database." }
-    $sorts += @{ property = $sortProp; direction = 'ascending' }
-  }
-  $sorts += @{ timestamp = 'created_time'; direction = 'ascending' }
-  $body = @{ page_size = 100; sorts = $sorts }
-
-  if ($filterProp -ne '' -and $filterOpts.Count -gt 0) {
-    $ft = $types[$filterProp]
-    if (-not $ft) { throw "Filter property '$filterProp' is not on this database." }
-    if ($ft -ne 'status' -and $ft -ne 'select') { throw "Filter property '$filterProp' is a $ft property; only Status and Select can be filtered." }
-    $conds = @($filterOpts | ForEach-Object { @{ property = $filterProp; $ft = @{ equals = $_ } } })
-    if ($conds.Count -eq 1) { $body.filter = $conds[0] } else { $body.filter = @{ or = $conds } }
-  }
-
-  $sb = New-Object System.Text.StringBuilder
-  [void]$sb.Append((@($cols | ForEach-Object { Csv-Cell $_ }) -join ',') + "`r`n")
-  $uri = "https://api.notion.com/v1/data_sources/$dsid/query"
-  $rows = 0
-  do {
-    $resp = Post-Json $uri $h $body
-    foreach ($page in $resp.results) {
-      $props = $page.properties
-      $cells = foreach ($c in $cols) { Csv-Cell (Prop-Text $props.$c) }
-      [void]$sb.Append((@($cells) -join ',') + "`r`n")
-      $rows++
-    }
-    Out-Status ('ROWS|' + $rows)
-    $body.start_cursor = $resp.next_cursor
-  } while ($resp.has_more -and $resp.next_cursor)
-
-  [System.IO.File]::WriteAllText($outPath, $sb.ToString(), (New-Object System.Text.UTF8Encoding $true))
-  Out-Status ('DONE|' + $rows)
-} catch {
-  $msg = $_.Exception.Message
-  try { $r = $_.ErrorDetails.Message | ConvertFrom-Json; if ($r.message) { $msg = $r.message } } catch {}
-  Out-Status ('ERR|' + $msg)
-}
-]==]
-    if not writeAll(script_path, ps_script) then return nil, "Could not write script file" end
-    local cmd = 'start /B powershell -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "' .. script_path:gsub('"', '\\"') .. '" "' .. req_path:gsub('"', '\\"') .. '" "' .. res_path:gsub('"', '\\"') .. '"'
-    os.execute(cmd)
-    return res_path
-end
-
--- Poll notionExportCsvAsync. Returns: rows, nil when done; nil, "pending", rows_so_far while running; nil, err on error.
-function notionExportCsvPoll(response_path)
-    local f = io.open(response_path, "r")
-    if not f then return nil, "pending", 0 end
-    local content = f:read("*all") or ""
-    f:close()
-    local err = content:match("ERR|([^\n]*)")
-    if err then return nil, trimWS(err) end
-    local done = content:match("DONE|(%d+)")
-    if done then return tonumber(done), nil end
-    local so_far = 0
-    for n in content:gmatch("ROWS|(%d+)") do so_far = tonumber(n) end
-    return nil, "pending", so_far
-end
-
 -- Simple function to write text to "ReaperSession" property
 -- Returns: success (bool), error message (string or nil)
 function notionSetReaperSessionByID(notion_token, id_num, text_value)
@@ -4306,9 +4125,11 @@ function doImport(csv_content, mappings, start_row, insert_at_cursor, auto_index
 
     -- [C] role always creates category regions; Tag R controls prefix
     if category_mapping then
-        if current_group ~= "" and current_group_start then
+        -- last_group, not current_group: trailing skipped rows (no entry text) still
+        -- update current_group, which would rename the final region after them.
+        if last_group ~= "" and current_group_start then
             table.insert(group_region_spans, {
-                group = current_group,
+                group = last_group,
                 start = current_group_start,
                 end_pos = current_pos - region_gap
             })
@@ -5143,6 +4964,7 @@ function loadPresetByName(preset_name)
     if active_rows > MAX_COLUMNS then active_rows = MAX_COLUMNS end
     
     updateRowVisibility()
+    NI_applyPresetSource(preset_name)
 end
 
 -- Load Preset button with dropdown menu
@@ -5248,6 +5070,7 @@ function saveImportPresetNamed(preset_name)
     -- travels with the preset; loading another preset must not inherit it.
     reaper.SetExtState("DMN_CSVImport_Presets", preset_name .. "__headers",
         reaper.GetExtState("DMN_GoogleSheetsToRegionsAndMarkers", HEADER_SNAPSHOT_KEY) or "", true)
+    reaper.SetExtState("DMN_CSVImport_Presets", preset_name .. "__notion", NI_presetSourceString(), true)
     local preset_list = reaper.GetExtState("DMN_CSVImport_Presets", "_preset_list") or ""
     if not preset_list:find(preset_name, 1, true) then
         if preset_list ~= "" then preset_list = preset_list .. "|" .. preset_name
@@ -5262,6 +5085,7 @@ function deleteImportPresetNamed(preset_name)
     if preset_name == "" then return false end
     reaper.DeleteExtState("DMN_CSVImport_Presets", preset_name, true)
     reaper.DeleteExtState("DMN_CSVImport_Presets", preset_name .. "__headers", true)
+    reaper.DeleteExtState("DMN_CSVImport_Presets", preset_name .. "__notion", true)
     local preset_list = reaper.GetExtState("DMN_CSVImport_Presets", "_preset_list") or ""
     local new_list = {}
     for name in preset_list:gmatch("([^|]+)") do
@@ -7928,6 +7752,7 @@ function draw_import_tab(ctx)
                     reaper.ImGui_PopStyleColor(ctx, 3)
                     reaper.ImGui_SameLine(ctx)
                     reaper.ImGui_Text(ctx, pname)
+                    if reaper.ImGui_IsItemHovered(ctx) then NI_drawPresetTooltip(ctx, pname) end
                 end
             end
         end
@@ -8094,32 +7919,118 @@ local function dmn_job_progress_bar(ctx, job, w)
 end
 
 -- ── Import tab → From Notion ──────────────────────────────────────────────────
--- Replaces exporting a filtered view from Notion by hand: fetches the active database
--- preset through the API, writes a dated snapshot CSV and points the CSV source at it.
--- Filter, sort and file name are stored per database preset; the folder is shared.
+-- Replaces exporting a filtered view from Notion by hand: queries the active database
+-- preset through the API with Notion-style filter and sort chips, writes a snapshot CSV
+-- in the same layout as Notion's "Export → CSV" and points the CSV source at it.
+-- The settings ("source") are saved with each Import preset; the folder is shared.
+--
+-- Everything lives in one table: the main chunk is close to Lua's 200-local limit.
 
-local _ni = { preset = nil, status = "" }
+local _ni = {
+    DEFAULT_FOLDER = "G:\\Shared drives\\Audio Drive\\Audio\\0_WorkFolder\\Reaper Sessions\\BXE\\Speak\\_DatabaseFiles",
+    DEFAULT_TEMPLATE = "$project_$speaker_$date",
+    FILTERABLE = { status = true, select = true, multi_select = true, checkbox = true },
+    UNSORTABLE = { button = true, relation = true, rollup = true, people = true, files = true, place = true },
+    -- Notion's dark-theme option backgrounds
+    COLORS = {
+        default = 0x373737FF, gray = 0x5A5A5AFF, brown = 0x603B2CFF, orange = 0x854C1DFF,
+        yellow = 0x89632AFF, green = 0x2B593FFF, blue = 0x28456CFF, purple = 0x492F64FF,
+        pink = 0x69314CFF, red = 0x6E3630FF,
+    },
+    state = nil,        -- { db, project, speaker, template, filters = { {prop, neg, opts} }, sorts = { {prop, desc} } }
+    schemas = {},       -- [db_id] = { props = {...}, by_name = {...} } | { loading = res_path } | { error = msg }
+    count = { sig = nil, value = nil, err = nil, job = nil },
+    last_change = 0,
+    status = "",
+    search = {},
+    pending_popup = nil,
+}
 
-function _ni.key(k)
-    return "notion_import__" .. getActiveNotionDbName() .. "__" .. k
+-- ── Serialization (ExtState values: one line, no "|" so it can't clash with list keys) ──
+
+function _ni.enc(s)
+    return (tostring(s or ""):gsub("[%%;,=|\r\n]", function(c) return string.format("%%%02X", c:byte()) end))
 end
 
-function _ni.get(k)
-    return reaper.GetExtState(EXTSTATE_SECTION, _ni.key(k)) or ""
+function _ni.dec(s)
+    return (tostring(s or ""):gsub("%%(%x%x)", function(h) return string.char(tonumber(h, 16)) end))
 end
 
-function _ni.set(k, v)
-    reaper.SetExtState(EXTSTATE_SECTION, _ni.key(k), v or "", true)
+function _ni.serialize(st)
+    local parts = {
+        "db=" .. _ni.enc(st.db), "project=" .. _ni.enc(st.project),
+        "speaker=" .. _ni.enc(st.speaker), "template=" .. _ni.enc(st.template),
+    }
+    for _, f in ipairs(st.filters) do
+        local fp = { _ni.enc(f.prop), f.neg and "1" or "0" }
+        for _, o in ipairs(f.opts) do fp[#fp + 1] = _ni.enc(o) end
+        parts[#parts + 1] = "f=" .. table.concat(fp, ",")
+    end
+    for _, s in ipairs(st.sorts) do
+        parts[#parts + 1] = "s=" .. _ni.enc(s.prop) .. "," .. (s.desc and "1" or "0")
+    end
+    return table.concat(parts, ";")
 end
 
-function _ni.loadForPreset()
-    _ni.preset = getActiveNotionDbName()
-    _ni.filter_prop = _ni.get("filter_prop")
-    _ni.filter_opts = {}
-    for o in _ni.get("filter_opts"):gmatch("[^|]+") do _ni.filter_opts[#_ni.filter_opts + 1] = o end
-    _ni.sort_prop = _ni.get("sort_prop")
-    _ni.file_name = _ni.get("file_name")
+function _ni.deserialize(str)
+    local st = { db = "", project = "", speaker = "", template = _ni.DEFAULT_TEMPLATE, filters = {}, sorts = {} }
+    for part in tostring(str or ""):gmatch("[^;]+") do
+        local k, v = part:match("^(%w+)=(.*)$")
+        if k == "f" then
+            local fields = {}
+            for x in (v .. ","):gmatch("([^,]*),") do fields[#fields + 1] = _ni.dec(x) end
+            local f = { prop = fields[1] or "", neg = fields[2] == "1", opts = {} }
+            for i = 3, #fields do if fields[i] ~= "" then f.opts[#f.opts + 1] = fields[i] end end
+            if f.prop ~= "" then st.filters[#st.filters + 1] = f end
+        elseif k == "s" then
+            local p, d = v:match("^([^,]*),?(%d?)$")
+            if p and p ~= "" then st.sorts[#st.sorts + 1] = { prop = _ni.dec(p), desc = d == "1" } end
+        elseif k then
+            st[k] = _ni.dec(v)
+        end
+    end
+    return st
+end
+
+function _ni.load()
+    local raw = reaper.GetExtState(EXTSTATE_SECTION, "notion_import_state") or ""
+    if raw ~= "" then
+        _ni.state = _ni.deserialize(raw)
+    else
+        -- Carry over the first version's per-database settings.
+        local db = getActiveNotionDbName()
+        local function old(k) return reaper.GetExtState(EXTSTATE_SECTION, "notion_import__" .. db .. "__" .. k) or "" end
+        local st = _ni.deserialize("")
+        st.db = db
+        local fp = old("filter_prop")
+        if fp ~= "" then
+            local f = { prop = fp, neg = false, opts = {} }
+            for o in old("filter_opts"):gmatch("[^|]+") do f.opts[#f.opts + 1] = o end
+            st.filters[1] = f
+        end
+        if old("sort_prop") ~= "" then st.sorts[1] = { prop = old("sort_prop"), desc = false } end
+        local p, s = old("file_name"):match("^([^_]+)_([^_]+)_?$")
+        st.project, st.speaker = p or "", s or ""
+        _ni.state = st
+    end
     _ni.folder = reaper.GetExtState(EXTSTATE_SECTION, "notion_import_folder") or ""
+    if _ni.folder == "" then _ni.folder = _ni.DEFAULT_FOLDER end
+end
+
+function _ni.changed()
+    reaper.SetExtState(EXTSTATE_SECTION, "notion_import_state", _ni.serialize(_ni.state), true)
+    _ni.last_change = reaper.time_precise()
+end
+
+-- Same side effects as picking a database in Edit → Notion, so the Edit-tab tools follow.
+function _ni.setDb(name)
+    if name == getActiveNotionDbName() then return end
+    setActiveNotionDbName(name)
+    GUI.Val("txt_edit_notion_db_id", getNotionDbPresetId(name))
+    if refreshNotionPresetLabel then pcall(refreshNotionPresetLabel) end
+    reaper.SetExtState(EXTSTATE_SECTION, "notion_cleanup_status_field", "", true)
+    reaper.SetExtState(EXTSTATE_SECTION, "notion_cleanup_target_option", "", true)
+    if refreshCleanupStatusLabels then pcall(refreshCleanupStatusLabels) end
 end
 
 function _ni.token()
@@ -8128,11 +8039,301 @@ function _ni.token()
     return trimWS(tok)
 end
 
--- <folder>\<name>_DDMM-YYYY.csv; a second fetch on the same day gets _B, _C, ...
+-- ── Background PowerShell jobs ────────────────────────────────────────────────
+
+function _ni.launch(tag, script, req_lines)
+    local tmp_dir = joinPath(reaper.GetResourcePath(), "Scripts", "DMN_Temp")
+    ensureDir(tmp_dir)
+    local nonce = tostring(math.floor(reaper.time_precise() * 1000)) .. tostring(math.random(1000, 9999))
+    local script_path = joinPath(tmp_dir, "DMN_NI_" .. tag .. ".ps1")
+    local req_path = joinPath(tmp_dir, "DMN_NI_" .. tag .. "_req.txt")
+    local res_path = joinPath(tmp_dir, "DMN_NI_" .. tag .. "_" .. nonce .. ".txt")
+    if not writeAll(script_path, script) then return nil, "Could not write script file" end
+    if not writeAll(req_path, table.concat(req_lines, "\n")) then return nil, "Could not write request file" end
+    os.execute('start /B powershell -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "'
+        .. script_path .. '" "' .. req_path .. '" "' .. res_path .. '"')
+    return res_path
+end
+
+-- Returns content once the job wrote DONE or ERR, else nil.
+function _ni.readFinished(res_path)
+    local f = io.open(res_path, "r")
+    if not f then return nil end
+    local content = f:read("*all") or ""
+    f:close()
+    if content:match("\nDONE") or content:match("^DONE") or content:match("ERR|") then
+        pcall(os.remove, res_path)
+        return content
+    end
+    return nil, content
+end
+
+_ni.PS_COMMON = [==[
+param($ReqPath, $ResPath)
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+$utf8 = New-Object System.Text.UTF8Encoding $false
+function Out-Status([string]$s) { [System.IO.File]::AppendAllText($ResPath, $s + "`n", $utf8) }
+function To-Hex([string]$s) {
+  if ($null -eq $s) { return '' }
+  return (([System.Text.Encoding]::UTF8.GetBytes($s) | ForEach-Object { $_.ToString('x2') }) -join '')
+}
+function Err-Text($e) {
+  $msg = $e.Exception.Message
+  try { $r = $e.ErrorDetails.Message | ConvertFrom-Json; if ($r.message) { $msg = $r.message } } catch {}
+  return $msg
+}
+$lines = @(Get-Content -Path $ReqPath -Encoding UTF8)
+$token = $lines[0].Trim(); $dbId = $lines[1].Trim(); $ver = $lines[2].Trim()
+$h = @{ Authorization = "Bearer $token"; 'Notion-Version' = $ver }
+]==]
+
+-- Schema: every property with its type, and the options (with colours) of choice properties.
+_ni.PS_SCHEMA = _ni.PS_COMMON .. [==[
+try {
+  $db = Invoke-RestMethod -Method Get -Uri ("https://api.notion.com/v1/databases/" + $dbId) -Headers $h
+  $ds = Invoke-RestMethod -Method Get -Uri ("https://api.notion.com/v1/data_sources/" + $db.data_sources[0].id) -Headers $h
+  $sb = New-Object System.Text.StringBuilder
+  foreach ($kv in $ds.properties.PSObject.Properties) {
+    $t = [string]$kv.Value.type
+    [void]$sb.Append('PROP|' + (To-Hex $kv.Name) + '|' + $t + "`n")
+    if ($t -eq 'status' -or $t -eq 'select' -or $t -eq 'multi_select') {
+      foreach ($o in @($kv.Value.$t.options)) {
+        if ($o) { [void]$sb.Append('OPT|' + (To-Hex $kv.Name) + '|' + (To-Hex ([string]$o.name)) + '|' + [string]$o.color + "`n") }
+      }
+    }
+  }
+  [void]$sb.Append("DONE`n")
+  [System.IO.File]::WriteAllText($ResPath, $sb.ToString(), $utf8)
+} catch { Out-Status ('ERR|' + (Err-Text $_)) }
+]==]
+
+-- Query: posts the JSON body built in Lua, follows pagination. With an output path it
+-- writes the CSV (title column first, then schema order); without one it only counts.
+_ni.PS_QUERY = _ni.PS_COMMON .. [==[
+function Csv-Cell([string]$s) {
+  if ($null -eq $s) { return '' }
+  if ($s -match '[",\r\n]') { return '"' + $s.Replace('"', '""') + '"' }
+  return $s
+}
+function Rich-Text($arr) { if (-not $arr) { return '' }; return (@($arr | ForEach-Object { [string]$_.plain_text }) -join '') }
+function Date-Text($d) {
+  if (-not $d -or -not $d.start) { return '' }
+  if ($d.end) { return ([string]$d.start + ' -> ' + [string]$d.end) }
+  return [string]$d.start
+}
+function Num-Text($n) { if ($null -eq $n) { return '' }; return ([double]$n).ToString([System.Globalization.CultureInfo]::InvariantCulture) }
+function Prop-Text($p) {
+  if (-not $p) { return '' }
+  switch ([string]$p.type) {
+    'title'            { return Rich-Text $p.title }
+    'rich_text'        { return Rich-Text $p.rich_text }
+    'number'           { return Num-Text $p.number }
+    'select'           { if ($p.select) { return [string]$p.select.name }; return '' }
+    'status'           { if ($p.status) { return [string]$p.status.name }; return '' }
+    'multi_select'     { return (@($p.multi_select | ForEach-Object { [string]$_.name }) -join ', ') }
+    'date'             { return Date-Text $p.date }
+    'checkbox'         { if ($p.checkbox) { return 'Yes' }; return 'No' }
+    'url'              { return [string]$p.url }
+    'email'            { return [string]$p.email }
+    'phone_number'     { return [string]$p.phone_number }
+    'created_time'     { return [string]$p.created_time }
+    'last_edited_time' { return [string]$p.last_edited_time }
+    'people'           { return (@($p.people | ForEach-Object { [string]$_.name }) -join ', ') }
+    'files'            { return (@($p.files | ForEach-Object { [string]$_.name }) -join ', ') }
+    'unique_id'        {
+      if (-not $p.unique_id -or $null -eq $p.unique_id.number) { return '' }
+      if ($p.unique_id.prefix) { return ([string]$p.unique_id.prefix + '-' + [string]$p.unique_id.number) }
+      return [string]$p.unique_id.number
+    }
+    'formula' {
+      $f = $p.formula; if (-not $f) { return '' }
+      switch ([string]$f.type) {
+        'string'  { return [string]$f.string }
+        'number'  { return Num-Text $f.number }
+        'boolean' { if ($f.boolean) { return 'Yes' }; return 'No' }
+        'date'    { return Date-Text $f.date }
+      }
+      return ''
+    }
+    'rollup' {
+      $r = $p.rollup; if (-not $r) { return '' }
+      switch ([string]$r.type) {
+        'number' { return Num-Text $r.number }
+        'date'   { return Date-Text $r.date }
+        'array'  { return (@($r.array | ForEach-Object { Prop-Text $_ }) -join ', ') }
+      }
+      return ''
+    }
+  }
+  # relation, button, verification etc. have no text value in the API
+  return ''
+}
+try {
+  $bodyJson = $lines[3].Trim()
+  $outPath = ''; if ($lines.Count -gt 4) { $outPath = $lines[4].Trim() }
+  $countOnly = ($outPath -eq '')
+  $db = Invoke-RestMethod -Method Get -Uri ("https://api.notion.com/v1/databases/" + $dbId) -Headers $h
+  $dsid = $db.data_sources[0].id
+  $uri = "https://api.notion.com/v1/data_sources/$dsid/query"
+  $cols = @()
+  if ($countOnly) {
+    # Only the title comes back, which keeps counting a large database fast.
+    $uri += '?filter_properties[]=title'
+  } else {
+    $ds = Invoke-RestMethod -Method Get -Uri ("https://api.notion.com/v1/data_sources/" + $dsid) -Headers $h
+    $titleCol = $null
+    foreach ($kv in $ds.properties.PSObject.Properties) {
+      if ($kv.Value.type -eq 'title') { $titleCol = $kv.Name } else { $cols += $kv.Name }
+    }
+    if ($titleCol) { $cols = @($titleCol) + $cols }
+  }
+  $sb = New-Object System.Text.StringBuilder
+  if (-not $countOnly) { [void]$sb.Append((@($cols | ForEach-Object { Csv-Cell $_ }) -join ',') + "`r`n") }
+  $rows = 0; $cursor = $null
+  do {
+    $b = $bodyJson
+    if ($cursor) { $b = $bodyJson.Substring(0, $bodyJson.Length - 1) + ',"start_cursor":"' + $cursor + '"}' }
+    # Windows PowerShell sends string bodies as Latin-1; send UTF-8 bytes so non-ASCII option names survive.
+    $resp = Invoke-RestMethod -Method Post -Uri $uri -Headers $h -Body ([System.Text.Encoding]::UTF8.GetBytes($b)) -ContentType 'application/json; charset=utf-8'
+    if ($countOnly) {
+      $rows += @($resp.results).Count
+    } else {
+      foreach ($page in $resp.results) {
+        $props = $page.properties
+        $cells = foreach ($c in $cols) { Csv-Cell (Prop-Text $props.$c) }
+        [void]$sb.Append((@($cells) -join ',') + "`r`n")
+        $rows++
+      }
+    }
+    Out-Status ('ROWS|' + $rows)
+    $cursor = $resp.next_cursor
+  } while ($resp.has_more -and $cursor)
+  if (-not $countOnly) { [System.IO.File]::WriteAllText($outPath, $sb.ToString(), (New-Object System.Text.UTF8Encoding $true)) }
+  Out-Status ('DONE|' + $rows)
+} catch { Out-Status ('ERR|' + (Err-Text $_)) }
+]==]
+
+-- ── Schema ────────────────────────────────────────────────────────────────────
+
+-- Returns the schema of the active database, starting/polling the fetch as needed.
+-- Second value: "loading", or an error message.
+function _ni.schema()
+    local db_id = getActiveNotionDbId()
+    if not isValidNotionId(db_id) then return nil, "No valid Notion database selected." end
+    local entry = _ni.schemas[db_id]
+    if entry and entry.props then return entry end
+    if entry and entry.error then return nil, entry.error end
+    if entry and entry.loading then
+        local content = _ni.readFinished(entry.loading)
+        if not content then return nil, "loading" end
+        local err = content:match("ERR|([^\n]*)")
+        if err then
+            _ni.schemas[db_id] = { error = trimWS(err) }
+            return nil, trimWS(err)
+        end
+        local schema = { props = {}, by_name = {} }
+        for line in content:gmatch("[^\n]+") do
+            local name_hex, typ = line:match("^PROP|([^|]*)|([%w_]+)")
+            if name_hex then
+                local p = { name = hexDecodeToString(name_hex), type = typ, options = {} }
+                schema.props[#schema.props + 1] = p
+                schema.by_name[p.name] = p
+            else
+                local p_hex, o_hex, color = line:match("^OPT|([^|]*)|([^|]*)|([%w_]*)")
+                local p = p_hex and schema.by_name[hexDecodeToString(p_hex)]
+                if p then p.options[#p.options + 1] = { name = hexDecodeToString(o_hex), color = color } end
+            end
+        end
+        for _, p in ipairs(schema.props) do
+            if p.type == "checkbox" then
+                p.options = { { name = "Checked", color = "default" }, { name = "Unchecked", color = "default" } }
+            end
+        end
+        table.sort(schema.props, function(a, b) return a.name:lower() < b.name:lower() end)
+        _ni.schemas[db_id] = schema
+        return schema
+    end
+    local tok = _ni.token()
+    if tok == "" then return nil, "Paste your Notion token first (Edit tab → Notion)." end
+    local res, err = _ni.launch("schema", _ni.PS_SCHEMA, { tok, db_id, NOTION_API_VERSION })
+    if not res then return nil, err end
+    _ni.schemas[db_id] = { loading = res }
+    return nil, "loading"
+end
+
+-- ── Query body (built here so filters can nest: AND across chips, OR within one) ──
+
+function _ni.json(s)
+    return '"' .. tostring(s):gsub('[%c"\\]', function(c)
+        if c == '"' then return '\\"' elseif c == "\\" then return "\\\\" end
+        return string.format("\\u%04x", c:byte())
+    end) .. '"'
+end
+
+function _ni.buildBody(schema, with_sorts)
+    local conds = {}
+    for _, f in ipairs(_ni.state.filters) do
+        local p = schema.by_name[f.prop]
+        if not p then return nil, "Filter property '" .. f.prop .. "' is not on this database." end
+        if #f.opts > 0 then
+            local leaves = {}
+            for _, o in ipairs(f.opts) do
+                local cond
+                if p.type == "checkbox" then
+                    local want = (o == "Checked")
+                    if f.neg then want = not want end
+                    cond = '{"equals":' .. tostring(want) .. '}'
+                elseif p.type == "multi_select" then
+                    cond = '{"' .. (f.neg and "does_not_contain" or "contains") .. '":' .. _ni.json(o) .. '}'
+                else
+                    cond = '{"' .. (f.neg and "does_not_equal" or "equals") .. '":' .. _ni.json(o) .. '}'
+                end
+                leaves[#leaves + 1] = '{"property":' .. _ni.json(p.name) .. ',"' .. p.type .. '":' .. cond .. '}'
+            end
+            if #leaves == 1 then
+                conds[#conds + 1] = leaves[1]
+            else
+                -- "is A or B" keeps rows matching any; "is not A, B" must exclude all of them.
+                conds[#conds + 1] = '{"' .. (f.neg and "and" or "or") .. '":[' .. table.concat(leaves, ",") .. ']}'
+            end
+        end
+    end
+    local body = '{"page_size":100'
+    if #conds == 1 then
+        body = body .. ',"filter":' .. conds[1]
+    elseif #conds > 1 then
+        body = body .. ',"filter":{"and":[' .. table.concat(conds, ",") .. ']}'
+    end
+    if with_sorts then
+        local sorts = {}
+        for _, s in ipairs(_ni.state.sorts) do
+            if not schema.by_name[s.prop] then return nil, "Sort property '" .. s.prop .. "' is not on this database." end
+            sorts[#sorts + 1] = '{"property":' .. _ni.json(s.prop) .. ',"direction":"' .. (s.desc and "descending" or "ascending") .. '"}'
+        end
+        -- Ties (and no sort at all) fall back to creation order.
+        sorts[#sorts + 1] = '{"timestamp":"created_time","direction":"ascending"}'
+        body = body .. ',"sorts":[' .. table.concat(sorts, ",") .. ']'
+    end
+    return body .. "}"
+end
+
+-- ── File name ─────────────────────────────────────────────────────────────────
+
+function _ni.expandTemplate(st)
+    local values = {
+        project = trimWS(st.project or ""), speaker = trimWS(st.speaker or ""),
+        date = os.date("%d%m-%Y"), db = st.db or "",
+    }
+    local name = tostring(st.template or ""):gsub("%$(%a+)", function(k) return values[k:lower()] end)
+    name = trimWS(name:gsub('[\\/:%*%?"<>|]', "_"))
+    return name
+end
+
+-- A second fetch with the same name gets _B, _C, ...
 function _ni.snapshotPath()
-    local base = joinPath(_ni.folder, trimWS(_ni.file_name) .. "_" .. os.date("%d%m-%Y"))
+    local base = joinPath(_ni.folder, _ni.expandTemplate(_ni.state))
     local path = base .. ".csv"
-    local suffix = 66 -- "B"
+    local suffix = 66
     while reaper.file_exists(path) and suffix <= 90 do
         path = base .. "_" .. string.char(suffix) .. ".csv"
         suffix = suffix + 1
@@ -8140,46 +8341,37 @@ function _ni.snapshotPath()
     return path
 end
 
-function _ni.statusSchema()
-    local db_id = getActiveNotionDbId()
-    local schema = NOTION_STATUS_SCHEMA_BY_DB[db_id]
-    if schema and schema.prop_list and #schema.prop_list > 0 then return schema end
-    local tok = _ni.token()
-    if tok == "" then return nil, "Paste your Notion token first (Edit tab → Notion)." end
-    if not isValidNotionId(db_id) then return nil, "No valid Notion database selected." end
-    return notionFetchStatusSchema(tok, db_id)
-end
+-- ── Fetch / count ─────────────────────────────────────────────────────────────
 
 function _ni.startFetch(auto_import)
     if _G.DMN_NOTION_IMPORT_JOB and _G.DMN_NOTION_IMPORT_JOB.running then return end
-    if trimWS(_ni.folder) == "" or trimWS(_ni.file_name) == "" then
-        reaper.ShowMessageBox("Set a folder and a file name first.", "Fetch from Notion", 0)
+    local schema, serr = _ni.schema()
+    if not schema then
+        _ni.status = "Error: " .. (serr == "loading" and "properties are still loading." or tostring(serr))
         return
     end
+    local body, berr = _ni.buildBody(schema, true)
+    if not body then _ni.status = "Error: " .. berr; return end
+    if _ni.expandTemplate(_ni.state) == "" then _ni.status = "Error: the file name is empty."; return end
     ensureDir(_ni.folder)
     local out_path = _ni.snapshotPath()
-    local opts = (_ni.filter_prop ~= "") and _ni.filter_opts or {}
-    local res_path, err = notionExportCsvAsync(_ni.token(), getActiveNotionDbId(), _ni.filter_prop, opts, _ni.sort_prop, out_path)
-    if not res_path then
-        _ni.status = "Error: " .. tostring(err)
-        return
-    end
+    local res, err = _ni.launch("export", _ni.PS_QUERY, { _ni.token(), getActiveNotionDbId(), NOTION_API_VERSION, body, out_path })
+    if not res then _ni.status = "Error: " .. tostring(err); return end
     local job = { running = true, progress_label = "Fetching from Notion", progress_done = 0 }
     _G.DMN_NOTION_IMPORT_JOB = job
     _ni.status = ""
     local function step()
-        local rows, poll_err, so_far = notionExportCsvPoll(res_path)
-        if poll_err == "pending" then
-            job.progress_done = tonumber(so_far) or 0
+        local content, partial = _ni.readFinished(res)
+        if not content then
+            for n in tostring(partial or ""):gmatch("ROWS|(%d+)") do job.progress_done = tonumber(n) end
             reaper.defer(step)
             return
         end
         job.running = false
         _G.DMN_NOTION_IMPORT_JOB = nil
-        if not rows then
-            _ni.status = "Error: " .. tostring(poll_err)
-            return
-        end
+        local err_msg = content:match("ERR|([^\n]*)")
+        if err_msg then _ni.status = "Error: " .. trimWS(err_msg); return end
+        local rows = tonumber(content:match("DONE|(%d+)")) or 0
         UIM["txt_url"] = out_path
         _ni.status = string.format("%d rows → %s", rows, out_path:match("[^\\/]+$") or out_path)
         if auto_import then run_btn("btn_import") end
@@ -8187,110 +8379,395 @@ function _ni.startFetch(auto_import)
     reaper.defer(step)
 end
 
-function _ni.inputText(ctx, id, field, extstate_key, width)
-    reaper.ImGui_SetNextItemWidth(ctx, width or -1)
-    local rv, nv = reaper.ImGui_InputText(ctx, id, _ni[field] or "", 0)
-    if rv then _ni[field] = nv end
-    if reaper.ImGui_IsItemDeactivatedAfterEdit(ctx) then
-        if extstate_key then
-            reaper.SetExtState(EXTSTATE_SECTION, extstate_key, _ni[field], true)
-        else
-            _ni.set(field, _ni[field])
+-- Live "N rows match": re-counted in the background a moment after the filters change.
+function _ni.updateCount(schema)
+    local c = _ni.count
+    if c.job then
+        local content = _ni.readFinished(c.job.res)
+        if content then
+            if c.job.sig == c.wanted then
+                c.sig = c.job.sig
+                local err_msg = content:match("ERR|([^\n]*)")
+                c.err = err_msg and trimWS(err_msg) or nil
+                c.value = tonumber(content:match("DONE|(%d+)"))
+            end
+            c.job = nil
         end
     end
+    local body, berr = _ni.buildBody(schema, false)
+    if not body then c.wanted = nil; c.err = berr; return end
+    c.wanted = getActiveNotionDbId() .. body
+    if c.wanted == c.sig or c.job then return end
+    if reaper.time_precise() - _ni.last_change < 0.6 then return end
+    local res = _ni.launch("count", _ni.PS_QUERY, { _ni.token(), getActiveNotionDbId(), NOTION_API_VERSION, body })
+    if res then c.job = { res = res, sig = c.wanted } end
 end
 
-function _ni.label(ctx, text)
+-- ── Folder picker: the Explorer-style dialog (IFileOpenDialog) instead of the old tree ──
+
+_ni.PS_PICK_FOLDER = [==[
+param($Title, $Start, $Owner)
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+Add-Type -TypeDefinition @"
+using System;
+using System.Runtime.InteropServices;
+public static class DmnFolderPicker {
+  [ComImport, Guid("DC1C5A9C-E88A-4dde-A5A1-60F82A20AEF7")] class FileOpenDialogCo {}
+  [ComImport, Guid("42f85136-db7e-439c-85f1-e4075d135fc8"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+  interface IFileOpenDialog {
+    [PreserveSig] int Show(IntPtr parent);
+    void SetFileTypes(uint cFileTypes, IntPtr rgFilterSpec);
+    void SetFileTypeIndex(uint iFileType);
+    void GetFileTypeIndex(out uint piFileType);
+    void Advise(IntPtr pfde, out uint pdwCookie);
+    void Unadvise(uint dwCookie);
+    void SetOptions(uint fos);
+    void GetOptions(out uint pfos);
+    void SetDefaultFolder(IShellItem psi);
+    void SetFolder(IShellItem psi);
+    void GetFolder(out IShellItem ppsi);
+    void GetCurrentSelection(out IShellItem ppsi);
+    void SetFileName([MarshalAs(UnmanagedType.LPWStr)] string pszName);
+    void GetFileName([MarshalAs(UnmanagedType.LPWStr)] out string pszName);
+    void SetTitle([MarshalAs(UnmanagedType.LPWStr)] string pszTitle);
+    void SetOkButtonLabel([MarshalAs(UnmanagedType.LPWStr)] string pszText);
+    void SetFileNameLabel([MarshalAs(UnmanagedType.LPWStr)] string pszLabel);
+    void GetResult(out IShellItem ppsi);
+  }
+  [ComImport, Guid("43826D1E-E718-42EE-BC55-A1E261C37BFE"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+  interface IShellItem {
+    void BindToHandler(IntPtr pbc, ref Guid bhid, ref Guid riid, out IntPtr ppv);
+    void GetParent(out IShellItem ppsi);
+    void GetDisplayName(uint sigdnName, [MarshalAs(UnmanagedType.LPWStr)] out string ppszName);
+    void GetAttributes(uint sfgaoMask, out uint psfgaoAttribs);
+    void Compare(IShellItem psi, uint hint, out int piOrder);
+  }
+  [DllImport("shell32.dll", CharSet = CharSet.Unicode, PreserveSig = false)]
+  static extern void SHCreateItemFromParsingName(string pszPath, IntPtr pbc, [MarshalAs(UnmanagedType.LPStruct)] Guid riid, out IShellItem ppv);
+  public static string Pick(string title, string start, long owner) {
+    IFileOpenDialog d = (IFileOpenDialog)new FileOpenDialogCo();
+    uint opts; d.GetOptions(out opts);
+    d.SetOptions(opts | 0x20 | 0x40); // FOS_PICKFOLDERS | FOS_FORCEFILESYSTEM
+    d.SetTitle(title);
+    if (!string.IsNullOrEmpty(start) && System.IO.Directory.Exists(start)) {
+      try { IShellItem si; SHCreateItemFromParsingName(start, IntPtr.Zero, typeof(IShellItem).GUID, out si); d.SetFolder(si); } catch {}
+    }
+    if (d.Show(new IntPtr(owner)) != 0) return null;
+    IShellItem res; d.GetResult(out res);
+    string path; res.GetDisplayName(0x80058000, out path); // SIGDN_FILESYSPATH
+    return path;
+  }
+}
+"@
+$p = [DmnFolderPicker]::Pick($Title, $Start, [long]$Owner)
+if ($p) { Write-Output ('PATH|' + $p) }
+]==]
+
+-- Blocks REAPER while the dialog is open, like any modal dialog.
+function _ni.pickFolder(title, start)
+    local tmp_dir = joinPath(reaper.GetResourcePath(), "Scripts", "DMN_Temp")
+    ensureDir(tmp_dir)
+    local script_path = joinPath(tmp_dir, "DMN_NI_pickfolder.ps1")
+    if not writeAll(script_path, _ni.PS_PICK_FOLDER) then return nil end
+    local owner = 0
+    if reaper.JS_Window_AddressFromHandle then owner = reaper.JS_Window_AddressFromHandle(reaper.GetMainHwnd()) or 0 end
+    local cmd = 'powershell -STA -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "' .. script_path
+        .. '" "' .. title:gsub('"', "'") .. '" "' .. (tostring(start or ""):gsub('"', ""):gsub("\\+$", "")) .. '" ' .. string.format("%.0f", owner)
+    local out = reaper.ExecProcess(cmd, 0) or ""
+    local path = out:match("PATH|([^\r\n]+)")
+    return path and trimWS(path) or nil
+end
+
+-- ── Drawing helpers ───────────────────────────────────────────────────────────
+
+function _ni.lighten(col, amt)
+    local r = math.min(255, ((col >> 24) & 0xFF) + amt)
+    local g = math.min(255, ((col >> 16) & 0xFF) + amt)
+    local b = math.min(255, ((col >> 8) & 0xFF) + amt)
+    return (r << 24) | (g << 16) | (b << 8) | 0xFF
+end
+
+-- A coloured, rounded button like Notion's option pills and view-bar chips. Returns clicked.
+function _ni.pill(ctx, label, col)
+    reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_FrameRounding(), 4)
+    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(), col)
+    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), _ni.lighten(col, 24))
+    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(), _ni.lighten(col, 40))
+    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), 0xE6E6E6FF)
+    local clicked = reaper.ImGui_Button(ctx, label)
+    reaper.ImGui_PopStyleColor(ctx, 4)
+    reaper.ImGui_PopStyleVar(ctx)
+    return clicked
+end
+
+function _ni.optionColor(schema, prop, opt)
+    local p = schema and schema.by_name[prop]
+    if p then
+        for _, o in ipairs(p.options) do
+            if o.name == opt then return _ni.COLORS[o.color] or _ni.COLORS.default end
+        end
+    end
+    return _ni.COLORS.default
+end
+
+-- Keeps chips flowing onto the next line instead of running off the right edge.
+function _ni.flow(ctx, label, first)
+    if first then return end
+    reaper.ImGui_SameLine(ctx)
+    local w = reaper.ImGui_CalcTextSize(ctx, (label:gsub("##.*$", ""))) + 16
+    if reaper.ImGui_GetContentRegionAvail(ctx) < w then reaper.ImGui_NewLine(ctx) end
+end
+
+function _ni.shorten(s, n)
+    if #s <= n then return s end
+    return s:sub(1, n - 1) .. "…"
+end
+
+function _ni.filterLabel(f)
+    local opts = (#f.opts > 0) and table.concat(f.opts, ", ") or "any"
+    return _ni.shorten(f.prop .. (f.neg and " is not: " or ": ") .. opts, 48)
+end
+
+function _ni.row(ctx, label)
+    reaper.ImGui_TableNextRow(ctx)
+    reaper.ImGui_TableNextColumn(ctx)
     reaper.ImGui_AlignTextToFramePadding(ctx)
-    reaper.ImGui_Text(ctx, text)
-    reaper.ImGui_SameLine(ctx, 80)
+    reaper.ImGui_Text(ctx, label)
+    reaper.ImGui_TableNextColumn(ctx)
 end
 
-function draw_notion_import_section(ctx)
-    if _ni.preset ~= getActiveNotionDbName() then _ni.loadForPreset() end
-
-    _ni.label(ctx, "Database")
-    local preset = getActiveNotionDbName()
-    reaper.ImGui_Text(ctx, preset ~= "" and preset or "(none)")
-    reaper.ImGui_SameLine(ctx)
-    if reaper.ImGui_SmallButton(ctx, "Change##ni_db") then run_btn("btn_edit_notion_preset_pick") end
-
-    -- Filter: one Status/Select property, any of the ticked options
-    _ni.label(ctx, "Filter")
-    local fdesc = "(none: all rows)"
-    if _ni.filter_prop ~= "" then
-        fdesc = _ni.filter_prop .. " = " .. (#_ni.filter_opts > 0 and table.concat(_ni.filter_opts, " / ") or "(pick options)")
-    end
-    reaper.ImGui_TextColored(ctx, tcol("hint_text"), fdesc)
-    reaper.ImGui_SameLine(ctx)
-    if reaper.ImGui_SmallButton(ctx, "Property##ni_fprop") then
-        local schema, err = _ni.statusSchema()
-        if schema then reaper.ImGui_OpenPopup(ctx, "ni_fprop_popup")
-        else reaper.ShowMessageBox("Couldn't load properties:\n\n" .. tostring(err or ""), "Fetch from Notion", 0) end
-    end
-    if _ni.filter_prop ~= "" then
-        reaper.ImGui_SameLine(ctx)
-        if reaper.ImGui_SmallButton(ctx, "Options##ni_fopt") then
-            local schema, err = _ni.statusSchema()
-            if schema then reaper.ImGui_OpenPopup(ctx, "ni_fopt_popup")
-            else reaper.ShowMessageBox("Couldn't load options:\n\n" .. tostring(err or ""), "Fetch from Notion", 0) end
+-- Property list for the "+ Filter" / "+ Sort" popups and the chip popups. Returns picked name.
+function _ni.propList(ctx, schema, want, current)
+    local picked
+    for _, p in ipairs(schema.props) do
+        if want(p) then
+            if reaper.ImGui_Selectable(ctx, p.name .. "##ni_p_" .. p.name, p.name == current) then picked = p.name end
+            reaper.ImGui_SameLine(ctx, 240)
+            reaper.ImGui_TextDisabled(ctx, (p.type:gsub("_", " ")))
         end
     end
-    if reaper.ImGui_BeginPopup(ctx, "ni_fprop_popup") then
-        local schema = NOTION_STATUS_SCHEMA_BY_DB[getActiveNotionDbId()]
-        if reaper.ImGui_Selectable(ctx, "(no filter)", _ni.filter_prop == "") then
-            _ni.filter_prop = ""; _ni.filter_opts = {}
-            _ni.set("filter_prop", ""); _ni.set("filter_opts", "")
+    return picked
+end
+
+function _ni.isFilterable(p) return _ni.FILTERABLE[p.type] == true end
+function _ni.isSortable(p) return not _ni.UNSORTABLE[p.type] end
+
+function _ni.drawFilterPopup(ctx, schema, i, f)
+    local removed = false
+    local p = schema.by_name[f.prop]
+    reaper.ImGui_SetNextItemWidth(ctx, 260)
+    if reaper.ImGui_BeginCombo(ctx, "##ni_fprop" .. i, f.prop) then
+        local picked = _ni.propList(ctx, schema, _ni.isFilterable, f.prop)
+        if picked and picked ~= f.prop then f.prop = picked; f.opts = {}; _ni.changed() end
+        reaper.ImGui_EndCombo(ctx)
+    end
+    if reaper.ImGui_RadioButton(ctx, "is##ni_is" .. i, not f.neg) then f.neg = false; _ni.changed() end
+    reaper.ImGui_SameLine(ctx)
+    if reaper.ImGui_RadioButton(ctx, "is not##ni_isnot" .. i, f.neg) then f.neg = true; _ni.changed() end
+    if not p then
+        reaper.ImGui_TextColored(ctx, rgba(1, 0.5, 0.2, 1), "Not a property of this database.")
+    else
+        local opts = p.options
+        if #opts > 8 then
+            reaper.ImGui_SetNextItemWidth(ctx, 260)
+            local _, s = reaper.ImGui_InputTextWithHint(ctx, "##ni_fsearch" .. i, "Search options…", _ni.search[i] or "")
+            _ni.search[i] = s
         end
-        for _, name in ipairs((schema and schema.prop_list) or {}) do
-            if reaper.ImGui_Selectable(ctx, name, _ni.filter_prop == name) and _ni.filter_prop ~= name then
-                _ni.filter_prop = name; _ni.filter_opts = {}
-                _ni.set("filter_prop", name); _ni.set("filter_opts", "")
+        local q = (_ni.search[i] or ""):lower()
+        local ticked = {}
+        for _, o in ipairs(f.opts) do ticked[o] = true end
+        local changed = false
+        for j, o in ipairs(opts) do
+            if q == "" or o.name:lower():find(q, 1, true) then
+                local rv, nv = reaper.ImGui_Checkbox(ctx, "##ni_fo" .. i .. "_" .. j, ticked[o.name] == true)
+                if rv then ticked[o.name] = nv; changed = true end
+                reaper.ImGui_SameLine(ctx)
+                if _ni.pill(ctx, o.name .. "##ni_fpill" .. i .. "_" .. j, _ni.COLORS[o.color] or _ni.COLORS.default) then
+                    ticked[o.name] = not ticked[o.name]; changed = true
+                end
             end
         end
-        reaper.ImGui_EndPopup(ctx)
-    end
-    if reaper.ImGui_BeginPopup(ctx, "ni_fopt_popup") then
-        local schema = NOTION_STATUS_SCHEMA_BY_DB[getActiveNotionDbId()]
-        local prop = schema and schema.status_props[_ni.filter_prop]
-        local ticked = {}
-        for _, o in ipairs(_ni.filter_opts) do ticked[o] = true end
-        local changed = false
-        for _, opt in ipairs((prop and prop.options) or {}) do
-            local rv, nv = reaper.ImGui_Checkbox(ctx, opt .. "##ni_opt_" .. opt, ticked[opt] == true)
-            if rv then ticked[opt] = nv; changed = true end
-        end
         if changed then
-            local list = {}
-            for _, opt in ipairs(prop.options) do if ticked[opt] then list[#list + 1] = opt end end
-            _ni.filter_opts = list
-            _ni.set("filter_opts", table.concat(list, "|"))
+            f.opts = {}
+            for _, o in ipairs(opts) do if ticked[o.name] then f.opts[#f.opts + 1] = o.name end end
+            _ni.changed()
         end
-        reaper.ImGui_EndPopup(ctx)
     end
+    reaper.ImGui_Separator(ctx)
+    if reaper.ImGui_Button(ctx, "Remove filter##ni_frm" .. i) then removed = true; reaper.ImGui_CloseCurrentPopup(ctx) end
+    return removed
+end
 
-    _ni.label(ctx, "Sort by")
-    _ni.inputText(ctx, "##ni_sort", "sort_prop", nil, 200)
+function _ni.drawSortPopup(ctx, schema, i, s)
+    local removed = false
+    reaper.ImGui_SetNextItemWidth(ctx, 260)
+    if reaper.ImGui_BeginCombo(ctx, "##ni_sprop" .. i, s.prop) then
+        local picked = _ni.propList(ctx, schema, _ni.isSortable, s.prop)
+        if picked and picked ~= s.prop then s.prop = picked; _ni.changed() end
+        reaper.ImGui_EndCombo(ctx)
+    end
+    if reaper.ImGui_RadioButton(ctx, "Ascending##ni_sa" .. i, not s.desc) then s.desc = false; _ni.changed() end
     reaper.ImGui_SameLine(ctx)
-    reaper.ImGui_TextColored(ctx, tcol("hint_text"), "property name, A→Z (empty = creation order)")
+    if reaper.ImGui_RadioButton(ctx, "Descending##ni_sd" .. i, s.desc) then s.desc = true; _ni.changed() end
+    reaper.ImGui_Separator(ctx)
+    if reaper.ImGui_Button(ctx, "Remove sort##ni_srm" .. i) then removed = true; reaper.ImGui_CloseCurrentPopup(ctx) end
+    return removed
+end
 
-    _ni.label(ctx, "File name")
-    _ni.inputText(ctx, "##ni_name", "file_name", nil, 200)
-    reaper.ImGui_SameLine(ctx)
-    reaper.ImGui_TextColored(ctx, tcol("hint_text"), "_" .. os.date("%d%m-%Y") .. ".csv")
+function _ni.inputText(ctx, id, field, width, hint)
+    reaper.ImGui_SetNextItemWidth(ctx, width)
+    local rv, nv
+    if hint then
+        rv, nv = reaper.ImGui_InputTextWithHint(ctx, id, hint, _ni.state[field] or "")
+    else
+        rv, nv = reaper.ImGui_InputText(ctx, id, _ni.state[field] or "")
+    end
+    if rv then _ni.state[field] = nv end
+    if reaper.ImGui_IsItemDeactivatedAfterEdit(ctx) then _ni.changed() end
+end
 
-    _ni.label(ctx, "Folder")
-    local has_browse = reaper.JS_Dialog_BrowseForFolder ~= nil
-    _ni.inputText(ctx, "##ni_folder", "folder", "notion_import_folder", has_browse and -80 or -1)
-    if has_browse then
+-- ── Section ───────────────────────────────────────────────────────────────────
+
+function draw_notion_import_section(ctx)
+    if not _ni.state then _ni.load() end
+    -- Follow database changes made in Edit → Notion.
+    local active = getActiveNotionDbName()
+    if _ni.state.db ~= active then _ni.state.db = active; _ni.changed() end
+
+    local schema, serr = _ni.schema()
+    local col_chip = _ni.COLORS.blue
+    local col_bad = _ni.COLORS.red
+    local col_add = 0x00000000
+
+    if reaper.ImGui_BeginTable(ctx, "ni_tbl", 2, reaper.ImGui_TableFlags_SizingFixedFit()) then
+        reaper.ImGui_TableSetupColumn(ctx, "label", reaper.ImGui_TableColumnFlags_WidthFixed(), 78)
+        reaper.ImGui_TableSetupColumn(ctx, "value", reaper.ImGui_TableColumnFlags_WidthStretch())
+
+        -- Database
+        _ni.row(ctx, "Database")
+        reaper.ImGui_SetNextItemWidth(ctx, 200)
+        if reaper.ImGui_BeginCombo(ctx, "##ni_db", active ~= "" and active or "(none)") then
+            for _, name in ipairs(getNotionDbPresetList()) do
+                if reaper.ImGui_Selectable(ctx, name, name == active) then _ni.setDb(name) end
+            end
+            reaper.ImGui_Separator(ctx)
+            reaper.ImGui_TextDisabled(ctx, "Add databases in Edit → Notion")
+            reaper.ImGui_EndCombo(ctx)
+        end
+        reaper.ImGui_SameLine(ctx)
+        if serr == "loading" then
+            reaper.ImGui_TextDisabled(ctx, "loading properties…")
+        elseif not schema then
+            reaper.ImGui_TextColored(ctx, rgba(1, 0.5, 0.2, 1), _ni.shorten(tostring(serr), 60))
+            reaper.ImGui_SameLine(ctx)
+            if reaper.ImGui_SmallButton(ctx, "Retry##ni_retry") then _ni.schemas[getActiveNotionDbId()] = nil end
+        else
+            local c = _ni.count
+            if c.err then
+                reaper.ImGui_TextColored(ctx, rgba(1, 0.5, 0.2, 1), _ni.shorten(c.err, 60))
+            elseif c.value and c.sig == c.wanted then
+                reaper.ImGui_TextDisabled(ctx, string.format("%d rows match", c.value))
+            else
+                reaper.ImGui_TextDisabled(ctx, "counting…")
+            end
+        end
+
+        if schema then
+            _ni.updateCount(schema)
+
+            -- Filter chips
+            _ni.row(ctx, "Filter")
+            if _ni.pending_popup then reaper.ImGui_OpenPopup(ctx, _ni.pending_popup); _ni.pending_popup = nil end
+            local remove_f
+            for i, f in ipairs(_ni.state.filters) do
+                local label = _ni.filterLabel(f) .. " ▾##ni_fchip" .. i
+                _ni.flow(ctx, label, i == 1)
+                if _ni.pill(ctx, label, schema.by_name[f.prop] and col_chip or col_bad) then
+                    reaper.ImGui_OpenPopup(ctx, "ni_fpop" .. i)
+                end
+                if reaper.ImGui_BeginPopup(ctx, "ni_fpop" .. i) then
+                    if _ni.drawFilterPopup(ctx, schema, i, f) then remove_f = i end
+                    reaper.ImGui_EndPopup(ctx)
+                end
+            end
+            if remove_f then table.remove(_ni.state.filters, remove_f); _ni.changed() end
+            _ni.flow(ctx, "+ Filter", #_ni.state.filters == 0)
+            if _ni.pill(ctx, "+ Filter##ni_fadd", col_add) then reaper.ImGui_OpenPopup(ctx, "ni_fadd_pop") end
+            if reaper.ImGui_BeginPopup(ctx, "ni_fadd_pop") then
+                local picked = _ni.propList(ctx, schema, _ni.isFilterable)
+                if picked then
+                    table.insert(_ni.state.filters, { prop = picked, neg = false, opts = {} })
+                    _ni.changed()
+                    _ni.pending_popup = "ni_fpop" .. #_ni.state.filters
+                    reaper.ImGui_CloseCurrentPopup(ctx)
+                end
+                reaper.ImGui_EndPopup(ctx)
+            end
+
+            -- Sort chips
+            _ni.row(ctx, "Sort")
+            local remove_s
+            for i, s in ipairs(_ni.state.sorts) do
+                local label = (s.desc and "↓ " or "↑ ") .. s.prop .. " ▾##ni_schip" .. i
+                _ni.flow(ctx, label, i == 1)
+                if _ni.pill(ctx, label, schema.by_name[s.prop] and col_chip or col_bad) then
+                    reaper.ImGui_OpenPopup(ctx, "ni_spop" .. i)
+                end
+                if reaper.ImGui_BeginPopup(ctx, "ni_spop" .. i) then
+                    if _ni.drawSortPopup(ctx, schema, i, s) then remove_s = i end
+                    reaper.ImGui_EndPopup(ctx)
+                end
+            end
+            if remove_s then table.remove(_ni.state.sorts, remove_s); _ni.changed() end
+            _ni.flow(ctx, "+ Sort", #_ni.state.sorts == 0)
+            if _ni.pill(ctx, "+ Sort##ni_sadd", col_add) then reaper.ImGui_OpenPopup(ctx, "ni_sadd_pop") end
+            if reaper.ImGui_BeginPopup(ctx, "ni_sadd_pop") then
+                local picked = _ni.propList(ctx, schema, _ni.isSortable)
+                if picked then
+                    table.insert(_ni.state.sorts, { prop = picked, desc = false })
+                    _ni.changed()
+                    reaper.ImGui_CloseCurrentPopup(ctx)
+                end
+                reaper.ImGui_EndPopup(ctx)
+            end
+        end
+
+        -- Naming
+        _ni.row(ctx, "Project")
+        _ni.inputText(ctx, "##ni_project", "project", 110, "RC")
+        reaper.ImGui_SameLine(ctx)
+        reaper.ImGui_AlignTextToFramePadding(ctx)
+        reaper.ImGui_Text(ctx, "Speaker")
+        reaper.ImGui_SameLine(ctx)
+        _ni.inputText(ctx, "##ni_speaker", "speaker", 140, "MaleDwarf")
+
+        _ni.row(ctx, "File name")
+        _ni.inputText(ctx, "##ni_template", "template", 220, _ni.DEFAULT_TEMPLATE)
+        reaper.ImGui_SameLine(ctx)
+        local preview = _ni.expandTemplate(_ni.state)
+        reaper.ImGui_TextDisabled(ctx, "→ " .. (preview ~= "" and (preview .. ".csv") or "(empty)"))
+        if reaper.ImGui_IsItemHovered(ctx) then
+            reaper.ImGui_SetTooltip(ctx, "Tokens: $project  $speaker  $date (DDMM-YYYY)  $db (database name)")
+        end
+
+        -- Folder
+        _ni.row(ctx, "Folder")
+        reaper.ImGui_SetNextItemWidth(ctx, -80)
+        local rv, nv = reaper.ImGui_InputText(ctx, "##ni_folder", _ni.folder)
+        if rv then _ni.folder = nv end
+        if reaper.ImGui_IsItemDeactivatedAfterEdit(ctx) then
+            reaper.SetExtState(EXTSTATE_SECTION, "notion_import_folder", _ni.folder, true)
+        end
         reaper.ImGui_SameLine(ctx)
         if reaper.ImGui_Button(ctx, "Browse...##ni_folder_browse", -1) then
-            local rv, folder = reaper.JS_Dialog_BrowseForFolder("Folder for Notion CSV snapshots", _ni.folder)
-            if rv == 1 and folder and folder ~= "" then
+            local folder = _ni.pickFolder("Folder for Notion CSV snapshots", _ni.folder)
+            if folder and folder ~= "" then
                 _ni.folder = folder
                 reaper.SetExtState(EXTSTATE_SECTION, "notion_import_folder", folder, true)
             end
         end
+
+        reaper.ImGui_EndTable(ctx)
     end
 
     reaper.ImGui_Spacing(ctx)
@@ -8307,6 +8784,75 @@ function draw_notion_import_section(ctx)
         local col = _ni.status:match("^Error") and rgba(1, 0.5, 0.2, 1) or tcol("hint_text")
         reaper.ImGui_TextColored(ctx, col, _ni.status)
     end
+end
+
+-- ── Import presets carry the Notion source ────────────────────────────────────
+
+function NI_presetSourceString()
+    if not _ni.state then _ni.load() end
+    return _ni.serialize(_ni.state)
+end
+
+function NI_applyPresetSource(preset_name)
+    local raw = reaper.GetExtState("DMN_CSVImport_Presets", preset_name .. "__notion") or ""
+    if raw == "" then return end
+    _ni.state = _ni.deserialize(raw)
+    if _ni.state.db ~= "" and getNotionDbPresetId(_ni.state.db) ~= "" then _ni.setDb(_ni.state.db) end
+    _ni.state.db = getActiveNotionDbName()
+    _ni.changed()
+end
+
+-- Hover summary for an Import preset: Notion source plus every mapped column.
+function NI_drawPresetTooltip(ctx, preset_name)
+    reaper.ImGui_BeginTooltip(ctx)
+    reaper.ImGui_Text(ctx, preset_name)
+    reaper.ImGui_Separator(ctx)
+    local raw = reaper.GetExtState("DMN_CSVImport_Presets", preset_name .. "__notion") or ""
+    if raw == "" then
+        reaper.ImGui_TextDisabled(ctx, "No Notion source saved with this preset.")
+    else
+        local st = _ni.deserialize(raw)
+        local schema = _ni.schemas[getNotionDbPresetId(st.db)]
+        if schema and not schema.props then schema = nil end
+        reaper.ImGui_Text(ctx, "Database: " .. (st.db ~= "" and st.db or "(none)"))
+        if #st.filters == 0 then
+            reaper.ImGui_Text(ctx, "Filter: none (all rows)")
+        else
+            for _, f in ipairs(st.filters) do
+                reaper.ImGui_Text(ctx, "Filter: " .. f.prop .. (f.neg and " is not" or " is"))
+                for _, o in ipairs(f.opts) do
+                    reaper.ImGui_SameLine(ctx)
+                    _ni.pill(ctx, o .. "##tt", _ni.optionColor(schema, f.prop, o))
+                end
+            end
+        end
+        local sorts = {}
+        for _, s in ipairs(st.sorts) do sorts[#sorts + 1] = (s.desc and "↓ " or "↑ ") .. s.prop end
+        reaper.ImGui_Text(ctx, "Sort: " .. (#sorts > 0 and table.concat(sorts, ", ") or "creation order"))
+        reaper.ImGui_Text(ctx, "File name: " .. _ni.expandTemplate(st) .. ".csv")
+    end
+    reaper.ImGui_Spacing(ctx)
+    local data = reaper.GetExtState("DMN_CSVImport_Presets", preset_name) or ""
+    if data ~= "" and reaper.ImGui_BeginTable(ctx, "ni_tt_cols", 9, reaper.ImGui_TableFlags_Borders() + reaper.ImGui_TableFlags_SizingFixedFit()) then
+        for _, h in ipairs({ "Name", "Col", "Role", "Marker", "Region", "Item", "Tag M", "Tag R", "Track" }) do
+            reaper.ImGui_TableSetupColumn(ctx, h)
+        end
+        reaper.ImGui_TableHeadersRow(ctx)
+        for entry in data:gmatch("([^|]+)") do
+            local f = {}
+            for x in (entry .. ":"):gmatch("([^:]*):") do f[#f + 1] = x end
+            local role = (f[8] == "1" and "E") or (f[9] == "1" and "C") or (f[10] == "1" and "Sp") or ""
+            local cells = { f[1] or "", f[2] or "", role, f[3], f[4], f[5], f[6], f[7], f[11] }
+            reaper.ImGui_TableNextRow(ctx)
+            for k, v in ipairs(cells) do
+                reaper.ImGui_TableNextColumn(ctx)
+                if k >= 4 then v = (v == "1") and "✓" or "" end
+                reaper.ImGui_Text(ctx, v or "")
+            end
+        end
+        reaper.ImGui_EndTable(ctx)
+    end
+    reaper.ImGui_EndTooltip(ctx)
 end
 
 -- State for ImGui Edit → Utilities section

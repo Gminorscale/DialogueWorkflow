@@ -85,17 +85,19 @@ The script opens a **single window** with five tabs: **Import**, **Record**, **N
 Paste a **published Google Sheets CSV URL** or a **local `.csv` file path**. Use **Open local CSV file…** to browse for a file on disk.
 
 #### From Notion
-Pulls the active Notion database preset (Edit tab → Notion) straight through the API instead of exporting a view by hand. The CSV has the same columns and cell text as Notion's own **Export → CSV**, so existing column mappings keep working.
+Pulls a Notion database straight through the API instead of exporting a view by hand. The CSV has the same columns and cell text as Notion's own **Export → CSV**, so column mappings keep working.
 
-| Setting | |
+| Row | |
 |---|---|
-| **Database** | The active Notion preset; **Change** switches it |
-| **Filter** | One Status or Select property, plus any number of options (rows matching any option are kept). Mirrors a filtered view, e.g. `Male Voice Status` = `Approved (Needs recording)` / `Needs Fixing` |
-| **Sort by** | Property name to sort A→Z, e.g. `Shout Name`; ties and empty fall back to creation order |
-| **File name** | Snapshot name, e.g. `RC_MaleDwarf`; the date is appended (`RC_MaleDwarf_1910-2026.csv`, then `_B`, `_C` for later fetches that day) |
-| **Folder** | Where snapshots are saved (shared by all presets) |
+| **Database** | Dropdown of the database presets from Edit → Notion. Shows a live **N rows match** count for the current filters |
+| **Filter** | Notion-style chips. **+ Filter** picks a Status, Select, Multi-select or Checkbox property; click a chip to choose **is / is not** and tick options (shown in Notion's colours). Several options in one chip = any of them; several chips = all of them |
+| **Sort** | Chips picked from the property list, ascending or descending, several allowed. Ties fall back to creation order |
+| **Project / Speaker / File name** | The file name is a template: `$project`, `$speaker`, `$date` (DDMM-YYYY) and `$db`. Default `$project_$speaker_$date` → `RC_Omega_1910-2026.csv`; a second fetch the same day gets `_B`, `_C` |
+| **Folder** | Where snapshots are saved; **Browse…** opens the Explorer folder picker |
 
-Filter, sort and file name are remembered per database preset. **Fetch** saves the snapshot and fills the CSV source field with it; **Fetch and Import** also runs **Import**. Requires Windows (PowerShell) and a saved Notion token.
+**Fetch** saves the snapshot and fills the CSV source field with it; **Fetch and Import** also runs **Import**.
+
+The Notion settings are saved with each Import preset (everything except the folder), so loading a preset such as `RC_Omega` switches database, filters, sorts and naming along with the columns. Hover a preset to see what it will apply. Requires Windows (PowerShell) and a saved Notion token.
 
 #### Column Mappings
 
